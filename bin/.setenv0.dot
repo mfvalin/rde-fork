@@ -1,0 +1,52 @@
+#!/bin/ksh
+#@usage: . .setenv0.dot $purplefrog $purplefrog_src $COMP_ARCH $PF_COMPILER_VERSION $ATM_MODEL_NAME $ATM_MODEL_VERSION
+#@arguments:
+# $1 : purplefrog base dir (has bin and include sub dir)
+# $2 : COMP_ARCH
+# $3 : PF_COMPILER config VERSION
+# $4 : purplefrog_src base dir
+# $5 : model_config base dir
+# $6 : ATM_MODEL_NAME
+# $7 : ATM_MODEL_VERSION
+
+export purplefrog=$1
+#export COMP_ARCH=${COMP_ARCH:-${EC_ARCH##*/}}
+export COMP_ARCH=$2
+tmp_PF_COMPILER_VERSION=$3
+export purplefrog_src=$4
+tmp_model_config=$5
+export ATM_MODEL_NAME=$6
+export ATM_MODEL_VERSION=$7
+
+export EC_ARCH=${BASE_ARCH}/${COMP_ARCH}
+export PATH=${purplefrog}/bin:${PATH}
+
+if [[ x${BASE_ARCH} == xAIX || x${BASE_ARCH} == xAIX-powerpc7 ]] ; then
+   s.use gmake as make
+fi
+
+. s.ssmuse.dot Prepend \
+   $(cat ${purplefrog}/include/${EC_ARCH}/ssmusedep_${tmp_PF_COMPILER_VERSION}.txt) \
+   $(cat ${tmp_model_config}/${ATM_MODEL_NAME}/${ATM_MODEL_VERSION}/ssmusedep.txt)
+
+export ATM_MODEL_COMP_VER="$(cat ${tmp_model_config}/gem/${ATM_MODEL_VERSION}/components.txt)"
+export ATM_MODEL_COMPONENTS=""
+for item in ${ATM_MODEL_COMP_VER} ; do
+   export ATM_MODEL_COMPONENTS="${ATM_MODEL_COMPONENTS} ${item%/*}"
+   export ${item%/*}_version=${item#*/}
+   export ${item%/*}=${purplefrog_src}/${item%/*}/${item#*/}
+done
+
+#eval "$(pf.clean_ec_path.dot)"
+
+mytmp=""
+for item in $EC_INCLUDE_PATH; do 
+   if [[ x$(ls -1 ${item#-I} | wc -l | cut -d" " -f1) != x0 ]] ; then 
+      mytmp="$mytmp $item"
+   fi
+done
+mytmp="$(echo $mytmp)"
+export EC_INCLUDE_PATH="$mytmp"
+
+unset tmp_PF_COMPILER_VERSION tmp_model_config item mytmp
+
