@@ -1,0 +1,59 @@
+#!/bin/ksh
+
+cat > .setenv.dot <<EOF
+#. s.ssmuse.dot GEM/x/4.7.0-a9
+. s.ssmuse.dot Prepend \\
+   GEM/others/gem-prep-1 \\
+   Linux_x86-64:/ssm/net/hpcs/201402/00/base  \\
+   Linux_x86-64:/ssm/net/hpcs/201402/00/intel13sp1 \\
+   Linux_x86-64:/ssm/net/rpn/utils/4.0 \\
+   AIX-powerpc7:Xlf13.110 \\
+   AIX-powerpc7:legacy \\
+   AIX-powerpc7:rmnlib-dev \\
+   AIX-powerpc7:devtools \\
+   /ssm/net/rpn/libs/4.0 \\
+   /ssm/net/cmoi/base/20130927 \\
+   GEM/d/gem-data/gem-data_4.2.0 \\
+   gem-mod_1.4.1_all@GEM/ISST/gem \\
+   GEM/d/x/gem-ref/4.6.0-rc8 \\
+   gem-validation_0.0.0_all@GEM/d/gem-data/validation \\
+   GEM/others/gem-post-1b \\
+   dot
+
+#export purplefrog=${0%/*}
+export purplefrog=/users/dor/armn/sch/SsmBundles/data/purplefrog/1.0.0-a3
+export purplefrog_src=/users/dor/armn/sch/SsmBundles/data/purplefrog-src
+export PATH=\${purplefrog}/bin:\${PATH}
+
+export COMP_ARCH=\${COMP_ARCH:-\${EC_ARCH##*/}}
+export ATM_MODEL_NAME=gem
+export ATM_MODEL_VERSION=4.7.0-a9
+
+export ATM_MODEL_COMP_VER="
+ modelutils/1.3.0-a4
+ rpnphy/5.7.0-a9
+ gemdyn/4.7.0-a9
+ gem/4.7.0-a9
+ chm_stubs/1.0.0
+ cpl_stubs/1.0.0
+ envhpcs/1.0.0
+ massv_wrap/1.0.0
+ prof_stubs/1.0.0
+ rpn_comm/4.5.10
+ vgrid/4.4.1"
+
+export ATM_MODEL_COMPONENTS=""
+for item in \${ATM_MODEL_COMP_VER} ; do
+   export ATM_MODEL_COMPONENTS="\${ATM_MODEL_COMPONENTS} \${item%/*}"
+   export \${item%/*}_version=\${item#*/}
+   export \${item%/*}=\${purplefrog_src}/\${item%/*}/\${item#*/}
+done
+
+if [[ x\${BASE_ARCH} == xAIX || x\${BASE_ARCH} == xAIX-powerpc7 ]] ; then
+	s.use gmake as make
+fi
+
+EOF
+
+. .setenv.dot
+

@@ -66,6 +66,7 @@ done
 ##
 # Basic dirs and links
 ##
+myecho 1 "++ Prep basic dirs and links"
 for mydir in $BUILD_SUB_DIR_LIST ; do
    mkdir -p $STORAGE_BIN/$mydir 2>/dev/null || true
 done
@@ -84,6 +85,7 @@ fi
 # Clone
 ##
 if [[ x$myclone != x ]] ; then
+   myecho 1 "++ Clone build dir"
    myclone0=$myclone0
    for mydir in . ${myclonedir} ; do
       myclone=$(true_path $mydir/$myclone0)
@@ -93,7 +95,7 @@ if [[ x$myclone != x ]] ; then
    done
    if [[ x$myclone != x ]] ; then
       myecho 0 "WARNING: ignoring $myclone0"
-   elif [[ ! -d $myclone && ! -f $myclone]] ; then
+   elif [[ ! -d $myclone && ! -f $myclone ]] ; then
       myecho 0 "WARNING: ignoring $myclone0"
       myclone=""
    fi
@@ -107,6 +109,7 @@ if [[ x$myclone != x ]] ; then
    cd $STORAGE_BIN/
    if [[ -d $myclone ]] ; then
       for mysubdir in $clonesubdirlist ; do
+         myecho 1 "++ Clone build dir: $mysubdir"
          if [[ -d $myclone/$mysubdir ]] ; then
             cp -R $myclone/$mysubdir .
             if [[ $mysubdir == src ]] ; then hasclonesrc=1 ; fi
@@ -116,6 +119,7 @@ if [[ x$myclone != x ]] ; then
       done
    else
       for mysubdir in $clonesubdirlist ; do
+         myecho 1 "++ Clone build dir: $mysubdir .tgz"
          #TODO: check tar options for --force
          tar xzf $myclone $mysubdir
          if [[ $? -ne 0 ]] ; then
@@ -135,7 +139,9 @@ fi
 ##
 # Components subdir and src
 ##
+myecho 1 "++ Prep Components subdir and src"
 for mycomponent in $ATM_MODEL_COMPONENTS ; do
+   myecho 1 "++ Prep Components subdir and src: $mycomponent"
    mypath=$(eval "echo \$$mycomponent")
    varname=$(echo ${mycomponent}_version)
    myversion="$(eval echo \$$varname)"
@@ -172,6 +178,7 @@ done #mycomponent
 ##
 # Add/Update Purplefrog build system
 ##
+myecho 1 "++ Add/Update Purplefrog build system: Makefiles"
 cd ${ROOT}
 cp ${purplefrog}/include/Makefile.root.mk Makefile.root.mk
 if [[ -f ${purplefrog}/include/${BASE_ARCH}/Makefile.dep.mk && \
@@ -181,6 +188,7 @@ if [[ -f ${purplefrog}/include/${BASE_ARCH}/Makefile.dep.mk && \
 fi
 ln -sf Makefile.root.mk Makefile
 
+myecho 1 "++ Add/Update Purplefrog build system: dependencies"
 make -s sanity_nodep_force
 
 exit 0

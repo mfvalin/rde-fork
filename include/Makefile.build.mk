@@ -29,8 +29,8 @@ VPATH    = $(ROOT)/$(shell pf.model_link build/src)
 LIBLOCAL = local
 #BLAS     = blas
 
-
-INCLUDES = $(shell find $(VPATH) -type d |tr '\n' ' ')
+INCLUDES = $(shell pf.dir_with_files -n $(VPATH))
+#INCLUDES = $(shell find $(VPATH) -type d |tr '\n' ' ')
 #INCLUDES = $(shell find $(VPATH) -type d |tr '\n' ' ' | grep '/include')
 #TODO: INCLUDE only /include when code is clean from cross dir includes
 
@@ -85,6 +85,22 @@ libssplit:
 $(BUILDLIB)/liblocal.a: $(OBJECTS) Makefile.dep.mk
 	rm -f $@ 2>/dev/null || true
 	ar r $@ `find . -name '*.o'`
+	
+libssplit_other: $(OBJECTS) Makefile.dep.mk
+	status=0;\
+	for mydir in `ls` ; do \
+		if [[ -d $${mydir} ]] ; then \
+			$(MAKE_ARCH) $(BUILDLIB)/lib$${mydir}.a MYCOMPONENT=$${mydir} || status=1;\
+		fi ;\
+	done ;\
+	exit $${status}
+$(BUILDLIB)/lib$(MYCOMPONENT).a: $(OBJECTS) Makefile.dep.mk
+	status=0;\
+	if [[ -d $(MYCOMPONENT) ]] ; then \
+		rm -f $@  2>/dev/null || true ;\
+		ar r $@ `find $(MYCOMPONENT) -name '*.o'` || status=1;\
+	fi ;\
+	exit $${status}
 
 #TODO: what about $(VPATH)/include ?
 allbin: $(BUILDLIB)/liblocal.a
@@ -128,6 +144,14 @@ clean:
 		chmod -R u+w . 2> /dev/null || true ;\
 		`find . -type f -exec rm -f {} \; ` ;\
 	done
+	
+	#TODO: get .o .mod from libs again?
+	
+clean_other:
+	chmod -R u+w . $(BUILDMOD) $(BUILDPRE) 2> /dev/null || true
+	rm -f $(foreach mydir,. * */* */*/* */*/*/* */*/*/*/*,$(foreach exte,$(INCSUFFIXES) $(SRCSUFFIXES) .o .[mM][oO][dD],$(mydir)/*$(exte))) 2>/dev/null || true
+	rm -f $(foreach mydir,. * */* */*/* */*/*/* */*/*/*/*,$(foreach mydir0,$(BUILDMOD) $(BUILDPRE),$(mydir0)/$(mydir)/*)) 2>/dev/null || true
+	
 	#TODO: get .o .mod from libs again?
 
 check_inc_dup: links
