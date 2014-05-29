@@ -5,10 +5,10 @@
 MAKE_ARCH = $(MAKE) $(MFLAGS) --no-print-directory
 
 DEFINE = -DLINUX_X86_64
+MASSLIB = massvp4
 
-LIBMASS  = massv_wrap
-LAPACK   = lapack
-BLAS     = blas
+LAPACK    = lapack
+BLAS      = blas
 
-LIBSYSOTHERS = $(LIBMASS) $(LAPACK) $(BLAS) $(HPCSPERF)
+LIBSYSOTHERS = $(MASSLIB) $(LAPACK) $(BLAS) $(HPCSPERF)
 ## ====================================================================

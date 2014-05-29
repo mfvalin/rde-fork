@@ -15,6 +15,9 @@ endif
 OPTIL  = 2
 OMP    = -openmp
 MPI    = -mpi
+
+LFLAGS = $(OMP) $(MKL)
+
 BUILD = $(ROOT)/$(shell pf.model_link build)
 BUILDBIN = $(ROOT)/$(shell pf.model_link build/bin)
 BUILDLIB = $(ROOT)/$(shell pf.model_link build/lib)
@@ -23,11 +26,11 @@ BUILDPRE = $(ROOT)/$(shell pf.model_link build/pre)
 BINDIR   = $(BUILDBIN)
 VPATH    = $(ROOT)/$(shell pf.model_link build/src)
 
-#LIBLOCAL = local
+LIBLOCAL = local
 #BLAS     = blas
 
-INCLUDES = $(shell pf.dir_with_files -n $(VPATH))
-#INCLUDES = $(shell find $(VPATH) -type d |tr '\n' ' ')
+
+INCLUDES = $(shell find $(VPATH) -type d |tr '\n' ' ')
 #INCLUDES = $(shell find $(VPATH) -type d |tr '\n' ' ' | grep '/include')
 #TODO: INCLUDE only /include when code is clean from cross dir includes
 
@@ -70,21 +73,18 @@ all: objects libs allbin
 
 objects: $(OBJECTS)
 
-libs: $(OBJECTS) Makefile.dep.mk
-	status=0;\
-	for mydir in `ls` ; do \
+LIBLOCALDEP = $(BUILDLIB)/liblocal.a
+libs: $(BUILDLIB)/liblocal.a
+libssplit:
+	for mydir in `ls -d *` ; do \
 		if [[ -d $${mydir} ]] ; then \
-			$(MAKE_ARCH) $(BUILDLIB)/lib$${mydir}.a MYCOMPONENT=$${mydir} || status=1;\
+			rm -f $(BUILDLIB)/lib$${mydir}.a ;\
+			ar r $(BUILDLIB)/lib$${mydir}.a `find $${mydir} -name '*.o'` ;\
 		fi ;\
-	done ;\
-	exit $${status}
-$(BUILDLIB)/lib$(MYCOMPONENT).a: $(OBJECTS) Makefile.dep.mk
-	status=0;\
-	if [[ -d $(MYCOMPONENT) ]] ; then \
-		rm -f $@  2>/dev/null || true ;\
-		ar r $@ `find $(MYCOMPONENT) -name '*.o'` || status=1;\
-	fi ;\
-	exit $${status}
+	done
+$(BUILDLIB)/liblocal.a: $(OBJECTS) Makefile.dep.mk
+	rm -f $@ 2>/dev/null || true
+	ar r $@ `find . -name '*.o'`
 
 #TODO: what about $(VPATH)/include ?
 allbin: $(BUILDLIB)/liblocal.a
@@ -117,18 +117,17 @@ allbinsplit: $(BUILDLIB)/liblocal.a
 
 .PHONY: clean check_inc_dup
 clean:
-	chmod -R u+w . $(BUILDMOD) $(BUILDPRE) 2> /dev/null || true
-	rm -f $(foreach mydir,. * */* */*/* */*/*/* */*/*/*/*,$(foreach exte,$(INCSUFFIXES) $(SRCSUFFIXES) .o .[mM][oO][dD],$(mydir)/*$(exte))) 2>/dev/null || true
-	# for mydir in `find . -type d` ; do \
-	# 	for ext in $(INCSUFFIXES) $(SRCSUFFIXES) .o .[mM][oO][dD]; do \
-	# 		rm -f $${mydir}/*$${ext} 2>/dev/null ;\
-	# 	done ;\
-	# done
-	rm -f $(foreach mydir,. * */* */*/* */*/*/* */*/*/*/*,$(foreach mydir0,$(BUILDMOD) $(BUILDPRE),$(mydir0)/$(mydir)/*)) 2>/dev/null || true
-	# for mydir in $(BUILDMOD) $(BUILDPRE) ; do \
-	# 	cd $${mydir} ;\
-	# 	`find . -type f -exec rm -f {} \; ` ;\
-	# done
+	chmod -R u+w . 2> /dev/null || true
+	for mydir in `find . -type d` ; do \
+		for ext in $(INCSUFFIXES) $(SRCSUFFIXES) .o .[mM][oO][dD]; do \
+			rm -f $${mydir}/*$${ext} 2>/dev/null ;\
+		done ;\
+	done
+	for mydir in $(BUILDMOD) $(BUILDPRE) ; do \
+		cd $${mydir} ;\
+		chmod -R u+w . 2> /dev/null || true ;\
+		`find . -type f -exec rm -f {} \; ` ;\
+	done
 	#TODO: get .o .mod from libs again?
 
 check_inc_dup: links

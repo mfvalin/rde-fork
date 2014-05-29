@@ -183,9 +183,9 @@ fi
 for mydir in ${SRC_LIB} ${SRC_USR} ; do
    cd ${ROOT}/${mydir}
    for item in $(find -L . -name .restricted -type f) ; do
-      if [[ x"$(cat $item | grep ${BASE_ARCH}:)" == x && \
-            x"$(cat $item | grep ${EC_ARCH}:)" == x ]] ; then
-         for mysubdir in ${BUILD_SUB_DIR_LIST} ; do
+      if [[ x"$(cat $item | grep $BASE_ARCH):" == x && \
+            x"$(cat $item | grep $EC_ARCH):" == x ]] ; then
+         for mysubdir in ${} ; do
             rm -rf ${ROOT}/${BUILD}/${mysubdir}/${item%/*} 2>/dev/null || true
          done
       fi

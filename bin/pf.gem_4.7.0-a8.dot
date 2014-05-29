@@ -24,24 +24,34 @@ EOF
 for item in .setenv.dot-pgi .setenv.dot-intel ; do
   cat >> $item <<EOF
   /ssm/net/rpn/libs/201309/01 \
+  ENV/d/rpn_comm/4.5.10 \
+  CMDN/vgrid/4.4.0-a2 \
   dot
-
-export purplefrog=/users/dor/armn/sch/SsmBundles/data/purplefrog/1.0.0-a1
-export purplefrog_src=/users/dor/armn/sch/SsmBundles/data/purplefrog-src
 
 export COMP_ARCH=\${COMP_ARCH:-\${EC_ARCH##*/}}
 export ATM_MODEL_NAME=gem
 export ATM_MODEL_VERSION=4.7.0-a8
-export ATM_MODEL_COMPONENTS="chm_stubs  cpl_stubs  envhpcs  gem  gemdyn  massv_wrap  modelutils  prof_stubs  rpn_comm  rpn_comm_stubs  rpnphy  vgrid"
-for item in \$ATM_MODEL_COMPONENTS ; do
-   export \$item=\$(true_path \${purplefrog_src}/\$item/*)
-   #export \${item}_version=\${item##*/}/
-done
+export ATM_MODEL_COMPONENTS="modelutils rpnphy gemdyn"
+modelutils_x="x/"
+export modelutils_version=1.3.0-a3
+rpnphy_x="x/"
+export rpnphy_version=5.7.0-a8
+gemdyn_x="x/"
+export gemdyn_version=4.7.0-a8
+export modelutils=/home/ordenv/ssm-domains9/ENV/\${modelutils_x=}modelutils/modelutils_\${modelutils_version}/modelutils_\${modelutils_version}_all
+export rpnphy=/home/ordenv/ssm-domains9/ENV/\${rpnphy_x=}rpnphy/rpnphy_\${rpnphy_version}/rpnphy_\${rpnphy_version}_all
+export gemdyn=/home/ordenv/ssm-domains9/GEM/\${gemdyn_x=}gemdyn/gemdyn_\${gemdyn_version}/gemdyn_\${gemdyn_version}_all
+
+#export purplefrog=${0%/*}
+export purplefrog=/users/dor/armn/sch/_Code_Depot_/work/etagere2/sch-pf
 export PATH=\${purplefrog}/bin:\${PATH}
-$(pf.clean_ec_path.dot)
-if [[ x\${BASE_ARCH} == xAIX || x\${BASE_ARCH} == xAIX-powerpc7 ]] ; then
- 	s.use gmake as make
-fi
+
+# export ATM_MODEL_MASSV=massvp4
+# if [[ x\${BASE_ARCH} == xAIX || x\${BASE_ARCH} == xAIX-powerpc7 ]] ; then
+# 	s.use gmake as make
+# 	export ATM_MODEL_MASSV=massvp7_wrap
+# fi
+# export ATM_MODEL_modelutils_subdirs=${ATM_MODEL_modelutils_subdirs:-"base driver include include/${BASE_ARCH} include/${EC_ARCH} main \${ATM_MODEL_MASSV} tdpack utils"}
 
 EOF
 done
