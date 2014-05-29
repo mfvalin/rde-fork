@@ -1,0 +1,36 @@
+#!/bin/ksh
+# @Object: Return the path to the model link name specified as the argument
+# @Author: S.Chamberland
+# @Date:   March 2014
+
+# Check for required argument (becomes "mytype")
+if [[ -z "$1" ]] ; then
+   printf "Usage: $0 [build,src,local]\n"
+   exit 1
+fi
+mytype=$1
+
+buildsubdirs="src pre obj mod lib bin"
+COMP_ARCH0=${EC_ARCH##*/}
+hostarch=-${TRUE_HOST}-${COMP_ARCH:-${COMP_ARCH0:-unknown}}
+
+mylist="\
+:src=src_lib;\
+:local=src_usr;\
+:build=build${hostarch}\
+"
+for item in ${buildsubdirs} ; do
+   mylist="${mylist};:build/${item}=build${hostarch}/${item}"
+done
+
+if [[ x${mytype} == x-l ]] ; then
+   if [[ x$2 == xbuild ]] ; then
+      echo ${buildsubdirs}
+   else
+      echo ${mylist} | tr ';:' '\n ' | cut -d= -f2
+   fi
+elif [[ x${mytype} == x-h ]] ; then
+   echo ${mylist} | tr ';:' '\n ' | cut -d= -f1
+else
+   echo ${mylist} | tr ';' '\n' | grep :${mytype}= | cut -d= -f2
+fi

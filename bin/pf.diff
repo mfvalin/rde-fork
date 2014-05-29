@@ -1,0 +1,172 @@
+#!/bin/ksh
+. pf.base.inc.ksh
+
+DESC='Diff locally modified src compared to library version'
+USAGE="USAGE: ${MYSELF} [-h] [-v] [-l|--list|--status] [-d|--dirmode] [--diff=DIFF_TOOL] [DIFFARGS] [FILES]"
+BUILDDIFF=$(pf.model_link build)/tmp-diff-$$
+
+usage_long() {
+	 toto=$(echo -e $USAGE)
+	 more <<EOF
+$DESC
+
+$toto
+
+Options:
+    -h, --help         : print this help
+    -v, --verbose      : verbose mode
+    -l|--list|--status : print list of modified / removed / new files
+    -d|--dirmode       : Do a directory diff if possible
+                         DEFAULT: file by file diff
+    --diff=DIFF_TOOL   : diff tool to use 
+                         DEFAULT: ${ECDIFF:-diff}
+    DIFFARGS           : arguments to pass to the diff tool
+                         DEFAULT: $ECDIFFARGS
+    FILES              : space separated list of src files or dir
+                         DEFAULT: all locally modified src files
+EOF
+}
+
+mystatus=0
+listmode=0
+dirmode=0
+ECDIFF=${ECDIFF:-diff}
+ECDIFFARGS=${ECDIFFARGS}
+PATHLIST=""
+if [[ x$1 == x-f ]] ;  then
+   myforce=1
+   shift
+fi
+while [[ $# -gt 0 ]] ; do
+   case $1 in
+      (-h|--help) usage_long; exit 0;;
+      (-v|--verbose) ((verbose++));;
+      (-l|--list|--status) listmode=1;;
+      (-d|--dirmode) dirmode=1;;
+      (--diff=*) ECDIFF=${1#*=};;
+      (-*) ECDIFFARGS="${ECDIFFARGS} $1";;
+        *) PATHLIST="$PATHLIST $1";;
+    esac
+	 previous=$1
+    shift
+done
+
+if [[ x"$PATHLIST" == x"" ]] ; then
+   PATHLIST=.
+fi
+if [[ ! -d ${SRC_USR} || ! -r ${SRC_USR} ]] ; then
+	 echo "ERROR: source dir does not exist or not readable ${SRC_USR}/"
+	 echo "       Try running pf.prep"
+	 echo "---- Abort ----"
+	 exit 1
+fi
+if [[ ! -d ${SRC_LIB} || ! -r ${SRC_LIB} ]] ; then
+	 echo "ERROR: source dir does not exist or not readable ${SRC_LIB}/"
+	 echo "       Try running pf.prep"
+	 echo "---- Abort ----"
+	 exit 1
+fi
+
+echo_file_status() {
+   _myfile=$1
+   _itemname2=$(is_src_local_deleted ${_myfile})
+   if [[ x${_itemname2} != x ]] ; then
+      echo DEL ${_itemname2}
+   elif [[ -f ${ROOT}/${SRC_USR}/${_myfile} ]] ; then
+      if [[ -f ${ROOT}/${SRC_LIB}/${_myfile} ]] ; then
+         _isdiff=1
+         diff -q ${ROOT}/${SRC_LIB}/${_myfile} ${ROOT}/${SRC_USR}/${_myfile} >/dev/null && _isdiff=0
+         if [[ ${_isdiff} == 1 ]] ; then
+            echo MOD ${_myfile}
+         else
+            echo LIB ${_myfile}
+         fi
+      else
+         echo NEW ${_myfile}
+      fi
+   else
+      echo ??? ${_myfile}
+   fi
+}
+
+do_file_diff() {
+   _myfile=$1
+   _status0="$(echo_file_status ${_myfile})"
+   _status=${_status0% *}
+   _myfile2=${_status0#* }
+   if [[ x${_status} == xMOD || x${_status} == LIB ]] ; then
+      cd $ROOT
+      myecho 0 +${ECDIFF} ${ECDIFFARGS} ${SRC_LIB}/${_myfile} ${SRC_USR}/${_myfile}
+      ${ECDIFF} ${ECDIFFARGS} ${SRC_LIB}/${_myfile} ${SRC_USR}/${_myfile}
+   else
+      myecho 0 +${_status0}
+   fi
+}
+
+build_diff_tree() {
+   cd ${SRC_USR}
+   _myfilelist="$(find . -type f)"
+   _mydirlist="$(find . -type d)"
+   rm -rf ${BUILDDIFF}
+   cd ${ROOT}
+   for _item in ${SRC_LIB} ${SRC_USR} ; do
+      for _mysubdir in ${_mydirlist} ; do
+         mkdir -p ${BUILDDIFF}/${_item}/${_mysubdir} 2>/dev/null || true
+      done
+   done
+   for _myfile in ${_myfilelist} ; do
+      _status0="$(echo_file_status ${_myfile})"
+      _status=${_status0% *}
+      _myfile2=${_status0#* }
+      for _item in ${SRC_LIB} ${SRC_USR} ; do
+         if [[ -f ${_item}/${_myfile2} ]] ; then
+            cp ${_item}/${_myfile2} ${BUILDDIFF}/${_item}/${_myfile2}
+         fi
+      done
+      if [[ x${_status} == xDEL ]] ; then
+         rm -f ${BUILDDIFF}/${SRC_USR}/${_myfile2}
+      fi
+   done
+}
+
+do_dir_diff() {
+   _mydir=$1
+   cd ${BUILDDIFF}
+   myecho 0 +${ECDIFF} ${ECDIFFARGS} ${SRC_LIB}/${_mydir} ${SRC_USR}/${_mydir}
+   ${ECDIFF} ${ECDIFFARGS} ${SRC_LIB}/${_mydir} ${SRC_USR}/${_mydir}
+   cd ${ROOT}
+}
+
+if [[ $dirmode == 1 ]] ; then
+   build_diff_tree
+fi
+
+for mypath in $PATHLIST ; do
+   myfilelist="$(find_file $mypath)"
+   if [[ x"${myfilelist}" == x ]] ; then
+      myecho 1 "No file for: $mypath"
+   else
+      if [[ $listmode == 1 ]] ; then
+         for myfile in ${myfilelist} ; do
+            #myfile=${myfile./}
+            echo_file_status $myfile
+         done
+      else
+         if [[ $dirmode == 0 ]] ; then
+            for myfile in ${myfilelist} ; do
+               #myfile=${myfile./}
+               do_file_diff $myfile
+            done
+         else
+            do_dir_diff $mypath
+         fi
+      fi
+   fi
+ done
+
+if [[ $dirmode == 1 ]] ; then
+   rm -rf ${BUILDDIFF}
+fi
+
+
+exit $mystatus

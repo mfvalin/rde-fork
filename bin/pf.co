@@ -1,0 +1,102 @@
+#!/bin/ksh
+# @Object: Checkout library version of a source file
+# @Author: S.Chamberland
+# @Date:   March 2014
+. pf.base.inc.ksh
+
+DESC='Checkout library version of a source file'
+USAGE="USAGE: ${MYSELF} [-h] [-v] [-f] FILES"
+
+usage_long() {
+	 toto=$(echo -e $USAGE)
+	 more <<EOF
+$DESC
+
+$toto
+
+Options:
+    -h, --help         : print this help
+    -v, --verbose      : verbose mode
+    -l|--force         : 
+    FILES              : space separated list of src files or dir
+
+EOF
+}
+
+mystatus=0
+myforce=0
+while [[ $# -gt 0 ]] ; do
+   case $1 in
+      (-h|--help) usage_long; exit 0;;
+      (-v|--verbose) ((verbose++));;
+      (-f|--force) myforce=1;;
+      (--) shift ; break;;
+      (-*) myerror "Option Not recognized: $1";;
+        *) PATHLIST="$PATHLIST $1";;
+    esac
+	 previous=$1
+    shift
+done
+PATHLIST="$PATHLIST $@"
+
+if [[ ! -d ${BUILD_SRC} || ! -w ${BUILD_SRC} ]] ; then
+	 echo "ERROR: building dir does not exist or not writable ${BUILD_SRC}/"
+	 echo "       Try running pf.prep"
+	 echo "---- Abort ----"
+	 exit 1
+fi
+
+if [[ ! -d ${SRC_USR} || ! -w ${SRC_USR} ]] ; then
+	 echo "ERROR: source dir does not exist or not writable ${SRC_USR}/"
+	 echo "       Try running pf.prep"
+	 echo "---- Abort ----"
+	 exit 1
+fi
+
+if [[ ! -d ${SRC_LIB} ]] ; then
+	 echo "ERROR: library source dir does not exist or not writable ${SRC_LIB}/"
+	 echo "       Try running pf.prep"
+	 echo "---- Abort ----"
+	 exit 1
+fi
+
+
+for myfile in $@ ; do
+   mypathlist="$(find_src ${SRC_LIB} $myfile)"
+   if [[ x${mypathlist} == x ]] ; then
+      cat <<EOF
+    ERROR: File $myfile is not found in ${SRC_LIB}/
+EOF
+      mystatus=0
+   else
+      for mypath in ${mypathlist} ; do
+         replaced=""
+         #mypath=${mypath#*/}
+         if [[ -e ${ROOT}/${SRC_USR}/$mypath ]] ; then
+            if [[ $myforce == 0 ]] ; then
+               myecho 0 "
+    WARNING: File $mypath already exists, to overwrite:
+             use: ${MYSELF} -f $myfile"
+               mypath=""
+            else
+               rm -f ${ROOT}/${SRC_USR}/$mypath
+               replaced="(overwritting existing file)"
+            fi
+         fi
+
+         if [[ x$mypath != x ]] ; then
+            rm -f ${ROOT}/${SRC_USR}/$(echo_deleted_tag ${mypath}) 2> /dev/null || true
+            rsync -a ${ROOT}/${SRC_LIB}/$mypath ${ROOT}/${SRC_USR}/$mypath
+            chmod -R u+w ${ROOT}/${SRC_USR}/$mypath
+            if [[ x${replaced} != x ]] ; then
+               touch ${ROOT}/${SRC_USR}/$mypath
+            fi
+            cat <<EOF
+    Checking out ${mypath} ${replaced}
+EOF
+         fi
+      done
+   fi
+done
+
+exit $mystatus

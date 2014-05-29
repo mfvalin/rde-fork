@@ -1,0 +1,188 @@
+#!/bin/ksh
+# @Object: Prepare list of dir and links
+# @Author: S.Chamberlands
+# @Date:   March 2014
+#
+# build-HOST-COMP -> $(model_path storage)/MY_NAME/COMP_ARCH
+# .../build-HOST-COMP/
+# .../build-HOST-COMP/src/...
+# .../build-HOST-COMP/f90/...
+# .../build-HOST-COMP/obj/...
+# .../build-HOST-COMP/mod/...
+# .../build-HOST-COMP/lib/...
+# .../build-HOST-COMP/bin/...
+#
+# src_lib/...
+# src_usr/...
+. pf.base.inc.ksh
+
+DESC='Prepare list of dir and links'
+USAGE="USAGE: ${MYSELF} [-h] [-v] [-f] [--clonedir=/PATH/TO/BUILDCLONE] [--clone[=/PATH/TO/BUILDCLONE]]"
+usage_long() {
+	 toto=$(echo -e $USAGE)
+	 more <<EOF
+$DESC
+
+$toto
+
+Options:
+    -h, --help     : print this help
+    -v, --verbose  : verbose mode
+    -f, --force    : force, overwrite present installation 
+                     [Not fully yet implemented]
+    --clonedir=/PATH/TO/BUILDCLONE
+                   : Look into /PATH/TO/BUILDCLONE for clone file
+                     DEFAULT: ${ATM_MODEL_DIR:-$purplefrog}
+    --clone=/PATH/TO/BUILDCLONE/FILE_OR_DIR
+                   : Provide a basic build dir/tgz to start from
+                     Accept a full build dir or a file.tgz
+                     DEFAULT: ${ATM_MODEL_NAME}_${ATM_MODEL_VERSION}_build-${COMP_ARCH}.tgz
+                     WARNING: Consistency with src_usr and src_lib files is not done
+
+BUILD files will be located under (uses \$storage_model): 
+    $STORAGE_BIN
+
+EOF
+}
+
+logfile=$(pwd)/.${MYSELF}.log
+hasbuild=0
+myforce=""
+myclone=""
+myclonedir=${ATM_MODEL_DIR:-$purplefrog}
+while [[ $# -gt 0 ]] ; do
+   case $1 in
+      (-h|--help) usage_long; exit 0;;
+      (-v|--verbose) ((verbose++));;
+      (-f|--force) myforce=-f;;
+      --clonedir=*) myclonedir=${1#*=};;
+      --clone) myclone=${ATM_MODEL_NAME}_${ATM_MODEL_VERSION}_build-${COMP_ARCH}.tgz;;
+      --clone=*)  myclone=${1#*=};;
+      *) myerror "Option Not recognized: $1";;
+    esac
+    shift
+done
+
+##
+# Basic dirs and links
+##
+for mydir in $BUILD_SUB_DIR_LIST ; do
+   mkdir -p $STORAGE_BIN/$mydir 2>/dev/null || true
+done
+rm -f $BUILD
+ln -sf $STORAGE_BIN $BUILD 2>/dev/null || true
+echo ${TRUE_HOST:-$(hostname)}:$STORAGE_BIN $BUILD >> $logfile
+
+mkdir -p $SRC_LIB 2>/dev/null || true
+mkdir -p $SRC_USR 2>/dev/null || true
+
+if [[ -d $ROOT/$BUILD_SRC ]] ; then
+   find $ROOT/$BUILD_SRC -type l -exec rm -f {} \;
+fi
+
+##
+# Clone
+##
+if [[ x$myclone != x ]] ; then
+   myclone0=$myclone0
+   for mydir in . ${myclonedir} ; do
+      myclone=$(true_path $mydir/$myclone0)
+      if [[ -e ${myclone:-__nosuchfile-$$__} ]] ; then
+         break
+      fi
+   done
+   if [[ x$myclone != x ]] ; then
+      myecho 0 "WARNING: ignoring $myclone0"
+   elif [[ ! -d $myclone && ! -f $myclone ]] ; then
+      myecho 0 "WARNING: ignoring $myclone0"
+      myclone=""
+   fi
+fi
+
+hasclonesrc=0
+if [[ x$myclone != x ]] ; then
+   #TODO: if [[ x$force == x && dir exists ]] skip clone
+   #TODO?: if [[ x$force != x ]] rm -rf ${BUILD_OBJ} ${BUILD_SRC} ${BUILD_MOD} ${BUILD_PRE} 2>/dev/null || true
+   clonesubdirlist="mod obj src"
+   cd $STORAGE_BIN/
+   if [[ -d $myclone ]] ; then
+      for mysubdir in $clonesubdirlist ; do
+         if [[ -d $myclone/$mysubdir ]] ; then
+            cp -R $myclone/$mysubdir .
+            if [[ $mysubdir == src ]] ; then hasclonesrc=1 ; fi
+         else
+            myecho 0 "WARNING: incomplete clone, missing $mysubdir in $myclone"
+         fi
+      done
+   else
+      for mysubdir in $clonesubdirlist ; do
+         #TODO: check tar options for --force
+         tar xzf $myclone $mysubdir
+         if [[ $? -ne 0 ]] ; then
+            myecho 0 "WARNING: incomplete clone, missing $mysubdir in $myclone"
+         elif [[ $mysubdir == src ]] ; then 
+            hasclonesrc=1
+         fi
+      done
+   fi
+   cd $ROOT
+   if [[ -d $ROOT/$BUILD_SRC ]] ; then
+      find $ROOT/$BUILD_SRC -type l -exec rm -f {} \;
+   fi
+   #TODO: touch all src_usr file to force recompilation?
+fi
+
+##
+# Components subdir and src
+##
+for mycomponent in $ATM_MODEL_COMPONENTS ; do
+   mypath=$(eval "echo \$$mycomponent")
+   varname=$(echo ${mycomponent}_version)
+   myversion="$(eval echo \$$varname)"
+   myversion="${myversion:-${ATM_MODEL_NAME}${ATM_MODEL_VERSION}-${mycomponent}}-dev"
+   cd $mypath/src
+   varname=$(echo ATM_MODEL_${mycomponent}_subdirs)
+   subdirlist="$(eval echo \$$varname)"
+   if [[ x$subdirlist == x ]] ; then
+      subdirlist="$(find -L . -type d)"
+   fi
+   if [[ ! -e $ROOT/$SRC_LIB/$mycomponent ]] ; then
+      ln -sf $(pwd) $ROOT/$SRC_LIB/$mycomponent
+   fi
+   for mysubdir in ${subdirlist} ; do
+      if [[ -d ./${mysubdir} ]] ; then
+         mkdir -p $ROOT/$SRC_USR/$mycomponent/${mysubdir} 2>/dev/null || true
+         for mydir in $BUILD_SUB_DIR_LIST ; do
+            mkdir -p  $STORAGE_BIN/$mydir/$mycomponent/${mysubdir} 2>/dev/null || true
+         done #mydir
+         if [[ $hasclonesrc -eq 0 || x$myforce != x ]] ; then
+            #TODO: should this cp be avoided when src is already there? with an optional 'restore/force'
+            cp ./${mysubdir}/* $ROOT/$BUILD_SRC/$mycomponent/${mysubdir} 2>/dev/null || true
+         fi
+      fi
+   done #mysubdir
+   if [[ ! -f $ROOT/$SRC_lib/$mycomponent/.no_version_file ]] ; then
+      mkdir -p $ROOT/$BUILD_SRC/$mycomponent/include 2>/dev/null || true
+      mkdir -p $ROOT/$SRC_USR/$mycomponent/include 2>/dev/null || true
+      pf.mk_version_file ${myforce} $mycomponent $myversion $ROOT/$SRC_USR/$mycomponent/include
+      pf.mk_version_file ${myforce} $mycomponent $myversion $ROOT/$SRC_USR/$mycomponent/include c
+      pf.mk_version_file ${myforce} $mycomponent $myversion $ROOT/$SRC_USR/$mycomponent/include f
+   fi
+done #mycomponent
+
+
+##
+# Add/Update Purplefrog build system
+##
+cd ${ROOT}
+cp ${purplefrog}/include/Makefile.root.mk Makefile.root.mk
+if [[ -f ${purplefrog}/include/${BASE_ARCH}/Makefile.dep.mk && \
+    ! -f ${STORAGE_BIN}/obj/Makefile.dep.mk ]] ; then
+   cp ${purplefrog}/include/${BASE_ARCH}/Makefile.dep.mk \
+      ${STORAGE_BIN}/obj/Makefile.dep.mk
+fi
+ln -sf Makefile.root.mk Makefile
+
+make -s sanity_nodep_force
+
+exit 0

@@ -1,0 +1,74 @@
+#!/bin/ksh
+# @Object: Locate files in build or src directory
+# @Author: S.Chamberland
+# @Date:   March 2014
+. pf.base.inc.ksh
+
+DESC='Locate files in build or src directory'
+USAGE="USAGE: ${MYSELF} [-h] [-b|-s|-l] FILENAME [FILENAME2 ...]"
+
+usage_long() {
+	 toto=$(echo -e $USAGE)
+	 more 2>&1 <<EOF
+$DESC
+
+$toto
+
+Options:
+    -h, --help : print this help
+    -s: locate ${mydirsrc}/FILENAME (DEFAULT)
+    -l: locate ${mydirlib}/FILENAME
+    -b: locate ${mydirbinsrc}/FILENAME or ${mydirbinpre}/FILENAME 
+EOF
+}
+
+mydir=${SRC_USR}
+files=""
+binmode=0
+while [[ $# -gt 0 ]] ; do
+   case $1 in
+      (-h|--help) usage_long; exit 0;;
+      (-b) mydir=${BUILD_SRC} ; binmode=1;;
+      (-s) mydir=${SRC_USR} ; binmode=0;;
+      (-l) mydir=${SRC_LIB} ; binmode=0;;
+      (--) shift ; break;;
+      (-*) myerror "Option Not recognized: $1";;
+        *) files="$files $1"
+    esac
+	 previous=$1
+    shift
+done
+files="$files $@"
+
+if [[ x"$files" == x ]] ; then
+   myerror "Must provide at least one filename"
+fi
+
+find_file() {
+   _myfile=$1
+   _mydir=$2
+   if [[ -f ${_mydir}/${_myfile} ]] ; then
+      myecho 0 ${_mydir}/${_myfile}
+   else
+      _mypath="$(find -L ${_mydir} -name ${_myfile})"
+      myecho 0 ${_mypath}
+   fi
+}
+
+files2=""
+missfiles2=""
+for myfile in $files ; do
+   mypathlist="$(find_file $myfile $mydir)"
+   if [[ x${mypathlist} == x && $binmode == 1 ]] ; then
+      mypathlist="$(find_file $myfile $BUILD_PRE)"
+   fi
+   if [[ x${mypathlist} == x ]] ; then
+      missfiles2="$missfiles2 $myfile"
+   else
+      files2="$file2s $mypathlist"
+   fi
+done
+echo $files2
+if [[ x${missfiles2} != x ]] ; then
+   myerror "Missing files: $missfiles2"
+fi
