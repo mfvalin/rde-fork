@@ -1,12 +1,18 @@
 #!/bin/ksh
 
 cat > .setenv.dot <<EOF
-#. s.ssmuse.dot GEM/x/4.6.0-rc8 (prise 2)
+export ATM_MODEL_NAME=gem
+export ATM_MODEL_VERSION=4.7.0-b3
+
+#. s.ssmuse.dot GEM/x/\${ATM_MODEL_VERSION}
 . s.ssmuse.dot Prepend \\
-   Linux_x86-64:/ssm/net/hpcs/201402/00/base  \\
-   Linux_x86-64:/ssm/net/hpcs/201402/00/pgi1401 \\
-   Linux_x86-64:/ssm/net/rpn/utils/4.0 \\
+   Linux_x86-64:mpich2 \\
+   Linux_x86-64:pgi9xx \\
+   Linux_x86-64:legacy \\
+   Linux_x86-64:rmnlib-dev \\
+   Linux_x86-64:devtools \\
    AIX-powerpc7:Xlf13.110 \\
+   AIX-powerpc7:legacy \\
    AIX-powerpc7:rmnlib-dev \\
    AIX-powerpc7:devtools \\
    /ssm/net/rpn/libs/4.0 \\
@@ -14,7 +20,7 @@ cat > .setenv.dot <<EOF
    ENV/d/rpn_comm/4.5.10 \\
    dot
 
-#TODO: Add missing ssmuse
+#TODO:
 #   gem-scripts
 #   components/bin
 #
@@ -32,23 +38,19 @@ export purplefrog=/users/dor/armn/sch/SsmBundles/data/purplefrog/1.0.0-a3
 export purplefrog_src=/users/dor/armn/sch/SsmBundles/data/purplefrog-src
 export PATH=\${purplefrog}/bin:\${PATH}
 
-#TODO: Add ./bin/* $BINDIR/bin/* to PATH
-
 export COMP_ARCH=\${COMP_ARCH:-\${EC_ARCH##*/}}
-export ATM_MODEL_NAME=gem
-export ATM_MODEL_VERSION=4.7.0-a9
 
 export ATM_MODEL_COMP_VER="
  chm_stubs/1.0.0
  cpl_stubs/1.0.0
  envhpcs/1.0.0
- gem/4.6.0-rc8
- gemdyn/4.6.6
+ gem/4.7.0-b3
+ gemdyn/4.7.0-b3
  massv_wrap/1.0.0
- modelutils/1.2.4
+ modelutils/1.3.0-a7
  prof_stubs/1.0.0
- rpnphy/5.6.4
- vgrid/4.4.1"
+ rpnphy/5.7.0-b3
+ vgrid/4.5.0-a1"
 
 #TODO: add to ATM_MODEL_COMP_VER
 # rpn_comm/4.5.10

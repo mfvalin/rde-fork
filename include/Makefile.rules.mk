@@ -13,7 +13,10 @@ RBUILD  = pf.compile $(DEBUGLINKFLAGS) -libpath ./ $(LIBRARY_PATH)
 FCOMPF = 
 CCOMPF =
 COMPF = 
-FC   = $(RCOMPIL) -defines "=$(DEFINE)" -O $(OPTIL) -optf="$(FFLAGS)" $(COMPF) $(FCOMPF) -src
+#F77C = $(RCOMPIL) -defines "=$(DEFINE)" -O $(OPTIL) -optf="$(FFLAGS)" $(COMPF) $(FCOMPF) -src
+FC = $(RCOMPIL) -defines "=$(DEFINE)" -O $(OPTIL) -optf="$(FFLAGS)" $(COMPF) $(FCOMPF) -src
+F90C2 = $(RCOMPIL) -defines "=$(DEFINE)" -O $(OPTIL) -optf="$(FFLAGS) $(OPTF_MODULE)" $(COMPF) $(FCOMPF) -src
+#FC   = $(F77C)
 FTNC = $(RCOMPIL) -defines "=$(DEFINE)"             -optf="$(FFLAGS) $(CPPFLAGS)" -P $(COMPF) $(FCOMPF) -src
 CC   = $(RCOMPIL) -defines "=$(DEFINE)" -O $(OPTIL) -optc="$(CFLAGS)" $(COMPF) $(CCOMPF) -src
 
@@ -65,72 +68,71 @@ RBUILD3NOMPI_C = \
 	rm -f bidon_$${MAINSUBNAME}_c.o 2>/dev/null || true ;\
 	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
 
+C_DOT_O      = cd $(dir $@) ; $(CC) $<
+F_DOT_O      = cd $(dir $@) ; $(FC) $<
+F90_DOT_O    = cd $(dir $@) ; $(F90C2) $<
+
+FTN_DOT_F    = rm -f $*.f ; cd $(dir $@) && $(FTNC) $< && mv -f $(notdir $*.f) $(BUILDPRE)/$*.f
+FTN90_DOT_F90    = rm -f $*.f90 ; cd $(dir $@) && $(FTNC) $< && mv -f $(notdir $*.f90) $(BUILDPRE)/$*.f90
+PREF_DOT_O   = cd $(dir $@) && $(FC) $(BUILDPRE)/$*.f
+PREF90_DOT_O = cd $(dir $@) && $(F90C2) $(BUILDPRE)/$*.f90
+
+#TODO: mv -f *.[mM][oO][dD] is dangerous with parallel make [-j]
+F90_DOT_O_MOD_MV = cd $(dir $@) && mv -f *.[mM][oO][dD] $(BUILDMOD) 2>/dev/null || true
+
+
 .c.o:
-	cd $(dir $@) ;\
-	$(CC) $<
+	#.c.o
+	$(C_DOT_O)
 	#.c.o
 .f.o:
-	cd $(dir $@) ;\
-	$(FC) $<
+	#.f.o
+	$(F_DOT_O)
 	#.f.o
 .f90.o:
-	cd $(dir $@) ;\
-	$(FC) $<
+	#.f90.o:
+	$(F90_DOT_O)
+	$(F90_DOT_O_MOD_MV)
 	#.f90.o:
 .F.o:
 	s.f77 -c -o $@ -src $<  $(COMPILE_FLAGS) $(FFLAGS)
 .F90.o:
 	s.f90 -c -o $@ -src $<  $(COMPILE_FLAGS) $(FFLAGS)
+	$(F90_DOT_O_MOD_MV)
 .ftn.o:
-	rm -f $*.f
-	cd $(dir $@) ;\
-	$(FTNC) $<
-	mv -f $*.f $(BUILDPRE)/$*.f
-	cd $(dir $@) ;\
-	$(FC) $(BUILDPRE)/$*.f
+	#.ftn.o
+	$(FTN_DOT_F)
+	$(PREF_DOT_O)
 	#.ftn.o
 .ftn90.o:
-	rm -f $*.f90
-	cd $(dir $@) ;\
-	$(FTNC) $<
-	mv -f $*.f90 $(BUILDPRE)/$*.f90
-	cd $(dir $@) ;\
-	$(FC) $(BUILDPRE)/$*.f90
+	#.ftn90.o
+	$(FTN90_DOT_F90)
+	$(PREF90_DOT_O)
+	$(F90_DOT_O_MOD_MV)
 	#.ftn90.o
 .cdk90.o:
-	rm -f $*.f90
-	cd $(dir $@) ;\
-	$(FTNC) $<
-	mv -f $*.f90 $(BUILDPRE)/$*.f90
-	cd $(dir $@) ;\
-	$(FC) $(BUILDPRE)/$*.f90
-	cd $(dir $@) ;\
-	mv -f *.[mM][oO][dD] $(BUILDMOD) 2>/dev/null || true
-	#TODO: mv -f *.[mM][oO][dD] is dangerous with parallel make [-j]
 	#.cdk90.o:
-.tmpl90.o:
+	$(FTN90_DOT_F90)
+	$(PREF90_DOT_O)
+	$(F90_DOT_O_MOD_MV)
+	#.cdk90.o:
+.tmpl90.o: #TODO
+	#.tmpl90.
+	echo "Not yet implemented" ; exit 1
 	s.tmpl90.ftn90 < $<  > $*.ftn90
 	s.ftn90 -c -o $@ -src $(EC_ARCH)/$*.ftn90 $(COMPILE_FLAGS) $(FFLAGS)
-	#.tmpl90.o
+	#.tmpl90.
 
 .ftn.f:
-	rm -f $*.f
-	cd $(dir $@) ;\
-	$(FTNC) $<
-	mv -f $*.f $(BUILDPRE)/$*.f 2>/dev/null || true
+	$(FTN_DOT_F)
 	#.ftn.o
 .ftn90.f90:
-	rm -f $*.f90
-	cd $(dir $@) ;\
-	$(FTNC) $<
-	mv -f $*.f90 $(BUILDPRE)/$*.f90 2>/dev/null || true
+	$(FTN90_DOT_F90)
 	#.ftn90.o
 .cdk90.f90:
-	rm -f $*.f90
-	cd $(dir $@) ;\
-	$(FTNC) $<
-	mv -f $*.f90 $(BUILDPRE)/$*.f90 2>/dev/null || true
-# .tmpl90.ftn90:
+	$(FTN90_DOT_F90)
+.tmpl90.ftn90:
+	echo "Not yet implemented" ; exit 1
 # 	s.tmpl90.ftn90 < $<  > $@
 
 # EXTRACTSRC0 = if [[ ! -f $@ ]] ; then omd_exp $@ ; fi ; if [[ ! -f $@ ]] ; then exit 1 ; fi

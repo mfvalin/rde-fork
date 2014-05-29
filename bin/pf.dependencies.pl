@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #use warnings;        # Avertissement des messages d'erreurs
-use strict;          # Verification des declarations
+#use strict;          # Verification des declarations
 use File::Spec::Functions;
 use File::Basename;
 use URI::file;
@@ -218,7 +218,9 @@ my %LISTOBJECT = ( ); # Hash of SRCFile object with filename, path and extension
     #   true (1) if the module as been found, false (undef) otherwise
     sub find_depedencies {
         my $search_depedencies = "$_[1]";
-        while(my($dep_filename, $dep_ptr) = each(%{$_[0]->{DEPENDENCIES}})) {
+        #while(my($dep_filename, $dep_ptr) = each(%{$_[0]->{DEPENDENCIES}})) {
+		  for my $dep_filename (keys %{$_[0]->{DEPENDENCIES}}) {
+				my $dep_ptr = ${$_[0]->{DEPENDENCIES}}{$dep_filename};
             return 1 if (($search_depedencies eq $dep_filename) and ($_[0]->{FULLPATH_SRC} ne $dep_ptr->{FULLPATH_SRC} ) );
             return undef if (($search_depedencies eq $dep_filename) and ($_[0]->{FULLPATH_SRC} eq $dep_ptr->{FULLPATH_SRC} ) );
             return 1 if ($dep_ptr->SRCFile::find_depedencies($search_depedencies) );
@@ -419,8 +421,12 @@ sub find_string_in_array {
 sub rec_print_dependencies {
     my $file = ${$_[0]}{$_[1]};
     
-    while(my($dep_filename, $dep_ptr) = each(%{$file->{DEPENDENCIES}})) {
-        my $tmp_filename = $dep_filename;
+	 #print STDERR "rec_print_dependencies: $file->{FILENAME} : $_[1]\n" if ($msg >= 5);
+    #while(my($dep_filename, $dep_ptr) = each(%{$file->{DEPENDENCIES}})) {
+	 for my $dep_filename (sort keys %{$file->{DEPENDENCIES}}) {
+	 	  my $dep_ptr = ${$file->{DEPENDENCIES}}{$dep_filename};
+
+		  my $tmp_filename = $dep_filename;
         $tmp_filename = "$dep_ptr->{FULLPATH_SRC}$dep_ptr->{FILENAME}.o" if ($dep_ptr->{TYPE} eq "COMPILABLE");
 		  my $tmp_filename0 = $tmp_filename;
 		  if ($flat_layout) {
@@ -428,6 +434,7 @@ sub rec_print_dependencies {
 				$tmp_filename0 = "$dep_ptr->{FILENAME}.o" if ($dep_ptr->{TYPE} eq "COMPILABLE");
 		  }
     
+		  #print STDERR "$file->{FILENAME}: $dep_filename : $_[1] : $tmp_filename0 : $tmp_filename\n" if ($msg >= 5);
         next if (($_[1] eq $dep_filename) or find_string_in_array(\@current_dependencies_list, $tmp_filename) );
         
         print_item($tmp_filename0);
@@ -613,7 +620,7 @@ sub process_file_for_include {
 	 $LISTOBJECT{"$path$filn.$exte"} = new SRCFile({path => $path, filename => $filn, extension => $exte}) 
 		  if (!exists $LISTOBJECT{"$path$filn.$exte"});
 
-	 Force the file to not be analysed.
+	 # Force the file to not be analysed.
 	 $LISTOBJECT{"$path$filn.$exte"}->set_status() 
 	 	  if (!$deep_include);
 
@@ -728,15 +735,13 @@ if ($local_dir) {
 #
 reset_all_file(\%LISTOBJECT);
 
-while(my $filename = search_undone_file(\%LISTOBJECT) )
-{
+while(my $filename = search_undone_file(\%LISTOBJECT)) {
 	 print STDERR "Looking into $filename\n" if ($msg >= 5);
     open(INPUT,"<", $filename) or print STDERR "ERROR: Can't open file '".$filename."\n"; #  if ($msg >= 1 )
     my $file = $LISTOBJECT{$filename};
     my $line_number = 0;
 
-    while (<INPUT>) 
-    {
+    while (<INPUT>) {
         if ($_ =~ /^[@]*[\s]*#[\s]*include[\s]*[<'"\s]([\w.\/\.]+)[>"'\s][\s]*/) {
 				next if (process_file_for_include($file,$1));
         }
@@ -747,29 +752,25 @@ while(my $filename = search_undone_file(\%LISTOBJECT) )
 				next if (process_file_for_include($file,$1));
         }
         # FORTRAN use statement : use yyy 
-        if ($_ =~ /^[@]*[\s]*\buse[\s]+([a-z][\w]*)(,|\t| |$)/i)
-        {
+        if ($_ =~ /^[@]*[\s]*\buse[\s]+([a-z][\w]*)(,|\t| |$)/i) {
             my $modname = $1 ; $modname =~ tr/A-Z/a-z/ ; # modules names are case insensitive
 
-            if (my $include_filename = search_module(\%LISTOBJECT, $modname)) # If the module can be found, add the file to dependencies
-            {
-              ${$file->{DEPENDENCIES}}{$include_filename} = $LISTOBJECT{$include_filename} if (!exists ${$file->{DEPENDENCIES}}{$include_filename} );
-            }
-            else #module not found yet!
-            {
-             push @{$file->{UNSOLVED_MODULE}}, $modname; 
+            # If the module can be found, add the file to dependencies
+            if (my $include_filename = search_module(\%LISTOBJECT, $modname)) {
+					 ${$file->{DEPENDENCIES}}{$include_filename} = $LISTOBJECT{$include_filename} if (!exists ${$file->{DEPENDENCIES}}{$include_filename} );
+					 #print STDERR "$filename +: $modname \n";
+            } else {
+					 push @{$file->{UNSOLVED_MODULE}}, $modname; 
+					 #print STDERR "$filename -: $modname \n";
             }
 
-        }
-
-        elsif ($_ =~ /^[@]*[\s]*\buse[\s]+([a-z][\w]*)/i)
-        {
+        } elsif ($_ =~ /^[@]*[\s]*\buse[\s]+([a-z][\w]*)/i) {
             ${$file->{UNKOWN_USE}}{$line_number} = $_;
+				#print STDERR "$filename ? \n";
         }
 
         # FORTRAN module declaration : module xxx
-        if ($_ =~ /^[@]*[\s]*\bmodule[\s]+([a-z][\w]*)(,|\t| |$)/i)
-        {
+        if ($_ =~ /^[@]*[\s]*\bmodule[\s]+([a-z][\w]*)(,|\t| |$)/i) {
             my $modname = $1 ; $modname =~ tr/A-Z/a-z/ ; # modules names are case insensitive
             my $search_filename = '';
 
@@ -779,8 +780,7 @@ while(my $filename = search_undone_file(\%LISTOBJECT) )
             #print "$modname\n";
 
             # Verifier que le nom du module n'existe pas dans un autre fichier
-            if ($search_filename = search_module(\%LISTOBJECT, $modname))
-            { 
+            if ($search_filename = search_module(\%LISTOBJECT, $modname)) { 
                 print STDERR "Module ".$modname." (".$filename.") already defined in ".$search_filename."\n"; 
                 next; 
             }
@@ -789,18 +789,15 @@ while(my $filename = search_undone_file(\%LISTOBJECT) )
             push @{$file->{ MODULE_LIST }}, $modname;
 
             # Recherche tous les fichiers analyser precedemment qui avait besoin de ce module la
-            while(my $key = search_unsolved_module(\%LISTOBJECT, $modname) )
-            {
-                #print "unsolved module: $key".${$LISTOBJECT{$key}->{ DEPENDENCIES }}{$filename}."\n";
+            while(my $key = search_unsolved_module(\%LISTOBJECT, $modname)) {
+                #print STDERR "unsolved module: $key".${$LISTOBJECT{$key}->{ DEPENDENCIES }}{$filename}." : $modname \n";
                 # Ajouter a la liste des dependence, le fichier en cours
                 ${$LISTOBJECT{$key}->{ DEPENDENCIES }}{$filename} = $file if (!exists ${$LISTOBJECT{$key}->{ DEPENDENCIES }}{$filename} );
 
                 # Enlever le module de la liste des unsolved modules 
                 $LISTOBJECT{$key}->remove_unsolved_module($modname);
             }
-        }
-        elsif ($_ =~ /^[@]*[\s]*\bmodule[\s]+/i)
-        {
+        } elsif ($_ =~ /^[@]*[\s]*\bmodule[\s]+/i) {
             ${$file->{ UNKOWN_MODULE }}{$line_number} = $_;
             #print STDERR "Unknown module statement: $filename: $_\n";
         }
@@ -813,7 +810,11 @@ while(my $filename = search_undone_file(\%LISTOBJECT) )
 
 }
 
-while(my($filename, $file) = each(%LISTOBJECT)) {
+print STDERR "Checking for Circular dependencies\n" if ($msg >= 5);
+#while(my($filename, $file) = each(%LISTOBJECT)) {
+for my $filename (keys %LISTOBJECT) {
+	 my $file = $LISTOBJECT{$filename};
+	 #print STDERR "Checking for Circular dependencies: $filename\n" if ($msg >= 5);
     my $result;
     if ($result = $file->find_depedencies($filename)) { 
         print STDERR "ERR: Circular dependencies in $filename FAILED\n";
@@ -825,6 +826,7 @@ while(my($filename, $file) = each(%LISTOBJECT)) {
 #
 #  lists of file types FDECKS, CDECKS, ...
 #
+print STDERR "Listing file types FDECKS, CDECKS, ...\n" if ($msg >= 5);
 reset_all_file(\%LISTOBJECT);
 for $ext (keys %SRCFile::TYPE_LIST) {
     print_header(uc $ext."DECKS", "=", "");
@@ -844,6 +846,7 @@ for $ext (keys %SRCFile::TYPE_LIST) {
 #
 #  OBJECTS LIST
 #
+print STDERR "Listing OBJECTS\n" if ($msg >= 5);
 print_header("OBJECTS","=","");
 for (sort keys %LISTOBJECT) {
     my $file = $LISTOBJECT{$_};
@@ -858,9 +861,10 @@ for (sort keys %LISTOBJECT) {
 print STDOUT "\n";
 
 #
-#   Build depedencie rules
+#   Build dependencie rules
 #
 #TODO: Dependencies to Modules should be on .mod:.o not direcly on .o (.mod could have been erased accidentaly)
+print STDERR "Printing dependencie rules\n" if ($msg >= 5);
 for my $filename (sort keys %LISTOBJECT) {
     my $file = $LISTOBJECT{$filename};
     @current_dependencies_list = ();
@@ -885,7 +889,9 @@ print STDERR "Includes missing from the current tree: ".join(" ",@outside_tree_l
 #TODO: do as module below, print first filename for each missing inc
 
 %module_missing = ();
-while(my($filename, $file) = each(%LISTOBJECT)) {
+#while(my($filename, $file) = each(%LISTOBJECT)) {
+for my $filename (keys %LISTOBJECT) {
+    my $file = $LISTOBJECT{$filename};
     for my $module (@{$file->{UNSOLVED_MODULE}}) {
         next if ($module eq "");
         $module_missing{$module} = $filename if (!exists $module_missing{$module});
@@ -905,7 +911,9 @@ if (keys %module_missing) {
 #
 my $module_unknown = "";
 my $use_unknown = "";
-while(my($filename, $file) = each(%LISTOBJECT)) {
+#while(my($filename, $file) = each(%LISTOBJECT)) {
+for my $filename (keys %LISTOBJECT) {
+    my $file = $LISTOBJECT{$filename};
     while(my($line_number,$text_line) = each(%{$file->{UNKNOWN_MODULE}})) {
 		  $module_unknown .= "\t($filename) $line_number: $text_line\n";
     }
@@ -923,7 +931,7 @@ print STDERR "Unknown use statement: \n".$use_unknown if ($use_unknown);
 if ($export_list) {
     open(my $EXPOUT,'>',$export_list);
     my @list_of_modules = ();
-    for (sort keys %LISTOBJECT) {
+    for (keys %LISTOBJECT) {
         my $file = $LISTOBJECT{$_};
 		  if ($file->{TYPE} eq "COMPILABLE") {
 				if ($flat_layout) {

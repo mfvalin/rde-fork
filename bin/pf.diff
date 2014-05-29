@@ -1,6 +1,5 @@
 #!/bin/ksh
 . pf.base.inc.ksh
-
 DESC='Diff locally modified src compared to library version'
 USAGE="USAGE: ${MYSELF} [-h] [-v] [-l|--list|--status] [-d|--dirmode] [--diff=DIFF_TOOL] [DIFFARGS] [FILES]"
 BUILDDIFF=$(pf.model_link build)/tmp-diff-$$
@@ -13,17 +12,17 @@ $DESC
 $toto
 
 Options:
-    -h, --help         : print this help
-    -v, --verbose      : verbose mode
-    -l|--list|--status : print list of modified / removed / new files
-    -d|--dirmode       : Do a directory diff if possible
-                         DEFAULT: file by file diff
-    --diff=DIFF_TOOL   : diff tool to use 
-                         DEFAULT: ${ECDIFF:-diff}
-    DIFFARGS           : arguments to pass to the diff tool
-                         DEFAULT: $ECDIFFARGS
-    FILES              : space separated list of src files or dir
-                         DEFAULT: all locally modified src files
+    -h, --help           : print this help
+    -v, --verbose        : verbose mode
+    -l, --list, --status : print list of modified / removed / new files
+    -d, --dirmode        : Do a directory diff if possible
+                           DEFAULT: file by file diff
+    --diff=DIFF_TOOL     : diff tool to use 
+                           DEFAULT: \${ECDIFF:-diff} (${ECDIFF:-diff})
+    DIFFARGS             : arguments to pass to the diff tool
+                           DEFAULT: \$ECDIFFARGS ($ECDIFFARGS)
+    FILES                : space separated list of src files or dir
+                           DEFAULT: all locally modified src files
 EOF
 }
 
@@ -137,12 +136,18 @@ do_dir_diff() {
    cd ${ROOT}
 }
 
+find_file() {
+   find_src_file ${SRC_USR} $@
+   #find_src_file ${SRC_LIB} $@
+}
+
+
 if [[ $dirmode == 1 ]] ; then
    build_diff_tree
 fi
 
 for mypath in $PATHLIST ; do
-   myfilelist="$(find_file $mypath)"
+   myfilelist="$(find_src_file_list ${SRC_USR} $mypath)"
    if [[ x"${myfilelist}" == x ]] ; then
       myecho 1 "No file for: $mypath"
    else

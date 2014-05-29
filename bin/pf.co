@@ -17,7 +17,7 @@ $toto
 Options:
     -h, --help         : print this help
     -v, --verbose      : verbose mode
-    -l|--force         : 
+    -f, --force        : 
     FILES              : space separated list of src files or dir
 
 EOF
@@ -60,8 +60,7 @@ if [[ ! -d ${SRC_LIB} ]] ; then
 	 exit 1
 fi
 
-
-for myfile in $@ ; do
+for myfile in $PATHLIST ; do
    mypathlist="$(find_src ${SRC_LIB} $myfile)"
    if [[ x${mypathlist} == x ]] ; then
       cat <<EOF

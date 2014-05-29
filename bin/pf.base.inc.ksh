@@ -42,6 +42,15 @@ myecho() {
       echo $@ 2>&1
    fi
 }
+mystdout() {
+   myecho $@
+}
+mystderr() {
+   if [[ $verbose -ge $1 ]] ; then
+      shift
+      echo $@ 1>&2
+   fi
+}
 
 
 
@@ -89,6 +98,24 @@ find_src() {
    cd ${_here}
 }
 
+find_src_file_list() {
+   _mydir=$1
+   _myfile=$2
+   _here=$(pwd)
+   cd ${ROOT}/${_mydir}
+   if [[ -f ${_myfile} ]] ; then
+      echo ${_myfile}
+   elif [[ -d ${_myfile} ]] ; then
+      _mypath="$(find -L ${_myfile} -type f 2>/dev/null)"
+      for _myfile2 in $_mypath ; do
+         echo ${_myfile2#./}
+      done
+   else
+      _mypath="$(find -L . -name ${_myfile} -type f 2>/dev/null)"
+      echo ${_mypath#./}
+   fi
+   cd ${_here}
+}
 ##
 #
 ##

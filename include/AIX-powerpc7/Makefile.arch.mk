@@ -14,13 +14,13 @@ IBM_LD =
 #TODO: check if rtools and bindcpu are still useful
 RTOOLS      = 
 BINDCPU     = 
-#MASSLIBWRAP = modelutils_massvp7_wrap
-MASSLIB     = $(MASSLIBWRAP) massvp7 mass #TODO: massv?
+LIBMASSWRAP = massv_wrap
+LIBMASS     = $(LIBMASSWRAP) massvp7 mass
 LAPACK      = lapack_340
 LIBHPC      = hpc
 LIBPMAPI    = pmapi
 
-LIBSYSOTHERS     = $(MASSLIB) $(LAPACK) $(BLAS) $(RTOOLS) $(BINDCPU) $(LLAPI) $(IBM_LD) $(HPCSPERF)
+LIBSYSOTHERS     = $(LIBMASS) $(LAPACK) $(BLAS) $(RTOOLS) $(BINDCPU) $(LLAPI) $(IBM_LD) $(HPCSPERF)
 
 LIBSYSEXTRA = $(LIBHPC) $(LIBPMAPI)
 

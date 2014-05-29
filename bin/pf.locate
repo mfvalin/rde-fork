@@ -16,9 +16,9 @@ $toto
 
 Options:
     -h, --help : print this help
-    -s: locate ${mydirsrc}/FILENAME (DEFAULT)
-    -l: locate ${mydirlib}/FILENAME
-    -b: locate ${mydirbinsrc}/FILENAME or ${mydirbinpre}/FILENAME 
+    -s: locate ${SRC_USR}/FILENAME (DEFAULT)
+    -l: locate ${SRC_LIB}/FILENAME
+    -b: locate ${BUILD_SRC}/FILENAME or ${mydirbinpre}/FILENAME 
 EOF
 }
 

@@ -17,7 +17,7 @@ $toto
 Options:
     -h, --help         : print this help
     -v, --verbose      : verbose mode
-    -l|--local_only    : remove only local src modifications (leave lib copy)
+    -l, --local_only   : remove only local src modifications (leave lib copy)
                          If a lib version exists, it will bring it back
                          DEFAULT: removes local and lib copies
     FILES              : space separated list of src files to remove
