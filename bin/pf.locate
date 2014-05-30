@@ -5,7 +5,7 @@
 . pf.base.inc.ksh
 
 DESC='Locate files in build or src directory'
-USAGE="USAGE: ${MYSELF} [-h] [-b|-s|-l] FILENAME [FILENAME2 ...]"
+USAGE="USAGE: ${MYSELF} [-h] [-b|-s|-l|-a] FILENAME [FILENAME2 ...]"
 
 usage_long() {
 	 toto=$(echo -e $USAGE)
@@ -19,18 +19,21 @@ Options:
     -s: locate ${SRC_USR}/FILENAME (DEFAULT)
     -l: locate ${SRC_LIB}/FILENAME
     -b: locate ${BUILD_SRC}/FILENAME or ${mydirbinpre}/FILENAME 
+    -a: locate all in SRC_USR, SRC_LIB, BUILD_SRC, BUILD_PRE
 EOF
 }
 
 mydir=${SRC_USR}
 files=""
 binmode=0
+allmode=0
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
       (-b) mydir=${BUILD_SRC} ; binmode=1;;
       (-s) mydir=${SRC_USR} ; binmode=0;;
       (-l) mydir=${SRC_LIB} ; binmode=0;;
+      (-a) mydir="" ; binmode=0; allmode=1;;
       (--) shift ; break;;
       (-*) myerror "Option Not recognized: $1";;
         *) files="$files $1"
@@ -40,7 +43,7 @@ while [[ $# -gt 0 ]] ; do
 done
 files="$files $@"
 
-if [[ x"$files" == x ]] ; then
+if [[ x"$files" == x" " ]] ; then
    myerror "Must provide at least one filename"
 fi
 
@@ -55,20 +58,46 @@ find_file() {
    fi
 }
 
-files2=""
-missfiles2=""
-for myfile in $files ; do
-   mypathlist="$(find_file $myfile $mydir)"
-   if [[ x${mypathlist} == x && $binmode == 1 ]] ; then
-      mypathlist="$(find_file $myfile $BUILD_PRE)"
+locate0() {
+   files2=""
+   missfiles2=""
+   for myfile in $files ; do
+      mypathlist="$(find_file $myfile $mydir)"
+      if [[ x"${mypathlist}" == x"" && $binmode == 1 ]] ; then
+         mypathlist="$(find_file $myfile $BUILD_PRE)"
+      fi
+      if [[ x"${mypathlist}" == x"" ]] ; then
+         missfiles2="$missfiles2 $myfile"
+      else
+         files2="$files2 $mypathlist"
+      fi
+   done
+   myecho 0 $files2  | tr ' ' '\n'
+   if [[ x${missfiles2} != x ]] ; then
+      myerror "Missing files: $missfiles2"
    fi
-   if [[ x${mypathlist} == x ]] ; then
-      missfiles2="$missfiles2 $myfile"
-   else
-      files2="$file2s $mypathlist"
-   fi
-done
-echo $files2
-if [[ x${missfiles2} != x ]] ; then
-   myerror "Missing files: $missfiles2"
+}
+
+if [[ $allmode == 0 ]] ; then
+   locate0
+else
+   for myfile in $files ; do
+      found=0
+      mypathlist2=""
+      for mydir in ${SRC_LIB} ${SRC_USR} ${BUILD_SRC} ${BUILD_PRE} ; do
+         mypathlist="$(find_file $myfile $mydir)"
+         if [[ x"${mypathlist}" != x"" ]] ; then
+            mypathlist2="${mypathlist2} ${mypathlist}"
+            found=1
+            #echo 1:${mypathlist}:$myfile  $found  $mydir
+         fi
+         #echo 2:${mypathlist}:$myfile  $found
+      done
+      #echo 3:${mypathlist}:$myfile  $found
+      if [[ x$found == x1 ]] ; then
+         myecho 0 ${mypathlist2} | tr ' ' '\n'
+      else
+         myecho 0 "Missing file: $myfile"
+      fi
+   done
 fi

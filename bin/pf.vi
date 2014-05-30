@@ -31,12 +31,13 @@ EOF
 mydir=${SRC_USR}
 files=""
 binmode=0
+mydiropt="-s"
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
-      (-b) mydir=${BUILD_SRC} ; binmode=1;;
-      (-s) mydir=${SRC_USR} ; binmode=0;;
-      (-l) mydir=${SRC_LIB} ; binmode=0;;
+      (-b) mydir=${BUILD_SRC} ; mydiropt="-b"; binmode=1;;
+      (-s) mydir=${SRC_USR} ; mydiropt="-s"; binmode=0;;
+      (-l) mydir=${SRC_LIB} ; mydiropt="-l"; binmode=0;;
       (-e) EDITOR=emacs;;
       (-v) EDITOR=vi;;
       (--) shift ; break;;
@@ -48,25 +49,53 @@ while [[ $# -gt 0 ]] ; do
 done
 files="$files $@"
 
-if [[ x"$files" == x ]] ; then
+if [[ x"$files" == x" " ]] ; then
    myerror "Must provide at least one filename"
 fi
 
-files2=""
+locate_for_vi() {
+   _item=$1
+   _item2=$(echo_deleted_tag $_item)
+   if [[ $mydir == ${SRC_USR} && -f ${SRC_USR}/$_item2 ]] ; then
+      echo __DELETED__
+      return
+   fi
+   if [[ $binmode == 1 && -f $BUILD_PRE/$_item && ! -f $mydir/$_item ]] ; then
+      echo $BUILD_PRE/$_item
+      return
+   fi
+   if [[ -f $mydir/$_item ]] ; then
+      echo $mydir/$_item
+      return
+   fi
+   if [[ ${_item##*/} == $_item || $mydir != ${SRC_USR} ]] ; then
+      echo __NOTFOUND__
+   else #NEW FILE
+      echo $mydir/$_item
+   fi
+}
+
+files2=" "
 for item in $files ; do
-   if [[ $binmode == 1 && -f $BUILD_PRE/$item && ! -f $mydir/$item ]] ; then
-      files2="$file2s $BUILD_PRE/$item"
-   else
-      item2=$(echo_deleted_tag $item)
-      if [[ $mydir == ${SRC_USR} && -f ${SRC_USR}/$item2 ]] ; then
-         myecho 0 "WARNING: file $item was marked as deleted, before editing,\n\tremove ${SRC_USR}/$item2"
-      else
-         files2="$file2s $mydir/$item"
+   item2=$(locate_for_vi $item)
+   if [[ x"$item2" == x"__NOTFOUND__" ]] ; then
+      item1=$(pf.locate ${mydiropt} $item)
+      item1=$(echo ${item1} | sed "s|$mydir/||")
+      if [[ $binmode == 1 ]] ; then
+         item1=$(echo ${item1} | sed "s|$BUILD_PRE/||")
       fi
+      item2=$(locate_for_vi ${item1})
+   fi
+   if [[ x"$item2" == x"__DELETED__" ]] ; then
+      myecho 0 "WARNING: file $item was marked as deleted, before editing do,\n\tpf.co $item"      
+   elif [[ x"$item2" == x"__NOTFOUND__" ]] ; then
+      myecho 0 "WARNING: file $item was not found in $mydir"      
+   else
+      files2="$files2 $item2"
    fi
 done
-set -x
-if [[ x"$files2" != x ]] ; then
+if [[ x"$files2" != x" " ]] ; then
+   echo $EDITOR $files2
    $EDITOR $files2
 else
    myecho 0 "No files to edit"
