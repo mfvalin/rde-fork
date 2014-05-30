@@ -1,0 +1,3 @@
+#!/bin/ksh
+. pf.base.inc.ksh
+find ${SRC_USR} ${SRC_LIB} -type f -exec grep -Hi $* {} \;
