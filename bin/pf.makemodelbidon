@@ -1,5 +1,30 @@
 #!/bin/ksh
 
+
+DESC='Create a main/program file calling a function/subroutine'
+
+if [[ x$1 == x-h || x$1 == x--help ]] ; then
+	 more <<EOF
+$DESC
+
+USAGE: pf.makemodelbidon [-c] MAIN
+
+   -c : creat a main in C [Default: main in Fortran]
+
+   MAIN : Name of the function/subroutine to call
+          Also used as ATM_MODEL_NAME if not defined
+
+Used Env Var:
+
+   ATM_MODEL_NAME=\${ATM_MODEL_NAME:-MAIN}
+   ATM_MODEL_VERSION=\${ATM_MODEL_VERSION:-?.?}
+   ATM_MODEL_ISOFFICIAL=\${ATM_MODEL_ISOFFICIAL:-false}
+   COMP_ARCH=${COMP_ARCH:-\${EC_ARCH#*/}}
+EOF
+    exit 0
+fi
+
+
 is_c=0
 if [[ x$1 == x-c ]] ;then
    is_c=1

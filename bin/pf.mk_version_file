@@ -1,6 +1,36 @@
 #!/bin/ksh
+# @Object: Create version files
+# @Author: S.Chamberland
+# @Date:   March 2014
+. pf.base.inc.ksh
+DESC='Create version files'
+USAGE="USAGE: ${MYSELF} [-h] [-f] PKGNAME PKGVERSION [DESTDIR [TYPE [FORMAT]]]"
+
+usage_long() {
+	 toto=$(echo -e $USAGE)
+	 more <<EOF
+$DESC
+
+$toto
+
+Options:
+    -h, --help   : print this help
+    -f, --force  : force file creation if already exists
+    PKGNAME      : Package Name
+    PKGVERSION   : Package Version Number
+    DESTDIR      : Dir where to creat the file [Default: .]
+    TYPE         : Version File Type of  [c, f, sh] [Default: sh]
+    FORMAT       : Version File Name Format [s, l] [Default: l]
+EOF
+}
+
+if [[ x$1 == x-h || x$1 == x--help ]] ; then
+   usage_long
+   exit 0
+fi
+
 myforce=0
-if [[ x$1 == x-f ]] ; then
+if [[ x$1 == x-f || x$1 == x--force ]] ; then
    myforce=1
    shift
 fi
@@ -10,10 +40,9 @@ DESTDIR=${3:-.}
 MODE=${4:-sh}
 NAMEFMT=${5:-l}
 if [[ x$PKGNAME == x || x$PKGVERSION == x ]] ; then
-    echo "ERROR: PKGNAME or PKGVERSION not provided"
-    echo "USAGE: $0 PKGNAME PKGVERSION LIBDIR MODDIR"
-    exit 1
+   myerror "PKGNAME or PKGVERSION not provided"
 fi
+
 PKGNAME=$(echo $PKGNAME | tr 'a-z' 'A-Z')
 PKGVERSION=$(echo $PKGVERSION)
 pkgname_=$(echo $PKGNAME | tr 'A-Z' 'a-z')

@@ -1,8 +1,17 @@
-#!/bin/ksh
 # @Object: Basic definitions and functions
 # @Author: S.Chamberland
 # @Date:   March 2014
 # @USAGE: . pf.base.inc.ksh
+
+if [[ x"${0##*/}" == x"pf.base.inc.ksh" ]] ; then
+   cat<<EOF
+=======================================
+ERROR: This script should be sourced
+       . $0
+=======================================
+EOF
+   exit 1
+fi
 
 MYSELF=${0##*/}
 COMP_ARCH=${COMP_ARCH:-${EC_ARCH#*/}}

@@ -7,6 +7,16 @@
 DESC='Update files, dirs and links in Build tree for locally modified source'
 USAGE="USAGE: ${MYSELF} [--resync]"
 
+if [[ x$1 == x-h || x$1 == x--help ]] ; then
+	 more <<EOF
+$DESC
+
+$USAGE
+
+EOF
+    exit 0
+fi
+
 EXT4MODLIST=".cdk .hf .fh .itf90 .inc .f .ftn .ptn .f90 .ftn90 .ptn90 .cdk90 .tmpl90 .F .FOR .F90"
 
 for item in ${BUILD_SRC} ${SRC_USR} ${SRC_LIB} ; do

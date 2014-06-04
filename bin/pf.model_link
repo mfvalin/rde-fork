@@ -3,6 +3,19 @@
 # @Author: S.Chamberland
 # @Date:   March 2014
 
+DESC='Return the path to the model link name specified as the argument'
+USAGE="Usage: ${0##*/} [build,src,local]"
+
+if [[ x$1 == x-h || x$1 == x--help ]] ; then
+	 more <<EOF
+$DESC
+
+$USAGE
+
+EOF
+    exit 0
+fi
+
 # Check for required argument (becomes "mytype")
 if [[ -z "$1" ]] ; then
    printf "Usage: $0 [build,src,local]\n"

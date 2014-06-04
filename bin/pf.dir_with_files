@@ -3,6 +3,22 @@
 # @Author: S.Chamberland
 # @Date:   March 2014
 
+
+#DESC='Echo the include path trimmed from empty dirs'
+
+if [[ x$1 == x-h || x$1 == x--help ]] ; then
+	 more <<EOF
+Echo the include path trimmed from empty dirs
+
+USAGE: pf.dir_with_files [VPATH]
+
+       VPATH : source dir to look into [Default: .]
+
+EOF
+    exit 0
+fi
+
+
 newline='\n'
 if [[ x$1 == x-n ]] ; then
    newline=' '
