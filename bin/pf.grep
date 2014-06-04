@@ -1,3 +1,30 @@
 #!/bin/ksh
 . pf.base.inc.ksh
-find ${SRC_USR} ${SRC_LIB} -type f -exec grep -Hi $* {} \;
+
+DESC='Grep (print lines matching a pattern) in src_usr and src_lib'
+USAGE="USAGE: ${MYSELF} [GREP_OPTIONS] SEARCH_STRING"
+usage_long() {
+	 toto=$(echo -e $USAGE)
+	 more <<EOF
+$DESC
+
+$toto
+EOF
+}
+
+GREP_OPTIONS=""
+while [[ $# -gt 0 ]] ; do
+   case $1 in
+      (-h|--help) usage_long; exit 0;;
+      -*) GREP_OPTIONS="$GREP_OPTIONS $1";;
+      *) break;;
+    esac
+    shift
+done
+
+if [[ $# -lt 1 ]] ; then
+   myerror "Need to provide a search string"
+fi
+
+set -x
+find -L ${SRC_USR} ${SRC_LIB} -type f -exec grep -H ${GREP_OPTIONS} "$*" {} \;
