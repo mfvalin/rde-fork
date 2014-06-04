@@ -1,0 +1,42 @@
+==============================================================
+The following are some of the valid targets for this Makefile:
+
+dep          : Update dependencies
+objects      : Compile all out of date objects
+libs         : Build libs after compiling all out of date objects
+allbin       : Build bins after compiling all out of date objects, libs
+allbincheck  : Check if all bins have been built
+all          : Equivalent to 'make objects libs allbin'
+
+FILENAME.o   : Build a single .o if not up to date
+               To force a build of a .o you need to 'touch' its source file
+
+clean        : rm *.o *.mod src and pre from build tree (keep lib and bin)
+distclean    : rm all files in known build tree sub dir
+distclean+   : rm all files in build tree
+distclean++  : rm all files and dir (rm -rf *) in build tree
+
+check_inc_dup      : Check if there are any include file duplicate name
+sanity             : Build Makefiles including dep if need be
+sanity_nodep_force : Force update of Makefiles (without dep)
+links              : Update links in build tree then make sanity
+links_forced
+
+versionfiles       : Create/force_update versionfiles in src_usr
+
+--------------------------------------------------------------
+User overrides file: Makefile.user.mk
+
+Example content:
+
+VERBOSE = -v
+NJOBS   = 12
+OPTIL   = 2
+OMP     = -openmp
+MPI     = -mpi
+#LFLAGS = 
+FFLAGS  = '-g -C -traceback'
+#CFLAGS  =
+
+myall: dep objects libs allbin
+==============================================================

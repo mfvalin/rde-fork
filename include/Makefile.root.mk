@@ -61,6 +61,10 @@ all:
 	cd $(BUILDOBJ);\
 	$(MAKE_ARCH) -j $(NJOBS) $@ ROOT=$(ROOT) VPATH=$(VPATH)
 
+
+help:
+	cat $(purplefrog)/include/help.txt
+
 links: 
 	$(MAKE_LINKS)
 links_forced:
