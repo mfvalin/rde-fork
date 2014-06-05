@@ -59,6 +59,17 @@ fi
 
 isfile=0
 for myfile in $PATHLIST ; do
+   myfile0=$myfile
+   if [[ ! -f ${SRC_USR}/$myfile && ! -f ${SRC_LIB}/$myfile ]] ; then
+      myfile="$(pf.locate $myfile 2>/dev/null | grep -v "Missing file"| tr "\n" " " | cut -d" " -f1)"
+      myfile=${myfile#*/}
+   fi
+   if [[ ! -n $myfile ]] ; then
+      myfile=$myfile0
+   elif [[ x"$myfile" != x"$myfile0" ]] ; then
+      myecho 0 "WARNING: will try to remove : $myfile:"
+      #TODO: ask y/n
+   fi
    isfile0=0
    myfilerm=$(echo_deleted_tag $myfile)
    if [[ -f ${SRC_USR}/$myfile ]] ; then
