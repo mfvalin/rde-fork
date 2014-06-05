@@ -2,7 +2,7 @@
 # @Object: Create version files
 # @Author: S.Chamberland
 # @Date:   March 2014
-. pf.base.inc.ksh
+. pfbase.inc.dot
 DESC='Create version files'
 USAGE="USAGE: ${MYSELF} [-h] [-f] PKGNAME PKGVERSION [DESTDIR [TYPE [FORMAT]]]"
 

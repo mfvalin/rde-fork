@@ -2,7 +2,7 @@
 # @Object: Open editor with files in build or src directory
 # @Author: S.Chamberland
 # @Date:   March 2014
-. pf.base.inc.ksh
+. pfbase.inc.dot
 
 DESC='Open editor with files in build or src directory'
 USAGE="USAGE: ${MYSELF} [-h] [-b|-s|-l] [-v|-e] FILENAME [FILENAME2 ...]"
@@ -79,7 +79,7 @@ files2=" "
 for item in $files ; do
    item2=$(locate_for_vi $item)
    if [[ x"$item2" == x"__NOTFOUND__" ]] ; then
-      item1=$(pf.locate ${mydiropt} $item)
+      item1=$(pflocate ${mydiropt} $item)
       item1=$(echo ${item1} | sed "s|$mydir/||")
       if [[ $binmode == 1 ]] ; then
          item1=$(echo ${item1} | sed "s|$BUILD_PRE/||")
@@ -87,7 +87,7 @@ for item in $files ; do
       item2=$(locate_for_vi ${item1})
    fi
    if [[ x"$item2" == x"__DELETED__" ]] ; then
-      myecho 0 "WARNING: file $item was marked as deleted, before editing do,\n\tpf.co $item"      
+      myecho 0 "WARNING: file $item was marked as deleted, before editing do,\n\tpfco $item"      
    elif [[ x"$item2" == x"__NOTFOUND__" ]] ; then
       myecho 0 "WARNING: file $item was not found in $mydir"      
    else

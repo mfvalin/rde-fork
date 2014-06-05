@@ -1,8 +1,8 @@
 #!/bin/ksh
-. pf.base.inc.ksh
+. pfbase.inc.dot
 DESC='Diff locally modified src compared to library version'
 USAGE="USAGE: ${MYSELF} [-h] [-v] [-l|--list|--status] [-d|--dirmode] [--diff=DIFF_TOOL] [DIFFARGS] [FILES]"
-BUILDDIFF=$(pf.model_link build)/tmp-diff-$$
+BUILDDIFF=$(pfmodel_link build)/tmp-diff-$$
 
 usage_long() {
 	 toto=$(echo -e $USAGE)
@@ -55,13 +55,13 @@ if [[ x"$PATHLIST" == x"" ]] ; then
 fi
 if [[ ! -d ${SRC_USR} || ! -r ${SRC_USR} ]] ; then
 	 echo "ERROR: source dir does not exist or not readable ${SRC_USR}/"
-	 echo "       Try running pf.prep"
+	 echo "       Try running pfprep"
 	 echo "---- Abort ----"
 	 exit 1
 fi
 if [[ ! -d ${SRC_LIB} || ! -r ${SRC_LIB} ]] ; then
 	 echo "ERROR: source dir does not exist or not readable ${SRC_LIB}/"
-	 echo "       Try running pf.prep"
+	 echo "       Try running pfprep"
 	 echo "---- Abort ----"
 	 exit 1
 fi

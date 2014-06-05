@@ -1,6 +1,6 @@
 #!/bin/ksh
 
-. pf.base.inc.ksh
+. pfbase.inc.dot
 DESC='Purple Frog help'
 USAGE="USAGE: ${MYSELF} [-h] [-l] [TOOL]"
 
@@ -30,7 +30,7 @@ if [[ x$1 == x-l || x$1 == x--long ]] ; then
 fi
 
 if [[ $# -ne 0 ]] ; then
-   for item in $* ; do
+   for item in $[a-zA-Z0-9]* ; do
       echo ========================================
       echo $item
       head -1 $(which $item) | grep ksh > /dev/null && $item -h
@@ -44,7 +44,7 @@ cat <<EOF
 Purple Frog: code devlopment environment
 
 Basic setup  :
-   pf.prep --clone -v #in working dir
+   pfprep --clone -v #in working dir
 Makefile help (after basic setup):
    make help
 
@@ -55,11 +55,11 @@ EOF
 
 if [[ $long == 0 ]] ; then
    echo ========================================
-   echo "List of tools: (for details: pf.help -l)"
+   echo "List of tools: (for details: pfhelp -l)"
    echo
    #for item in ${purplefrog}/bin/pf*; do echo "${item##*/}\n\t $(head -1 $item | grep ksh > /dev/null && grep DESC= $item | cut -d= -f2)"; done
    for item in ./pf*; do 
-      if [[ x"${item##*/}" != x"pf.compile" ]] ; then
+      if [[ x"${item##*/}" != x"pfcompile" ]] ; then
          echo "   ${item##*/}\n       $(head -1 $item | grep ksh > /dev/null && grep DESC= $item | cut -d= -f2 | grep -v \$item)"
       fi
    done
@@ -69,7 +69,7 @@ fi
 
 #for item in ${purplefrog}/bin/pf*; do
 for item in ./pf*; do
-   if [[ x"${item##*/}" != x"pf.compile" ]] ; then
+   if [[ x"${item##*/}" != x"pfcompile" ]] ; then
       head -1 $item | grep ksh > /dev/null && echo ======================================== && echo ${item##*/} && $item --help
    fi
 done

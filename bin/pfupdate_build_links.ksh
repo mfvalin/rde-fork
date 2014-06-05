@@ -2,7 +2,7 @@
 # @Object: Update files, dirs and links in Build tree for locally modified source
 # @Author: S.Chamberland
 # @Date:   March 2014
-. pf.base.inc.ksh
+. pfbase.inc.dot
 
 DESC='Update files, dirs and links in Build tree for locally modified source'
 USAGE="USAGE: ${MYSELF} [--resync]"
@@ -22,7 +22,7 @@ EXT4MODLIST=".cdk .hf .fh .itf90 .inc .f .ftn .ptn .f90 .ftn90 .ptn90 .cdk90 .tm
 for item in ${BUILD_SRC} ${SRC_USR} ${SRC_LIB} ; do
    if [[ ! -d ${item} || ! -w ${item} ]] ; then
 	   echo "ERROR: dir does not exist or not writable ${item}"
-	   echo "       Try running pf.prep"
+	   echo "       Try running pfprep"
 	   echo "---- Abort ----"
 	   exit 1
    fi

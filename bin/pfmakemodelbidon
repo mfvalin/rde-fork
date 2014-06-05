@@ -7,7 +7,7 @@ if [[ x$1 == x-h || x$1 == x--help ]] ; then
 	 more <<EOF
 $DESC
 
-USAGE: pf.makemodelbidon [-c] MAIN
+USAGE: pfmakemodelbidon [-c] MAIN
 
    -c : creat a main in C [Default: main in Fortran]
 

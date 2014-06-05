@@ -5,13 +5,13 @@
 SHELL = /bin/bash
 
 ROOT  = $(PWD)
-BUILD = $(ROOT)/$(shell pf.model_link build)
-BUILDBIN = $(ROOT)/$(shell pf.model_link build/bin)
-BUILDLIB = $(ROOT)/$(shell pf.model_link build/lib)
-BUILDMOD = $(ROOT)/$(shell pf.model_link build/mod)
-BUILDOBJ = $(ROOT)/$(shell pf.model_link build/obj)
-BUILDPRE = $(ROOT)/$(shell pf.model_link build/pre)
-BUILDSRC = $(ROOT)/$(shell pf.model_link build/src)
+BUILD = $(ROOT)/$(shell pfmodel_link build)
+BUILDBIN = $(ROOT)/$(shell pfmodel_link build/bin)
+BUILDLIB = $(ROOT)/$(shell pfmodel_link build/lib)
+BUILDMOD = $(ROOT)/$(shell pfmodel_link build/mod)
+BUILDOBJ = $(ROOT)/$(shell pfmodel_link build/obj)
+BUILDPRE = $(ROOT)/$(shell pfmodel_link build/pre)
+BUILDSRC = $(ROOT)/$(shell pfmodel_link build/src)
 VPATH = $(BUILDSRC)
 VERBOSE = -v
 NJOBS = 12
@@ -49,7 +49,7 @@ endif
 .PHONY: all links links_forced sanity sanity_nodep_force dep versionfiles clean distclean distclean+ distclean++
 
 MAKE_SANITY = $(MAKE) $(BUILDOBJ)/Makefile
-MAKE_LINKS  = pf.update_build_links.ksh ; $(MAKE_SANITY)
+MAKE_LINKS  = pfupdate_build_links.ksh ; $(MAKE_SANITY)
 
 .DEFAULT: 
 	$(MAKE_LINKS)
@@ -74,31 +74,34 @@ links_forced:
 sanity: $(BUILDOBJ)/Makefile
 sanity_nodep_force:
 	rm -f $(BUILDOBJ)/Makefile $(BUILDOBJ)/Makefile.build.mk $(BUILDOBJ)/Makefile.local.mk $(BUILDOBJ)/Makefile.rules.mk $(BUILDOBJ)/Makefile.base_arch.mk $(BUILDOBJ)/Makefile.ec_arch.mk
-	#touch $(BUILDOBJ)/Makefile.dep.mk
 	$(MAKE) links
+
+	#touch $(BUILDOBJ)/Makefile.dep.mk
+	#$(MAKE) links
 
 dep: 
 	echo "Re-Building dependency list"
 	rm -f $(BUILDOBJ)/Makefile.dep.mk $(BUILDOBJ)/Makefile.local.mk
-	$(MAKE) links
+	$(MAKE) --no-print-directory links
 
 versionfiles:
 	for mydir in `ls $(BUILDSRC)` ; do \
 		if [[ -d $${mydir} && ! -f $${mydir}/.no_version_file ]] ; then \
-			pf.mk_version_file "$${mydir}" "$(ATM_MODEL_VERSION)" $(BUILDSRC)/$${mydir}/include ;\
-			pf.mk_version_file "$${mydir}" "$(ATM_MODEL_VERSION)" $(BUILDSRC)/$${mydir}/include c ;\
-			pf.mk_version_file "$${mydir}" "$(ATM_MODEL_VERSION)" $(BUILDSRC)/$${mydir}/include f ;\
+			pfmk_version_file "$${mydir}" "$(ATM_MODEL_VERSION)" $(BUILDSRC)/$${mydir}/include c ;\
+			pfmk_version_file "$${mydir}" "$(ATM_MODEL_VERSION)" $(BUILDSRC)/$${mydir}/include f ;\
 		fi ;\
 	done
-	pf.mk_version_file "$(ATM_MODEL_NAME)" "$(ATM_MODEL_VERSION)" "$(BUILDSRC)"
-	pf.mk_version_file "$(ATM_MODEL_NAME)" "$(ATM_MODEL_VERSION)" "$(BUILDSRC)" c
-	pf.mk_version_file "$(ATM_MODEL_NAME)" "$(ATM_MODEL_VERSION)" "$(BUILDSRC)" f
+	pfmk_version_file "$(ATM_MODEL_NAME)" "$(ATM_MODEL_VERSION)" "$(BUILDSRC)" c
+	pfmk_version_file "$(ATM_MODEL_NAME)" "$(ATM_MODEL_VERSION)" "$(BUILDSRC)" f
+
+	#pfmk_version_file "$(ATM_MODEL_NAME)" "$(ATM_MODEL_VERSION)" "$(BUILDSRC)"
+			#pfmk_version_file "$${mydir}" "$(ATM_MODEL_VERSION)" $(BUILDSRC)/$${mydir}/include ;\
 
 clean: sanity
 	cd $(BUILDOBJ);\
 	$(MAKE_ARCH) $@ ROOT=$(ROOT) VPATH=$(VPATH)
 distclean:
-	for mydir in $(shell pf.model_link -l build) ; do \
+	for mydir in $(shell pfmodel_link -l build) ; do \
 		if [[ $${mydir} != src ]] ; then \
 			cd $(BUILD)/$${mydir} ;\
 			chmod -R u+w . 2> /dev/null || true ;\
@@ -109,12 +112,14 @@ distclean+:
 	cd $(BUILD) ;\
 	chmod -R u+w . 2> /dev/null || true ;\
 	`find . -type f -exec rm -f {} \; `
-	#TODO: need to re-run pf.linkit, no more src
+
+	#TODO: need to re-run pfprep, no more src
 distclean++:
 	cd $(BUILD) ;\
 	chmod -R u+w . 2> /dev/null || true ;\
 	rm -rf * 2> /dev/null || true
-	#TODO: need to re-run pf.linkit, no more dir and src
+
+	#TODO: need to re-run pfprep, no more dir and src
 
 
 ## ====  Real Targets and Dependencies
@@ -150,9 +155,10 @@ $(BUILDOBJ)/Makefile.ec_arch.mk:
 	cp $(purplefrog)/include/$(EC_ARCH)/Makefile.arch.mk $@ 2>/dev/null || true
 	touch $@
 $(BUILDOBJ)/Makefile.dep.mk:
-	#pf.update_build_links.ksh
+	#pfupdate_build_links.ksh
 	cd $(BUILDSRC) ;\
-	pf.dependencies.pl $(VERBOSE) --deep-include --soft-restriction $(DEP_DUP_OK) $(DEP_FLAT) --out=$(BUILDOBJ)/Makefile.dep.mk --any --short --inc=`find * -type d -name include|tr '\n' ':'` `find * -type d|grep -v include`
+	pfdependencies.pl $(VERBOSE) --deep-include --soft-restriction $(DEP_DUP_OK) $(DEP_FLAT) --out=$(BUILDOBJ)/Makefile.dep.mk --any --short --inc=`find * -type d -name include|tr '\n' ':'` `find * -type d|grep -v include`
+
 	#TODO: remove --any when code is clean from cross dir includes
 
 ## ====================================================================

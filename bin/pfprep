@@ -14,7 +14,7 @@
 #
 # src_lib/...
 # src_usr/...
-. pf.base.inc.ksh
+. pfbase.inc.dot
 
 DESC='Prepare list of dir and links'
 USAGE="USAGE: ${MYSELF} [-h] [-v] [-f] [--clonedir=/PATH/TO/BUILDCLONE] [--clone[=/PATH/TO/BUILDCLONE]]"
@@ -172,9 +172,9 @@ for mycomponent in $ATM_MODEL_COMPONENTS ; do
    if [[ ! -f $ROOT/$SRC_LIB/$mycomponent/.no_version_file ]] ; then
       mkdir -p $ROOT/$BUILD_SRC/$mycomponent/include 2>/dev/null || true
       mkdir -p $ROOT/$SRC_USR/$mycomponent/include 2>/dev/null || true
-      pf.mk_version_file ${myforce} $mycomponent $myversion $ROOT/$SRC_USR/$mycomponent/include >/dev/null 2>&1
-      pf.mk_version_file ${myforce} $mycomponent $myversion $ROOT/$SRC_USR/$mycomponent/include c >/dev/null 2>&1
-      pf.mk_version_file ${myforce} $mycomponent $myversion $ROOT/$SRC_USR/$mycomponent/include f >/dev/null 2>&1
+      #pfmk_version_file ${myforce} $mycomponent $myversion $ROOT/$SRC_USR/$mycomponent/include >/dev/null 2>&1
+      pfmk_version_file ${myforce} $mycomponent $myversion $ROOT/$SRC_USR/$mycomponent/include c >/dev/null 2>&1
+      pfmk_version_file ${myforce} $mycomponent $myversion $ROOT/$SRC_USR/$mycomponent/include f >/dev/null 2>&1
    fi
 done #mycomponent
 
@@ -185,9 +185,9 @@ done #mycomponent
 myecho 1 "++ Add/Update Purplefrog build system: Makefiles"
 cd ${ROOT}
 cp ${purplefrog}/include/Makefile.root.mk Makefile
-if [[ -f ${purplefrog}/include/${BASE_ARCH}/Makefile.dep.mk && \
+if [[ -f ${purplefrog}/models/${ATM_MODEL_NAME}/${ATM_MODEL_VERSION}/${BASE_ARCH}/Makefile.dep.mk && \
     ! -f ${STORAGE_BIN}/obj/Makefile.dep.mk ]] ; then
-   cp ${purplefrog}/include/${BASE_ARCH}/Makefile.dep.mk \
+   cp ${purplefrog}/models/${ATM_MODEL_NAME}/${ATM_MODEL_VERSION}/${BASE_ARCH}/Makefile.dep.mk \
       ${STORAGE_BIN}/obj/Makefile.dep.mk
 fi
 

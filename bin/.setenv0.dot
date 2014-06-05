@@ -37,7 +37,7 @@ for item in ${ATM_MODEL_COMP_VER} ; do
    export ${item%/*}=${purplefrog_src}/${item%/*}/${item#*/}
 done
 
-#eval "$(pf.clean_ec_path.dot)"
+#eval "$(pfclean_ec_path.dot)"
 
 mytmp=""
 for item in $EC_INCLUDE_PATH; do 

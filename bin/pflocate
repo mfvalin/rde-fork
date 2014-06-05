@@ -2,7 +2,7 @@
 # @Object: Locate files in build or src directory
 # @Author: S.Chamberland
 # @Date:   March 2014
-. pf.base.inc.ksh
+. pfbase.inc.dot
 
 DESC='Locate files in build or src directory'
 USAGE="USAGE: ${MYSELF} [-h] [-b|-s|-l|-a] FILENAME [FILENAME2 ...]"

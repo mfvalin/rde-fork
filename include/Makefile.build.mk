@@ -18,17 +18,17 @@ MPI    = -mpi
 
 LFLAGS = $(OMP) $(MKL)
 
-BUILD = $(ROOT)/$(shell pf.model_link build)
-BUILDBIN = $(ROOT)/$(shell pf.model_link build/bin)
-BUILDLIB = $(ROOT)/$(shell pf.model_link build/lib)
-BUILDMOD = $(ROOT)/$(shell pf.model_link build/mod)
-BUILDPRE = $(ROOT)/$(shell pf.model_link build/pre)
+BUILD = $(ROOT)/$(shell pfmodel_link build)
+BUILDBIN = $(ROOT)/$(shell pfmodel_link build/bin)
+BUILDLIB = $(ROOT)/$(shell pfmodel_link build/lib)
+BUILDMOD = $(ROOT)/$(shell pfmodel_link build/mod)
+BUILDPRE = $(ROOT)/$(shell pfmodel_link build/pre)
 BINDIR   = $(BUILDBIN)
-VPATH    = $(ROOT)/$(shell pf.model_link build/src)
+VPATH    = $(ROOT)/$(shell pfmodel_link build/src)
 
 #BLAS     = blas
 
-INCLUDES = $(shell pf.dir_with_files -n $(VPATH))
+INCLUDES = $(shell pfdir_with_files -n $(VPATH))
 #INCLUDES = $(shell find $(VPATH) -type d |tr '\n' ' ')
 #INCLUDES = $(shell find $(VPATH) -type d |tr '\n' ' ' | grep '/include')
 #TODO: INCLUDE only /include when code is clean from cross dir includes
@@ -110,6 +110,7 @@ allbin: $(BUILDLIB)/liblocal.a
 			$(MAKE) allbin_$${mydir##*/} BINDIR=$(BUILDBIN) LIBPATHEXTRA=$(BUILDLIB) LIBLOCALDEP=$(LIBLOCALDEP) || exit 1;\
 		fi ;\
 	done
+
 #		   mydir_uc=`echo $${mydir##*/} | tr 'a-z' 'A-Z'` ;\
 #			$(MAKE) allbin_subdir SUBDIR_BINLIST=$(eval \$\($${mydir_uc}_BINLIST\)) BINDIR=$(BUILDBIN) LIBPATHEXTRA=$(BUILDLIB) LIBLOCALDEP=$(LIBLOCALDEP) || exit 1;\
 # allbin_subdir:
@@ -145,17 +146,20 @@ clean0:
 		chmod -R u+w . 2> /dev/null || true ;\
 		`find . -type f -exec rm -f {} \; ` ;\
 	done
+
 	#TODO: get .o .mod from libs again?
 
 clean:
 	chmod -R u+w . $(BUILDMOD) $(BUILDPRE) 2> /dev/null || true
 	rm -f $(foreach mydir,. * */* */*/* */*/*/* */*/*/*/*,$(foreach exte,$(INCSUFFIXES) $(SRCSUFFIXES) .o .[mM][oO][dD],$(mydir)/*$(exte))) 2>/dev/null || true
+	rm -f $(foreach mydir,. * */* */*/* */*/*/* */*/*/*/*,$(foreach mydir0,$(BUILDMOD) $(BUILDPRE),$(mydir0)/$(mydir)/*)) 2>/dev/null || true
+
 	# for mydir in `find . -type d` ; do \
 	# 	for ext in $(INCSUFFIXES) $(SRCSUFFIXES) .o .[mM][oO][dD]; do \
 	# 		rm -f $${mydir}/*$${ext} 2>/dev/null ;\
 	# 	done ;\
 	# done
-	rm -f $(foreach mydir,. * */* */*/* */*/*/* */*/*/*/*,$(foreach mydir0,$(BUILDMOD) $(BUILDPRE),$(mydir0)/$(mydir)/*)) 2>/dev/null || true
+
 	# for mydir in $(BUILDMOD) $(BUILDPRE) ; do \
 	# 	cd $${mydir} ;\
 	# 	`find . -type f -exec rm -f {} \; ` ;\
@@ -164,6 +168,6 @@ clean:
 
 check_inc_dup: links
 	echo "Checking for duplicated include files:"
-	pf.check_dup -r --src=$(VPATH) --ext="$(INCSUFFIXES)" . $(INCLUDES) $(EC_INCLUDE_PATH) #$(shell s.generate_ec_path --include)
+	pfcheck_dup -r --src=$(VPATH) --ext="$(INCSUFFIXES)" . $(INCLUDES) $(EC_INCLUDE_PATH) #$(shell s.generate_ec_path --include)
 
 ## ====================================================================

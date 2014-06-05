@@ -8,8 +8,8 @@ SRCSUFFIXES = .c .f .ftn .ptn .f90 .ftn90 .ptn90 .cdk90 .tmpl90 .F .FOR .F90
 .SUFFIXES :
 .SUFFIXES : $(INCSUFFIXES) $(SRCSUFFIXES) .o 
 
-RCOMPIL = pf.compile $(MPI) $(OMP) -includes ./ $(INCLUDE_PATH) $(INCLUDE_MOD)  $(DEBUGCOMPFLAGS)
-RBUILD  = pf.compile $(DEBUGLINKFLAGS) -libpath ./ $(LIBRARY_PATH)
+RCOMPIL = pfcompile $(MPI) $(OMP) -includes ./ $(INCLUDE_PATH) $(INCLUDE_MOD)  $(DEBUGCOMPFLAGS)
+RBUILD  = pfcompile $(DEBUGLINKFLAGS) -libpath ./ $(LIBRARY_PATH)
 FCOMPF = 
 CCOMPF =
 COMPF = 
@@ -20,12 +20,12 @@ F90C2 = $(RCOMPIL) -defines "=$(DEFINE)" -O $(OPTIL) -optf="$(FFLAGS) $(OPTF_MOD
 FTNC = $(RCOMPIL) -defines "=$(DEFINE)"             -optf="$(FFLAGS) $(CPPFLAGS)" -P $(COMPF) $(FCOMPF) -src
 CC   = $(RCOMPIL) -defines "=$(DEFINE)" -O $(OPTIL) -optc="$(CFLAGS)" $(COMPF) $(CCOMPF) -src
 
-BUILDPRE = $(ROOT)/$(shell pf.model_link build/pre)
-BUILDMOD = $(ROOT)/$(shell pf.model_link build/mod)
+BUILDPRE = $(ROOT)/$(shell pfmodel_link build/pre)
+BUILDMOD = $(ROOT)/$(shell pfmodel_link build/mod)
 
 RBUILD3MPI = \
 	status=0 ;\
-	pf.makemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
+	pfmakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
 	$(MAKE) bidon_$${MAINSUBNAME}.o >/dev/null || status=1 ; \
 	rm -f bidon_$${MAINSUBNAME}.f90 ;\
 	$(RBUILD) -obj *.o -o $@ $(OMP) $(MPI) \
@@ -40,7 +40,7 @@ RBUILD3MPI = \
 
 RBUILD3NOMPI = \
 	status=0 ;\
-	pf.makemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
+	pfmakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
 	$(MAKE) bidon_$${MAINSUBNAME}.o >/dev/null || status=1 ; \
 	rm -f bidon_$${MAINSUBNAME}.f90 ;\
 	$(RBUILD) -obj *.o -o $@ $(OMP) \
@@ -55,7 +55,7 @@ RBUILD3NOMPI = \
 
 RBUILD3NOMPI_C = \
 	status=0 ;\
-	pf.makemodelbidon -c $${MAINSUBNAME} > bidon_$${MAINSUBNAME}_c.c ; \
+	pfmakemodelbidon -c $${MAINSUBNAME} > bidon_$${MAINSUBNAME}_c.c ; \
 	$(MAKE) bidon_$${MAINSUBNAME}_c.o >/dev/null || status=1 ; \
 	rm -f bidon_$${MAINSUBNAME}_c.c ;\
 	$(RBUILD) -obj *.o -o $@ $(OMP) -conly \

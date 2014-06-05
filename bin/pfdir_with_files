@@ -10,7 +10,7 @@ if [[ x$1 == x-h || x$1 == x--help ]] ; then
 	 more <<EOF
 Echo the include path trimmed from empty dirs
 
-USAGE: pf.dir_with_files [VPATH]
+USAGE: pfdir_with_files [VPATH]
 
        VPATH : source dir to look into [Default: .]
 

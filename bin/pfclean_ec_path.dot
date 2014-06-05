@@ -9,14 +9,14 @@ if [[ x$1 == x-h || x$1 == x--help ]] ; then
 	 more <<EOF
 Remove empty, not exsitant path in EC_*_PATH
 
-USAGE: eval \$(pf.clean_ec_path.dot)
+USAGE: eval \$(pfclean_ec_path.dot)
 
 EOF
     exit 0
 fi
 
 
-# if [[ x"${0##*/}" == x"pf.clean_ec_path.dot" ]] ; then
+# if [[ x"${0##*/}" == x"pfclean_ec_path.dot" ]] ; then
 #    cat<<EOF
 # =======================================
 # ERROR: This script should be sourced

@@ -1,9 +1,9 @@
 # @Object: Basic definitions and functions
 # @Author: S.Chamberland
 # @Date:   March 2014
-# @USAGE: . pf.base.inc.ksh
+# @USAGE: . pfbase.inc.dot
 
-if [[ x"${0##*/}" == x"pf.base.inc.ksh" ]] ; then
+if [[ x"${0##*/}" == x"pfbase.inc.dot" ]] ; then
    cat<<EOF
 =======================================
 ERROR: This script should be sourced
@@ -17,16 +17,16 @@ MYSELF=${0##*/}
 COMP_ARCH=${COMP_ARCH:-${EC_ARCH#*/}}
 STORAGE_BIN=$(model_path storage)/${COMP_ARCH}
 ROOT=$(pwd)
-BUILD=$(pf.model_link build)
-BUILD_SUB_DIR_LIST="$(pf.model_link -l build)"
-BUILD_BIN=$(pf.model_link build/bin)
-BUILD_LIB=$(pf.model_link build/lib)
-BUILD_MOD=$(pf.model_link build/mod)
-BUILD_OBJ=$(pf.model_link build/obj)
-BUILD_PRE=$(pf.model_link build/pre)
-BUILD_SRC=$(pf.model_link build/src)
-SRC_LIB=$(pf.model_link src)
-SRC_USR=$(pf.model_link local)
+BUILD=$(pfmodel_link build)
+BUILD_SUB_DIR_LIST="$(pfmodel_link -l build)"
+BUILD_BIN=$(pfmodel_link build/bin)
+BUILD_LIB=$(pfmodel_link build/lib)
+BUILD_MOD=$(pfmodel_link build/mod)
+BUILD_OBJ=$(pfmodel_link build/obj)
+BUILD_PRE=$(pfmodel_link build/pre)
+BUILD_SRC=$(pfmodel_link build/src)
+SRC_LIB=$(pfmodel_link src)
+SRC_USR=$(pfmodel_link local)
 verbose=0
 
 ##

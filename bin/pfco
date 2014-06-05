@@ -2,7 +2,7 @@
 # @Object: Checkout library version of a source file
 # @Author: S.Chamberland
 # @Date:   March 2014
-. pf.base.inc.ksh
+. pfbase.inc.dot
 
 DESC='Checkout library version of a source file'
 USAGE="USAGE: ${MYSELF} [-h] [-v] [-f] FILES"
@@ -41,21 +41,21 @@ PATHLIST="$PATHLIST $@"
 
 if [[ ! -d ${BUILD_SRC} || ! -w ${BUILD_SRC} ]] ; then
 	 echo "ERROR: building dir does not exist or not writable ${BUILD_SRC}/"
-	 echo "       Try running pf.prep"
+	 echo "       Try running pfprep"
 	 echo "---- Abort ----"
 	 exit 1
 fi
 
 if [[ ! -d ${SRC_USR} || ! -w ${SRC_USR} ]] ; then
 	 echo "ERROR: source dir does not exist or not writable ${SRC_USR}/"
-	 echo "       Try running pf.prep"
+	 echo "       Try running pfprep"
 	 echo "---- Abort ----"
 	 exit 1
 fi
 
 if [[ ! -d ${SRC_LIB} ]] ; then
 	 echo "ERROR: library source dir does not exist or not writable ${SRC_LIB}/"
-	 echo "       Try running pf.prep"
+	 echo "       Try running pfprep"
 	 echo "---- Abort ----"
 	 exit 1
 fi
