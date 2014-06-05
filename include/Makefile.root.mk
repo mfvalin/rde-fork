@@ -63,7 +63,7 @@ all:
 
 
 help:
-	cat $(purplefrog)/include/help.txt
+	cat $(purplefrog)/etc/pf_make_help.txt
 
 links: 
 	$(MAKE_LINKS)
