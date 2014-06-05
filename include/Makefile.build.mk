@@ -66,11 +66,12 @@ endif
 
 .DEFAULT: all
 
-.PHONY: all allbin allbincheck libs objects 
+.PHONY: all allbin allbincheck libs objects objloc
 
 all: objects libs allbin
 
 objects: $(OBJECTS)
+objloc: objects
 
 libs: $(OBJECTS) Makefile.dep.mk
 	status=0;\

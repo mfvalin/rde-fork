@@ -184,13 +184,12 @@ done #mycomponent
 ##
 myecho 1 "++ Add/Update Purplefrog build system: Makefiles"
 cd ${ROOT}
-cp ${purplefrog}/include/Makefile.root.mk Makefile.root.mk
+cp ${purplefrog}/include/Makefile.root.mk Makefile
 if [[ -f ${purplefrog}/include/${BASE_ARCH}/Makefile.dep.mk && \
     ! -f ${STORAGE_BIN}/obj/Makefile.dep.mk ]] ; then
    cp ${purplefrog}/include/${BASE_ARCH}/Makefile.dep.mk \
       ${STORAGE_BIN}/obj/Makefile.dep.mk
 fi
-ln -sf Makefile.root.mk Makefile
 
 myecho 1 "++ Add/Update Purplefrog build system: dependencies"
 make -s sanity_nodep_force

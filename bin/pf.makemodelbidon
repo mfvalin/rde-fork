@@ -20,6 +20,7 @@ Used Env Var:
    ATM_MODEL_VERSION=\${ATM_MODEL_VERSION:-?.?}
    ATM_MODEL_ISOFFICIAL=\${ATM_MODEL_ISOFFICIAL:-false}
    COMP_ARCH=${COMP_ARCH:-\${EC_ARCH#*/}}
+   COMP_USER=${COMP_USER:-$USER}
 EOF
     exit 0
 fi
@@ -56,6 +57,21 @@ cat <<EOF
           is_official_L = ${ISOFFICIAL:-.false.}
           return
        end subroutine atm_model_getversion
+
+       subroutine atm_model_getversion2(name_S,version_S,date_S,arch_S,compil_S,user_S,is_official_L)
+          implicit none
+          character(len=*),intent(out) :: name_S,version_S,date_S,arch_S,compil_S,user_S
+          logical,intent(out) :: is_official_L
+          name_S = "$(echo ${ATM_MODEL_NAME:-$1} | tr 'a-z' 'A-Z')"
+          version_S = "${ATM_MODEL_VERSION:-?.?}"
+          date_S = "$(date '+%Y-%m-%d %H:%M %Z')"
+          arch_S = "${BASE_ARCH:-$MYARCH}"
+          compil_S = "${COMP_ARCH:-${EC_ARCH#*/}} [${PGI_VERSION}${XLF_VERSION}]"
+          user_S   = "${COMP_USER:-$USER}"
+          is_official_L = ${ISOFFICIAL:-.false.}
+          return
+       end subroutine atm_model_getversion2
+
 EOF
 
 else
@@ -72,14 +88,16 @@ main(int argc, char **argv){
    $1(argc, argv);
 }
 /*
-void atm_model_getversion_c(char *name_S,char *version_S,char *date_S,char *arch_S,char *compil_S,int *is_official);
+void atm_model_getversion_c(char *name_S,char *version_S,char *date_S,char *arch_S,char *compil_S,char *user_S,int *is_official);
 
-void atm_model_getversion_c(char *name_S,char *version_S,char *date_S,char *arch_S,char *compil_S,int *is_official){
+void atm_model_getversion_c(char *name_S,char *version_S,char *date_S,char *arch_S,char *compil_S,char *user_S,int *is_official){
           strcp(name_S,"$(echo ${ATM_MODEL_NAME:-$1} | tr 'a-z' 'A-Z')");
           strcp(version_S,"${ATM_MODEL_VERSION:-?.?}");
           strcp(date_S,"$(date '+%Y-%m-%d %H:%M %Z')");
           strcp(arch_S,"${BASE_ARCH:-$MYARCH}");
           strcp(compil_S,"${COMP_ARCH:-${EC_ARCH#*/}} [${PGI_VERSION}${XLF_VERSION}]");
+          strcp(user_S,"${COMP_USER:-$USER}");
+
           is_official = $([[ x${ISOFFICIA} == xtrue ]] && echo 1 || echo 0);
 }
 */
