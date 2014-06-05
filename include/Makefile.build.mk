@@ -167,7 +167,7 @@ clean:
 	#TODO: get .o .mod from libs again?
 
 check_inc_dup: links
-	echo "Checking for duplicated include files:"
+	echo "Checking for duplicated include files"
 	pfcheck_dup -r --src=$(VPATH) --ext="$(INCSUFFIXES)" . $(INCLUDES) $(EC_INCLUDE_PATH) #$(shell s.generate_ec_path --include)
 
 ## ====================================================================

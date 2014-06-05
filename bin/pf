@@ -1,4 +1,6 @@
 #!/bin/ksh
+DESC='Purple Frog main program'
+USAGE="USAGE: ${MYSELF} TOOL [OPTIONS]"
 
 prefix=${0##*/}
 

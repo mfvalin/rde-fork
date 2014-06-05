@@ -64,7 +64,11 @@ all:
 
 
 help:
-	cat $(purplefrog)/etc/pf_make_help.txt
+	@more $(purplefrog)/etc/pf_make_help.txt
+	@echo "Raw list of Makefile targets:"
+	@echo
+	@pffindtargets
+	@echo "=============================================================="
 
 links: 
 	$(MAKE_LINKS)
