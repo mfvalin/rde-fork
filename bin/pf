@@ -1,0 +1,9 @@
+#!/bin/ksh
+
+prefix=${0##*/}
+
+if [[ x"$(which $prefix$1 2>/dev/null)" != x && x"$1" != x ]] ; then
+   $prefix$*
+else
+   ${prefix}help
+fi

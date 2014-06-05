@@ -19,6 +19,7 @@ NJOBS = 12
 #DEP_FLAT = --flat
 #PERLPROF = perl -d:DProf $(purplefrog)/bin/
 # with PERLPROF, look at results with: dprofpp $(BUILDSRC)/tmon.out
+PFDEP_SUPP_FILE = $(purplefrog)/etc/pfdependencies.supp
 
 ifeq (,$(purplefrog))
    $(error FATAL ERROR: purplefrog is not defined)
@@ -157,7 +158,7 @@ $(BUILDOBJ)/Makefile.ec_arch.mk:
 $(BUILDOBJ)/Makefile.dep.mk:
 	#pfupdate_build_links.ksh
 	cd $(BUILDSRC) ;\
-	pfdependencies.pl $(VERBOSE) --deep-include --soft-restriction $(DEP_DUP_OK) $(DEP_FLAT) --out=$(BUILDOBJ)/Makefile.dep.mk --any --short --inc=`find * -type d -name include|tr '\n' ':'` `find * -type d|grep -v include`
+	pfdependencies.pl $(VERBOSE) --deep-include --soft-restriction $(DEP_DUP_OK) $(DEP_FLAT) --out=$(BUILDOBJ)/Makefile.dep.mk --any --short --supp=$(PFDEP_SUPP_FILE) --inc=`find * -type d -name include|tr '\n' ':'` `find * -type d|grep -v include`
 
 	#TODO: remove --any when code is clean from cross dir includes
 

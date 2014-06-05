@@ -33,6 +33,7 @@ my $export_list = undef;
 my @current_dependencies_list = ();
 my @outside_tree_list = ();
 my %module_missing = ();
+my %module_missing_ignored = ();
 my $bool = 0;
 my %LISTOBJECT = ( ); # Hash of SRCFile object with filename, path and extension as the key
 
@@ -651,6 +652,7 @@ sub process_file_for_include {
 my $help = 0;
 my $output_file='';
 my $include_dirs='';
+my $suppress_errors_file='';
 GetOptions('verbose:+' => \$msg,
 			  'quiet' => sub{$msg=0;},
 			  'help' => \$help,
@@ -665,7 +667,8 @@ GetOptions('verbose:+' => \$msg,
 			  'soft-restriction' => \$soft_restriction,
 			  'exp=s' => \$export_list,
 			  'out=s' => \$output_file,
-			  'includes=s' => \$include_dirs
+			  'includes=s' => \$include_dirs,
+           'supp=s' => \$suppress_errors_file,
 	 )
 	 or $help=1;
 
@@ -704,6 +707,25 @@ if ($output_file) {
 }
 @includelist = split(':',$include_dirs) if ($include_dirs);
 
+#
+# Pre-Processsuppress_errors_file
+#
+if ($suppress_errors_file) {
+	 print STDERR "process suppress_errors_file: $suppress_errors_file\n" if ($msg >= 3);
+	 if (!open(INPUT,"<", $suppress_errors_file)) {
+		  print STDERR "ERROR: Can't open supp file, ignoring: ".$suppress_errors_file."\n";
+	 } else {
+		  while (<INPUT>) {
+				if ($_ =~ /^[\s]*module_missing[\s]+([^\s]+)/i) {
+					 print "Suppressing missing mod msg for: ".$1."\n"if ($msg >= 3);
+					 $module_missing_ignored{$1} = 1;
+				} else {
+					 print "Ignoring supp file line: ".$_."\n"if ($msg >= 3);
+				}
+		  }
+		  close INPUT;
+	 }
+}
 
 #
 # Pre-Process/register files
@@ -894,6 +916,7 @@ for my $filename (keys %LISTOBJECT) {
     my $file = $LISTOBJECT{$filename};
     for my $module (@{$file->{UNSOLVED_MODULE}}) {
         next if ($module eq "");
+		  next if (exists($module_missing_ignored{$module}));
         $module_missing{$module} = $filename if (!exists $module_missing{$module});
     }
 }
