@@ -89,7 +89,7 @@ $(BUILDLIB)/lib$(MYCOMPONENT).a: $(OBJECTS) Makefile.dep.mk
 	fi ;\
 	exit $${status}
 
-LIBLOCAL = local
+LIBLOCAL = _local_
 LIBLOCALDEP = $(BUILDLIB)/lib$(LIBLOCAL).a
 libs0: $(LIBLOCALDEP)
 libs0split: $(OBJECTS)
@@ -104,7 +104,7 @@ $(LIBLOCALDEP): $(OBJECTS) Makefile.dep.mk
 	ar r $@ `find . -name '*.o'`
 
 #TODO: what about $(VPATH)/include ?
-allbin: $(BUILDLIB)/liblocal.a
+allbin: $(BUILDLIB)/lib$(LIBLOCAL).a
 	for mydir in `ls $(VPATH)` ; do \
 		if [[ -f $(VPATH)/$${mydir}/include/Makefile.local.mk ]] ; then \
 			$(MAKE) allbin_$${mydir##*/} BINDIR=$(BUILDBIN) LIBPATHEXTRA=$(BUILDLIB) LIBLOCALDEP=$(LIBLOCALDEP) || exit 1;\
@@ -126,7 +126,7 @@ allbincheck:
 			$(MAKE) allbincheck_$${mydir##*/} BINDIR=$(BUILDBIN) LIBPATHEXTRA=$(BUILDLIB) LIBLOCALDEP=$(LIBLOCALDEP) || exit 1;\
 		fi ;\
 	done
-allbinsplit: $(BUILDLIB)/liblocal.a
+allbinsplit: $(BUILDLIB)/lib$(LIBLOCAL).a
 	for mydir in `ls $(VPATH)` ; do \
 		if [[ -f $(VPATH)/$${mydir##*/}/include/Makefile.local.mk ]] ; then \
 			$(MAKE) allbin_$${mydir##*/} BINDIR=$(BUILDBIN)/$${mydir##*/} LIBPATHEXTRA="$(BUILDLIB) $(BUILDLIB)/$${mydir##*/}" LIBLOCALDEP=$(LIBLOCALDEP) || exit 1;\

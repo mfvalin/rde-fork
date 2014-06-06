@@ -81,9 +81,6 @@ sanity_nodep_force:
 	rm -f $(BUILDOBJ)/Makefile $(BUILDOBJ)/Makefile.build.mk $(BUILDOBJ)/Makefile.local.mk $(BUILDOBJ)/Makefile.rules.mk $(BUILDOBJ)/Makefile.base_arch.mk $(BUILDOBJ)/Makefile.ec_arch.mk
 	$(MAKE) links
 
-	#touch $(BUILDOBJ)/Makefile.dep.mk
-	#$(MAKE) links
-
 dep: 
 	echo "Re-Building dependency list"
 	rm -f $(BUILDOBJ)/Makefile.dep.mk $(BUILDOBJ)/Makefile.local.mk
