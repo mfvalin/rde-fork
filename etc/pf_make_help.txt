@@ -22,7 +22,7 @@ sanity_nodep_force : Force update of Makefiles (without dep)
 links              : Update links in build tree then make sanity
 links_forced
 
-versionfiles       : Create/force_update versionfiles in src_usr
+versionfiles       : Create/force_update versionfiles in src
 
 --------------------------------------------------------------
 User overrides file: Makefile.user.mk

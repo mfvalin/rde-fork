@@ -7,9 +7,7 @@
 DESC='Open editor with files in build or src directory'
 USAGE="USAGE: ${MYSELF} [-h] [-b|-s|-l] [-v|-e] FILENAME [FILENAME2 ...]"
 
-prog=${0##*/}
-prog=${prog#*.}
-EDITOR=${EDITOR:-$prog}
+EDITOR=${EDITOR:-vi}
 
 usage_long() {
 	 toto=$(echo -e $USAGE)
@@ -31,7 +29,7 @@ EOF
 mydir=${SRC_USR}
 files=""
 binmode=0
-mydiropt="-s"
+mydiropt="-l"
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;

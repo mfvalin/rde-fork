@@ -1,20 +1,37 @@
 #!/bin/ksh
 
+
 if [[ x"${0##*/}" == x"pfprep.dot" ]] ; then
    cat<<EOF
 =======================================
 ERROR: This script should be sourced
-       . ${0##*/} MODEL_NAME MODEL_VERSION
+       . ${0##*/} [-h] MODEL_NAME MODEL_VERSION [OPTIONS]
 =======================================
 EOF
    exit 1
+fi
+
+if [[ x"${1}" == x"-h" || x"${1}" == x"--help" ]] ; then
+   cat<<EOF
+=======================================
+Setup script for purple frog
+
+USAGE: . pfprep.dot [-h] MODEL_NAME MODEL_VERSION [OPTIONS]
+
+OPTIONS are passed to pfprep
+---------------------------------------
+$(pfprep -h)
+
+=======================================
+EOF
+   return 0
 fi
 
 if [[ $# -lt 2 ]] ; then
    cat<<EOF
 =======================================
 ERROR: You need to provide a model name and version
-       . pfprep.dot MODEL_NAME MODEL_VERSION [OPTIONS]
+       . pfprep.dot [-h] MODEL_NAME MODEL_VERSION [OPTIONS]
 =======================================
 EOF
    return 1
@@ -61,7 +78,8 @@ EOF1
    exit 1
 fi
 
-export purplefrog=$purplefrog
+#export purplefrog=$purplefrog
+. s.ssmuse.dot ENV/x/purplefrog/${purplefrog_version}
 #export COMP_ARCH=\${1:-\${COMP_ARCH:-\${EC_ARCH##*/}}}
 export COMP_ARCH=\${1:-\$COMP_ARCH}
 if [[ x\${BASE_ARCH} == xAIX || x\${BASE_ARCH} == xAIX-powerpc7 ]] ; then
@@ -81,9 +99,14 @@ fi
 
 EOF
 
+if [[ x\${BASE_ARCH} == xAIX || x\${BASE_ARCH} == xAIX-powerpc7 ]] ; then
+   export COMP_ARCH_DEFAULT=${COMP_ARCH:-$tmp_COMP_ARCH_DEFAULT_AIX}
+else
+   export COMP_ARCH_DEFAULT=${COMP_ARCH:-$tmp_COMP_ARCH_DEFAULT_LINUX}
+fi
+
 unset tmp_ATM_MODEL_NAME tmp_ATM_MODEL_VERSION tmp_PF_COMPILER_VERSION tmp_COMP_ARCH_DEFAULT_LINUX tmp_COMP_ARCH_DEFAULT_AIX tmp_model_config
 
-. .setenv.dot
+. .setenv.dot $COMP_ARCH_DEFAULT
 
 pfprep $*
-

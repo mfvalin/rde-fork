@@ -61,7 +61,7 @@ isfile=0
 for myfile in $PATHLIST ; do
    myfile0=$myfile
    if [[ ! -f ${SRC_USR}/$myfile && ! -f ${SRC_REF}/$myfile ]] ; then
-      myfile="$(pf.locate $myfile 2>/dev/null | grep -v "Missing file"| tr "\n" " " | cut -d" " -f1)"
+      myfile="$(pflocate $myfile 2>/dev/null | grep -v "Missing file"| tr "\n" " " | cut -d" " -f1)"
       myfile=${myfile#*/}
    fi
    if [[ ! -n $myfile ]] ; then
@@ -75,22 +75,22 @@ for myfile in $PATHLIST ; do
    if [[ -f ${SRC_USR}/$myfile ]] ; then
       isfile0=1
       rm -f ${SRC_USR}/$myfile
-      myecho 2 "Removing local version of: $myfile"
+      myecho 1 "Removing local version of: $myfile"
    else
-      myecho 2 "No local version of: $myfile"
+      myecho 1 "No local version of: $myfile"
    fi
    if [[ -f ${SRC_REF}/$myfile ]] ; then
       if [[ $localonly == 0 ]] ; then 
          if [[ ! -f ${SRC_USR}/${myfilerm} ]] ; then
             isfile0=1
             touch ${SRC_USR}/${myfilerm}
-            myecho 2 "Removing lib version of: $myfile"
+            myecho 1 "Removing lib version of: $myfile"
          else
-            myecho 2 "Already removed lib version of: $myfile"
+            myecho 1 "Already removed lib version of: $myfile"
          fi
       else
          if [[ ! -f ${SRC_USR}/${myfilerm} ]] ; then
-            myecho 2 "Leaving lib version of: $myfile"
+            myecho 1 "Leaving lib version of: $myfile"
          else
             myecho 1 "Bringing back lib version of: $myfile"
             rm -f ${SRC_USR}/${myfilerm}
@@ -98,7 +98,7 @@ for myfile in $PATHLIST ; do
       fi
    fi
    if [[ $isfile0 == 1 ]] ; then
-      myecho 1 "Removed: $myfile"
+      myecho 0 "Removed: $myfile"
       isfile=1
    fi
 done
