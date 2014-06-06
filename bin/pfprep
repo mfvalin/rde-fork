@@ -169,12 +169,12 @@ for mycomponent in $ATM_MODEL_COMPONENTS ; do
          fi
       fi
    done #mysubdir
-   if [[ ! -f $ROOT/$SRC_REF/$mycomponent/.no_version_file ]] ; then
+   if [[ -f $ROOT/$SRC_REF/$mycomponent/.version_file ]] ; then
       mkdir -p $ROOT/$BUILD_SRC/$mycomponent/include 2>/dev/null || true
       mkdir -p $ROOT/$SRC_USR/$mycomponent/include 2>/dev/null || true
-      #pfmk_version_file ${myforce} $mycomponent $myversion $ROOT/$SRC_USR/$mycomponent/include >/dev/null 2>&1
-      pfmk_version_file ${myforce} $mycomponent $myversion $ROOT/$SRC_USR/$mycomponent/include c >/dev/null 2>&1
-      pfmk_version_file ${myforce} $mycomponent $myversion $ROOT/$SRC_USR/$mycomponent/include f >/dev/null 2>&1
+      for item in $(cat $ROOT/$SRC_REF/$mycomponent/.version_file) ; do
+         pfmk_version_file ${myforce} $mycomponent $myversion $ROOT/$SRC_USR/$mycomponent/include $item >/dev/null 2>&1
+      done
    fi
 done #mycomponent
 

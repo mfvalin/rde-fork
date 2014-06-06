@@ -91,16 +91,12 @@ dep:
 
 versionfiles:
 	for mydir in `ls $(BUILDSRC)` ; do \
-		if [[ -d $${mydir} && ! -f $${mydir}/.no_version_file ]] ; then \
-			pfmk_version_file "$${mydir}" "$(ATM_MODEL_VERSION)" $(BUILDSRC)/$${mydir}/include c ;\
-			pfmk_version_file "$${mydir}" "$(ATM_MODEL_VERSION)" $(BUILDSRC)/$${mydir}/include f ;\
+		if [[ -d $${mydir} && ! -f $${mydir}/.version_file ]] ; then \
+			for item in $(cat $${mydir}/.version_file) ; do \
+			   pfmk_version_file "$${mydir}" "$(ATM_MODEL_VERSION)" $(BUILDSRC)/$${mydir}/include $${item} ;\
+		   done ;\
 		fi ;\
 	done
-	pfmk_version_file "$(ATM_MODEL_NAME)" "$(ATM_MODEL_VERSION)" "$(BUILDSRC)" c
-	pfmk_version_file "$(ATM_MODEL_NAME)" "$(ATM_MODEL_VERSION)" "$(BUILDSRC)" f
-
-	#pfmk_version_file "$(ATM_MODEL_NAME)" "$(ATM_MODEL_VERSION)" "$(BUILDSRC)"
-			#pfmk_version_file "$${mydir}" "$(ATM_MODEL_VERSION)" $(BUILDSRC)/$${mydir}/include ;\
 
 clean: sanity
 	cd $(BUILDOBJ);\

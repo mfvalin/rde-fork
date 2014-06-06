@@ -50,10 +50,6 @@ production_date=$(date '+%Y-%m-%d %H:%M %Z')
 
 mkdir -p ${DESTDIR} 2>/dev/null || true
 chmod u+w ${DESTDIR} || true
-versionfilename=${DESTDIR}/${pkgname_}_version.dot
-[[ x${NAMEFMT} == xs ]] && versionfilename=${DESTDIR}/.VERSION
-prefix='export'
-sep='='
 if [[ x$MODE == xc ]] ; then
    versionfilename=${DESTDIR}/${pkgname_}_version.h
    prefix='#define'
@@ -62,6 +58,16 @@ elif [[ x$MODE == xf ]] ; then
    versionfilename=${DESTDIR}/${pkgname_}_version.inc
    prefix='       character(len=50),parameter ::'
    sep=' = '
+elif [[ x$MODE == xsh ]] ; then
+   versionfilename=${DESTDIR}/${pkgname_}_version.dot
+   [[ x${NAMEFMT} == xs ]] && versionfilename=${DESTDIR}/.VERSION
+   prefix='export'
+   sep='='
+else
+   echo "WARNING: "
+   echo "$USAGE"
+   echo "        SUPPORTED TYPES: sh c f"
+   exit 1
 fi
 if [[ -f ${versionfilename} && $myforce == 0 ]] ; then
    echo "WARNING: Version file already exists, to overwrite use:"
