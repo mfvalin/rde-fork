@@ -34,6 +34,7 @@ my @current_dependencies_list = ();
 my @outside_tree_list = ();
 my %module_missing = ();
 my %module_missing_ignored = ();
+my %include_missing_ignored = ();
 my $bool = 0;
 my %LISTOBJECT = ( ); # Hash of SRCFile object with filename, path and extension as the key
 
@@ -607,7 +608,9 @@ sub process_file_for_include {
 				my $path1 = find_inc_file($file,$path,"$filn.$exte");
 				if (!$path1) {
 					 # print STDERR "No file $file->{FILENAME}.$file->{EXTENSION}: $tmp_dir : $include_path : $path$filn.$exte\n" if ($msg>=4);
-					 push @outside_tree_list, "$path$filn.$exte" if (!find_string_in_array(\@outside_tree_list, "$path$filn.$exte"));
+					 if (!exists($include_missing_ignored{"$path$filn.$exte"})) {
+						  push @outside_tree_list, "$path$filn.$exte" if (!find_string_in_array(\@outside_tree_list, "$path$filn.$exte"));
+					 }
 					 return 1;
 				}
 				# print STDERR "Found $filn.$exte in $path1\n" if ($msg >=5);
@@ -717,10 +720,13 @@ if ($suppress_errors_file) {
 	 } else {
 		  while (<INPUT>) {
 				if ($_ =~ /^[\s]*module_missing[\s]+([^\s]+)/i) {
-					 print "Suppressing missing mod msg for: ".$1."\n"if ($msg >= 3);
+					 print STDERR "Suppressing missing mod msg for: ".$1."\n" if ($msg >= 3);
 					 $module_missing_ignored{$1} = 1;
+				} elsif ($_ =~ /^[\s]*include_missing[\s]+([^\s]+)/i) {
+					 print STDERR "Suppressing missing inc msg for: ".$1."\n" if ($msg >= 3);
+					 $include_missing_ignored{$1} = 1;
 				} else {
-					 print "Ignoring supp file line: ".$_."\n"if ($msg >= 3);
+					 print STDERR "Ignoring supp file line: ".$_."\n" if ($msg >= 3);
 				}
 		  }
 		  close INPUT;
@@ -897,9 +903,9 @@ for my $filename (sort keys %LISTOBJECT) {
 				print_header("$file->{FULLPATH_SRC}$file->{FILENAME}.o",":","$filename");
 		  }
         rec_print_dependencies(\%LISTOBJECT, $filename);
-        print "\n";
+        print STDOUT "\n";
 		  print_header("$file->{FILENAME}.o",":","$file->{FULLPATH_SRC}$file->{FILENAME}.o") if ($short_target_names and $file->{FULLPATH_SRC} and !$flat_layout);
-        print "\n";
+        print STDOUT "\n";
     }
 }
 
