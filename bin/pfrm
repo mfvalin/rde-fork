@@ -50,8 +50,8 @@ if [[ ! -d ${SRC_USR} || ! -w ${SRC_USR} ]] ; then
 	 exit 1
 fi
 
-if [[ ! -d ${SRC_LIB} ]] ; then
-	 echo "ERROR: library source dir does not exist or not writable ${SRC_LIB}/"
+if [[ ! -d ${SRC_REF} ]] ; then
+	 echo "ERROR: library source dir does not exist or not writable ${SRC_REF}/"
 	 echo "       Try running pfprep"
 	 echo "---- Abort ----"
 	 exit 1
@@ -60,7 +60,7 @@ fi
 isfile=0
 for myfile in $PATHLIST ; do
    myfile0=$myfile
-   if [[ ! -f ${SRC_USR}/$myfile && ! -f ${SRC_LIB}/$myfile ]] ; then
+   if [[ ! -f ${SRC_USR}/$myfile && ! -f ${SRC_REF}/$myfile ]] ; then
       myfile="$(pf.locate $myfile 2>/dev/null | grep -v "Missing file"| tr "\n" " " | cut -d" " -f1)"
       myfile=${myfile#*/}
    fi
@@ -79,7 +79,7 @@ for myfile in $PATHLIST ; do
    else
       myecho 2 "No local version of: $myfile"
    fi
-   if [[ -f ${SRC_LIB}/$myfile ]] ; then
+   if [[ -f ${SRC_REF}/$myfile ]] ; then
       if [[ $localonly == 0 ]] ; then 
          if [[ ! -f ${SRC_USR}/${myfilerm} ]] ; then
             isfile0=1

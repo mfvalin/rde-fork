@@ -20,9 +20,9 @@ $toto
 
 Options:
     -h, --help : print this help
-    -s: open ${SRC_USR}/FILENAME (DEFAULT)
-    -l: open ${SRC_LIB}/FILENAME
-    -b: open ${BUILD_SRC}/FILENAME or ${BUILD_PRE}/FILENAME 
+    -l, --local : locate ${SRC_USR}/FILENAME (DEFAULT)
+    -r, --ref   : locate ${SRC_REF}/FILENAME
+    -b, --build : locate ${BUILD_SRC}/FILENAME or ${mydirbinpre}/FILENAME 
     -v: use vi    (DEFAULT: EDITOR=${EDITOR})
     -e: use emacs (DEFAULT: EDITOR=${EDITOR})
 EOF
@@ -35,9 +35,9 @@ mydiropt="-s"
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
-      (-b) mydir=${BUILD_SRC} ; mydiropt="-b"; binmode=1;;
-      (-s) mydir=${SRC_USR} ; mydiropt="-s"; binmode=0;;
-      (-l) mydir=${SRC_LIB} ; mydiropt="-l"; binmode=0;;
+      (-b|--build) mydir=${BUILD_SRC} ; mydiropt="-b"; binmode=1;;
+      (-l|--local) mydir=${SRC_USR}   ; mydiropt="-l"; binmode=0;;
+      (-r|--ref)   mydir=${SRC_REF}   ; mydiropt="-r"; binmode=0;;
       (-e) EDITOR=emacs;;
       (-v) EDITOR=vi;;
       (--) shift ; break;;

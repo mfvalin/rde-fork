@@ -53,18 +53,18 @@ if [[ ! -d ${SRC_USR} || ! -w ${SRC_USR} ]] ; then
 	 exit 1
 fi
 
-if [[ ! -d ${SRC_LIB} ]] ; then
-	 echo "ERROR: library source dir does not exist or not writable ${SRC_LIB}/"
+if [[ ! -d ${SRC_REF} ]] ; then
+	 echo "ERROR: library source dir does not exist or not writable ${SRC_REF}/"
 	 echo "       Try running pfprep"
 	 echo "---- Abort ----"
 	 exit 1
 fi
 
 for myfile in $PATHLIST ; do
-   mypathlist="$(find_src ${SRC_LIB} $myfile)"
+   mypathlist="$(find_src ${SRC_REF} $myfile)"
    if [[ x${mypathlist} == x ]] ; then
       cat <<EOF
-    ERROR: File $myfile is not found in ${SRC_LIB}/
+    ERROR: File $myfile is not found in ${SRC_REF}/
 EOF
       mystatus=0
    else
@@ -85,7 +85,7 @@ EOF
 
          if [[ x$mypath != x ]] ; then
             rm -f ${ROOT}/${SRC_USR}/$(echo_deleted_tag ${mypath}) 2> /dev/null || true
-            rsync -a ${ROOT}/${SRC_LIB}/$mypath ${ROOT}/${SRC_USR}/$mypath
+            rsync -a ${ROOT}/${SRC_REF}/$mypath ${ROOT}/${SRC_USR}/$mypath
             chmod -R u+w ${ROOT}/${SRC_USR}/$mypath
             if [[ x${replaced} != x ]] ; then
                touch ${ROOT}/${SRC_USR}/$mypath

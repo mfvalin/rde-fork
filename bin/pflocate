@@ -5,7 +5,7 @@
 . pfbase.inc.dot
 
 DESC='Locate files in build or src directory'
-USAGE="USAGE: ${MYSELF} [-h] [-b|-s|-l|-a] FILENAME [FILENAME2 ...]"
+USAGE="USAGE: ${MYSELF} [-h] [-b|-r|-l|-a] FILENAME [FILENAME2 ...]"
 
 usage_long() {
 	 toto=$(echo -e $USAGE)
@@ -15,11 +15,11 @@ $DESC
 $toto
 
 Options:
-    -h, --help : print this help
-    -s: locate ${SRC_USR}/FILENAME (DEFAULT)
-    -l: locate ${SRC_LIB}/FILENAME
-    -b: locate ${BUILD_SRC}/FILENAME or ${mydirbinpre}/FILENAME 
-    -a: locate all in SRC_USR, SRC_LIB, BUILD_SRC, BUILD_PRE
+    -h, --help  : print this help
+    -l, --local : locate ${SRC_USR}/FILENAME (DEFAULT)
+    -r, --ref   : locate ${SRC_REF}/FILENAME
+    -b, --build : locate ${BUILD_SRC}/FILENAME or ${mydirbinpre}/FILENAME 
+    -a, --all   : locate all in SRC, SRC_REF, BUILD_SRC, BUILD_PRE
 EOF
 }
 
@@ -29,11 +29,11 @@ binmode=0
 allmode=0
 while [[ $# -gt 0 ]] ; do
    case $1 in
-      (-h|--help) usage_long; exit 0;;
-      (-b) mydir=${BUILD_SRC} ; binmode=1;;
-      (-s) mydir=${SRC_USR} ; binmode=0;;
-      (-l) mydir=${SRC_LIB} ; binmode=0;;
-      (-a) mydir="" ; binmode=0; allmode=1;;
+      (-h|--help)  usage_long; exit 0;;
+      (-b|--build) mydir=${BUILD_SRC}  ; binmode=1;;
+      (-l|--local) mydir=${SRC_USR}    ; binmode=0;;
+      (-r|--ref)   mydir=${SRC_REF}    ; binmode=0;;
+      (-a|--all)   mydir="" ; binmode=0; allmode=1;;
       (--) shift ; break;;
       (-*) myerror "Option Not recognized: $1";;
         *) files="$files $1"
@@ -84,7 +84,7 @@ else
    for myfile in $files ; do
       found=0
       mypathlist2=""
-      for mydir in ${SRC_LIB} ${SRC_USR} ${BUILD_SRC} ${BUILD_PRE} ; do
+      for mydir in ${SRC_REF} ${SRC_USR} ${BUILD_SRC} ${BUILD_PRE} ; do
          mypathlist="$(find_file $myfile $mydir)"
          if [[ x"${mypathlist}" != x"" ]] ; then
             mypathlist2="${mypathlist2} ${mypathlist}"

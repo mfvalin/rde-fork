@@ -12,8 +12,8 @@
 # .../build-HOST-COMP/lib/...
 # .../build-HOST-COMP/bin/...
 #
-# src_lib/...
-# src_usr/...
+# src_ref/...
+# src/...
 . pfbase.inc.dot
 
 DESC='Prepare list of dir and links'
@@ -37,7 +37,7 @@ Options:
                    : Provide a basic build dir/tgz to start from
                      Accept a full build dir or a file.tgz
                      DEFAULT: ${ATM_MODEL_NAME}_${ATM_MODEL_VERSION}_build-${COMP_ARCH}.tgz
-                     WARNING: Consistency with src_usr and src_lib files is not done
+                     WARNING: Consistency with src and src_ref files is not done
 
 BUILD files will be located under (uses \$storage_model): 
     $STORAGE_BIN
@@ -74,7 +74,7 @@ rm -f $BUILD
 ln -sf $STORAGE_BIN $BUILD 2>/dev/null || true
 echo ${TRUE_HOST:-$(hostname)}:$STORAGE_BIN $BUILD >> $logfile
 
-mkdir -p $SRC_LIB 2>/dev/null || true
+mkdir -p $SRC_REF 2>/dev/null || true
 mkdir -p $SRC_USR 2>/dev/null || true
 
 if [[ -d $ROOT/$BUILD_SRC ]] ; then
@@ -154,8 +154,8 @@ for mycomponent in $ATM_MODEL_COMPONENTS ; do
    if [[ x$subdirlist == x ]] ; then
       subdirlist="$(find -L . -type d)"
    fi
-   if [[ ! -e $ROOT/$SRC_LIB/$mycomponent ]] ; then
-      ln -sf $(pwd) $ROOT/$SRC_LIB/$mycomponent
+   if [[ ! -e $ROOT/$SRC_REF/$mycomponent ]] ; then
+      ln -sf $(pwd) $ROOT/$SRC_REF/$mycomponent
    fi
    for mysubdir in ${subdirlist} ; do
       if [[ -d ./${mysubdir} ]] ; then
@@ -169,7 +169,7 @@ for mycomponent in $ATM_MODEL_COMPONENTS ; do
          fi
       fi
    done #mysubdir
-   if [[ ! -f $ROOT/$SRC_LIB/$mycomponent/.no_version_file ]] ; then
+   if [[ ! -f $ROOT/$SRC_REF/$mycomponent/.no_version_file ]] ; then
       mkdir -p $ROOT/$BUILD_SRC/$mycomponent/include 2>/dev/null || true
       mkdir -p $ROOT/$SRC_USR/$mycomponent/include 2>/dev/null || true
       #pfmk_version_file ${myforce} $mycomponent $myversion $ROOT/$SRC_USR/$mycomponent/include >/dev/null 2>&1

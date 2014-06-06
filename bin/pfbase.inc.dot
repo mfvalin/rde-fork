@@ -25,7 +25,7 @@ BUILD_MOD=$(pfmodel_link build/mod)
 BUILD_OBJ=$(pfmodel_link build/obj)
 BUILD_PRE=$(pfmodel_link build/pre)
 BUILD_SRC=$(pfmodel_link build/src)
-SRC_LIB=$(pfmodel_link src)
+SRC_REF=$(pfmodel_link ref)
 SRC_USR=$(pfmodel_link local)
 verbose=0
 
@@ -69,8 +69,8 @@ mystderr() {
 find_src_local_file() {
    find_src_file ${SRC_USR} $@
 }
-find_src_lib_file() {
-   find_src_file ${SRC_LIB} $@
+find_src_ref_file() {
+   find_src_file ${SRC_REF} $@
 }
 find_src_build_file() {
    find_src_file ${BUILD_SRC} $@
@@ -149,7 +149,7 @@ is_src_local_deleted() {
    _itempath=${_myfile%/*}
    _itemname=${_myfile##*/}
    _itemname2=${_itemname#.rm.}
-   if [[ -f ${ROOT}/${SRC_LIB}/${_itempath}/${_itemname2}  && \
+   if [[ -f ${ROOT}/${SRC_REF}/${_itempath}/${_itemname2}  && \
          -f ${ROOT}/${SRC_USR}/${_itempath}/.rm.${_itemname2} \
          ]] ; then
       echo ${_itempath}/${_itemname2}

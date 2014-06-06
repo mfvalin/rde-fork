@@ -19,7 +19,7 @@ fi
 
 EXT4MODLIST=".cdk .hf .fh .itf90 .inc .f .ftn .ptn .f90 .ftn90 .ptn90 .cdk90 .tmpl90 .F .FOR .F90"
 
-for item in ${BUILD_SRC} ${SRC_USR} ${SRC_LIB} ; do
+for item in ${BUILD_SRC} ${SRC_USR} ${SRC_REF} ; do
    if [[ ! -d ${item} || ! -w ${item} ]] ; then
 	   echo "ERROR: dir does not exist or not writable ${item}"
 	   echo "       Try running pfprep"
@@ -166,8 +166,8 @@ if [[ -d ${ROOT}/${BUILD_SRC} ]] ; then
 		   myrm_pre $item
 		   myrm_mod $item
          /bin/rm -f $item > /dev/null || true
-         if [[ -f ${ROOT}/${SRC_LIB}/${item} ]] ; then
-	         cp ${ROOT}/${SRC_LIB}/${item} ${item}
+         if [[ -f ${ROOT}/${SRC_REF}/${item} ]] ; then
+	         cp ${ROOT}/${SRC_REF}/${item} ${item}
             touch ${item}
          fi
       fi
@@ -176,12 +176,12 @@ if [[ -d ${ROOT}/${BUILD_SRC} ]] ; then
    myrm_empty
 fi
 
-#sync build_src with src_lib
+#sync build_src with src_ref
 if [[ $resync -eq 1 ]] ; then
    #TODO: remove exiting ${BUILD_SRC}?
    mkdir -p ${ROOT}/${BUILD_SRC} 2>/dev/null || true
    find ${ROOT}/${BUILD_SRC} -type l -exec rm -f {} \;
-   cd ${ROOT}/${SRC_LIB}
+   cd ${ROOT}/${SRC_REF}
    for item in $(ls); do
       if [[ -d $item/ ]] ; then
          cp -R $item $ROOT/$BUILD_SRC 2>/dev/null || true
@@ -190,7 +190,7 @@ if [[ $resync -eq 1 ]] ; then
 fi
 
 #Force remove specially marked source dirs
-for mydir in ${SRC_LIB} ${SRC_USR} ; do
+for mydir in ${SRC_REF} ${SRC_USR} ; do
    cd ${ROOT}/${mydir}
    for item in $(find -L . -name .restricted -type f) ; do
       if [[ x"$(cat $item | grep ${BASE_ARCH}:)" == x && \

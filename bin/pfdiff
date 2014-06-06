@@ -59,8 +59,8 @@ if [[ ! -d ${SRC_USR} || ! -r ${SRC_USR} ]] ; then
 	 echo "---- Abort ----"
 	 exit 1
 fi
-if [[ ! -d ${SRC_LIB} || ! -r ${SRC_LIB} ]] ; then
-	 echo "ERROR: source dir does not exist or not readable ${SRC_LIB}/"
+if [[ ! -d ${SRC_REF} || ! -r ${SRC_REF} ]] ; then
+	 echo "ERROR: source dir does not exist or not readable ${SRC_REF}/"
 	 echo "       Try running pfprep"
 	 echo "---- Abort ----"
 	 exit 1
@@ -72,13 +72,13 @@ echo_file_status() {
    if [[ x${_itemname2} != x ]] ; then
       echo DEL ${_itemname2}
    elif [[ -f ${ROOT}/${SRC_USR}/${_myfile} ]] ; then
-      if [[ -f ${ROOT}/${SRC_LIB}/${_myfile} ]] ; then
+      if [[ -f ${ROOT}/${SRC_REF}/${_myfile} ]] ; then
          _isdiff=1
-         diff -q ${ROOT}/${SRC_LIB}/${_myfile} ${ROOT}/${SRC_USR}/${_myfile} >/dev/null && _isdiff=0
+         diff -q ${ROOT}/${SRC_REF}/${_myfile} ${ROOT}/${SRC_USR}/${_myfile} >/dev/null && _isdiff=0
          if [[ ${_isdiff} == 1 ]] ; then
             echo MOD ${_myfile}
          else
-            echo LIB ${_myfile}
+            echo REF ${_myfile}
          fi
       else
          echo NEW ${_myfile}
@@ -93,10 +93,10 @@ do_file_diff() {
    _status0="$(echo_file_status ${_myfile})"
    _status=${_status0% *}
    _myfile2=${_status0#* }
-   if [[ x${_status} == xMOD || x${_status} == LIB ]] ; then
+   if [[ x${_status} == xMOD || x${_status} == REF ]] ; then
       cd $ROOT
-      myecho 0 +${ECDIFF} ${ECDIFFARGS} ${SRC_LIB}/${_myfile} ${SRC_USR}/${_myfile}
-      ${ECDIFF} ${ECDIFFARGS} ${SRC_LIB}/${_myfile} ${SRC_USR}/${_myfile}
+      myecho 0 +${ECDIFF} ${ECDIFFARGS} ${SRC_REF}/${_myfile} ${SRC_USR}/${_myfile}
+      ${ECDIFF} ${ECDIFFARGS} ${SRC_REF}/${_myfile} ${SRC_USR}/${_myfile}
    else
       myecho 0 +${_status0}
    fi
@@ -108,7 +108,7 @@ build_diff_tree() {
    _mydirlist="$(find . -type d)"
    rm -rf ${BUILDDIFF}
    cd ${ROOT}
-   for _item in ${SRC_LIB} ${SRC_USR} ; do
+   for _item in ${SRC_REF} ${SRC_USR} ; do
       for _mysubdir in ${_mydirlist} ; do
          mkdir -p ${BUILDDIFF}/${_item}/${_mysubdir} 2>/dev/null || true
       done
@@ -117,7 +117,7 @@ build_diff_tree() {
       _status0="$(echo_file_status ${_myfile})"
       _status=${_status0% *}
       _myfile2=${_status0#* }
-      for _item in ${SRC_LIB} ${SRC_USR} ; do
+      for _item in ${SRC_REF} ${SRC_USR} ; do
          if [[ -f ${_item}/${_myfile2} ]] ; then
             cp ${_item}/${_myfile2} ${BUILDDIFF}/${_item}/${_myfile2}
          fi
@@ -131,14 +131,14 @@ build_diff_tree() {
 do_dir_diff() {
    _mydir=$1
    cd ${BUILDDIFF}
-   myecho 0 +${ECDIFF} ${ECDIFFARGS} ${SRC_LIB}/${_mydir} ${SRC_USR}/${_mydir}
-   ${ECDIFF} ${ECDIFFARGS} ${SRC_LIB}/${_mydir} ${SRC_USR}/${_mydir}
+   myecho 0 +${ECDIFF} ${ECDIFFARGS} ${SRC_REF}/${_mydir} ${SRC_USR}/${_mydir}
+   ${ECDIFF} ${ECDIFFARGS} ${SRC_REF}/${_mydir} ${SRC_USR}/${_mydir}
    cd ${ROOT}
 }
 
 find_file() {
    find_src_file ${SRC_USR} $@
-   #find_src_file ${SRC_LIB} $@
+   #find_src_file ${SRC_REF} $@
 }
 
 
