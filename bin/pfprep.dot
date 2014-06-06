@@ -1,0 +1,89 @@
+#!/bin/ksh
+
+if [[ x"${0##*/}" == x"pfprep.dot" ]] ; then
+   cat<<EOF
+=======================================
+ERROR: This script should be sourced
+       . ${0##*/} MODEL_NAME MODEL_VERSION
+=======================================
+EOF
+   exit 1
+fi
+
+if [[ $# -lt 2 ]] ; then
+   cat<<EOF
+=======================================
+ERROR: You need to provide a model name and version
+       . pfprep.dot MODEL_NAME MODEL_VERSION [OPTIONS]
+=======================================
+EOF
+   return 1
+fi
+
+
+tmp_ATM_MODEL_NAME=$1
+tmp_ATM_MODEL_VERSION=$2
+shift ; shift
+
+tmp_PF_COMPILER_VERSION=1.0.0
+tmp_COMP_ARCH_DEFAULT_LINUX=pgi9xx
+tmp_COMP_ARCH_DEFAULT_AIX=xlf13
+
+#purplefrog=/users/dor/armn/sch/SsmBundles/data/purplefrog
+purplefrog=${purplefrog:-/users/dor/armn/sch/_Code_Depot_/work/purple-frog}
+purplefrog_src=/users/dor/armn/sch/SsmBundles/data/purplefrog-src
+tmp_model_config=${purplefrog}/etc/models
+
+if [[ ! -d  ${tmp_model_config}/${tmp_ATM_MODEL_NAME}/${tmp_ATM_MODEL_VERSION} ]] ; then
+   cat<<EOF
+=======================================
+ERROR: No config files are available for ${tmp_ATM_MODEL_NAME}/${tmp_ATM_MODEL_VERSION}
+       in ${tmp_model_config}
+
+Availaible models/version are:
+$(cd ${tmp_model_config} && ls -d */* )
+
+USAGE:
+  . pfprep.dot MODEL_NAME MODEL_VERSION
+=======================================
+EOF
+   return 1
+fi
+
+cat > .setenv.dot <<EOF
+if [[ x"\${0##*/}" == x".setenv.dot" ]] ; then
+   cat<<EOF1
+=======================================
+ERROR: This script should be sourced
+       . \$0 [COMP_ARCH]
+=======================================
+EOF1
+   exit 1
+fi
+
+export purplefrog=$purplefrog
+#export COMP_ARCH=\${1:-\${COMP_ARCH:-\${EC_ARCH##*/}}}
+export COMP_ARCH=\${1:-\$COMP_ARCH}
+if [[ x\${BASE_ARCH} == xAIX || x\${BASE_ARCH} == xAIX-powerpc7 ]] ; then
+   export COMP_ARCH=\${COMP_ARCH:-$tmp_COMP_ARCH_DEFAULT_AIX}
+else
+   export COMP_ARCH=\${COMP_ARCH:-$tmp_COMP_ARCH_DEFAULT_LINUX}
+fi
+
+. \${purplefrog}/bin/.setenv0.dot \\
+  $purplefrog \\
+  \$COMP_ARCH \\
+  $tmp_PF_COMPILER_VERSION \\
+  $purplefrog_src \\
+  $tmp_model_config \\
+  $tmp_ATM_MODEL_NAME \\
+  $tmp_ATM_MODEL_VERSION
+
+EOF
+
+unset tmp_ATM_MODEL_NAME tmp_ATM_MODEL_VERSION tmp_PF_COMPILER_VERSION tmp_COMP_ARCH_DEFAULT_LINUX tmp_COMP_ARCH_DEFAULT_AIX tmp_model_config
+
+. .setenv.dot
+
+pfprep $*
+

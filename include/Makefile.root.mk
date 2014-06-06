@@ -164,6 +164,6 @@ $(BUILDOBJ)/Makefile.dep.mk:
 	cd $(BUILDSRC) ;\
 	pfdependencies.pl $(VERBOSE) --deep-include --soft-restriction $(DEP_DUP_OK) $(DEP_FLAT) --out=$(BUILDOBJ)/Makefile.dep.mk --any --short --supp=$(PFDEP_SUPP_FILE) --inc=`find * -type d -name include|tr '\n' ':'` `find * -type d|grep -v include`
 
-	#TODO: remove --any when code is clean from cross dir includes
+#TODO: remove --any when code is clean from cross dir includes
 
 ## ====================================================================
