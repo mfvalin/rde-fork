@@ -2,48 +2,29 @@
 # @Object: Update files, dirs and links in Build tree for locally modified source
 # @Author: S.Chamberland
 # @Date:   March 2014
-. pfbase.inc.dot
+. .pfbase.inc.dot
 
+##
+# Help
+##
 DESC='Update files, dirs and links in Build tree for locally modified source'
-USAGE="USAGE: ${MYSELF} [--resync]"
-
-if [[ x$1 == x-h || x$1 == x--help ]] ; then
+USAGE="USAGE: ${MYSELF} [-h] [-v] [-f] [--resync]"
+usage_long() {
+	 toto=$(echo -e $USAGE)
 	 more <<EOF
 $DESC
 
-$USAGE
+$toto
+
+Options:
+    -h, --help     : print this help
+    -v, --verbose  : verbose mode
+    -f, --force    : force, overwrite present installation 
+                     [Not fully yet implemented]
+    --resync       : re-do build/src from scratch (from src_ref, src)
 
 EOF
-    exit 0
-fi
-
-EXT4MODLIST=".cdk .hf .fh .itf90 .inc .f .ftn .ptn .f90 .ftn90 .ptn90 .cdk90 .tmpl90 .F .FOR .F90"
-
-for item in ${BUILD_SRC} ${SRC_USR} ${SRC_REF} ; do
-   if [[ ! -d ${item} || ! -w ${item} ]] ; then
-	   echo "ERROR: dir does not exist or not writable ${item}"
-	   echo "       Try running pfprep"
-	   echo "---- Abort ----"
-	   exit 1
-   fi
-done
-
-resync=0
-if [[ x$1 == x--resync ]] ; then
-   resync=1
-fi
-
-# INCSUFFIXES=".cdk .h .hf .fh .itf90 .inc"
-# SRCSUFFIXES=".c .f .ftn .ptn .f90 .ftn90 .ptn90 .cdk90 .tmpl90 .F .FOR .F90"
-# VALIDEXT=""
-# for item in ${INCSUFFIXES} ${SRCSUFFIXES} ; do
-#    VALIDEXT="${VALIDEXT} *${item}"
-# done
-
-#mylist=$(ls $VALIDEXT 2>/dev/null)
-#modlist=$(ls *.mod 2>/dev/null)
-#modnamelist=""
-
+}
 
 ##
 #
@@ -107,17 +88,18 @@ myrm_mod() {
 #
 ##
 get_dep_list() {
+   #TOTO: update
 	 _filename=$1
 	 _deplist=""
-	 if [[ -r make_cdk ]] ; then
-		  _name=${_filename%.*}
-		  _ext=${_filename##*.}
-		  _filename2=${_name}.a${_ext}
-		  _here=$(pwd)
-		  cd /
-		  _deplist=$(make -f ${_here}/make_cdk -n ${_filename2} | cut -d" " -f2)
-		  cd ${_here}
-	 fi
+	 # if [[ -r make_cdk ]] ; then
+	 #     _name=${_filename%.*}
+	 #     _ext=${_filename##*.}
+	 #     _filename2=${_name}.a${_ext}
+	 #     _here=$(pwd)
+	 #     cd /
+	 #     _deplist=$(make -f ${_here}/make_cdk -n ${_filename2} | cut -d" " -f2)
+	 #     cd ${_here}
+	 # fi
 	 echo ${_deplist}
 }
 
@@ -154,10 +136,55 @@ myrm_empty() {
    #TOTO: update
 }
 
+## ====================================================================
+
+##
+# Inline Args
+##
+resync=0
+myforce=""
+while [[ $# -gt 0 ]] ; do
+   case $1 in
+      (-h|--help) usage_long; exit 0;;
+      (-v|--verbose) ((verbose++));;
+      (-f|--force) myforce=-f;;
+      (--resync) resync=1;;
+      (--) shift ;;
+      *) myerror "Option Not recognized: $1";;
+    esac
+    shift
+done
+
+EXT4MODLIST=".cdk .hf .fh .itf90 .inc .f .ftn .ptn .f90 .ftn90 .ptn90 .cdk90 .tmpl90 .F .FOR .F90"
+
+pf_exit_if_not_pftopdir
+
+for item in ${BUILD_SRC} ${SRC_USR} ${SRC_REF} ; do
+   if [[ ! -d ${item} || ! -w ${item} ]] ; then
+	   echo "ERROR: dir does not exist or not writable ${item}"
+	   echo "       Try running pfinit"
+	   echo "---- Abort ----"
+	   exit 1
+   fi
+done
+
+# INCSUFFIXES=".cdk .h .hf .fh .itf90 .inc"
+# SRCSUFFIXES=".c .f .ftn .ptn .f90 .ftn90 .ptn90 .cdk90 .tmpl90 .F .FOR .F90"
+# VALIDEXT=""
+# for item in ${INCSUFFIXES} ${SRCSUFFIXES} ; do
+#    VALIDEXT="${VALIDEXT} *${item}"
+# done
+
+#mylist=$(ls $VALIDEXT 2>/dev/null)
+#modlist=$(ls *.mod 2>/dev/null)
+#modnamelist=""
+
+
 #==============================================================================
 
 #remove links and obsolete files
 if [[ -d ${ROOT}/${BUILD_SRC} ]] ; then
+   myecho 1 "++ Remove links and obsolete files from BUILD_SRC"
    cd ${ROOT}/${BUILD_SRC}
    myfilelist="$(find . -type l)"
    for item in ${myfilelist} ; do
@@ -178,7 +205,15 @@ fi
 
 #sync build_src with src_ref
 if [[ $resync -eq 1 ]] ; then
+   myecho 1 "++ reSync BUILD_SRC with src_ref"
    #TODO: remove exiting ${BUILD_SRC}?
+   for _item in $(cd $ROOT/$SRC_REF ; find -L . -type d) ; do
+      if [[ x$item != x. ]] ;then
+         for _mydir in $BUILD_SUB_DIR_LIST ; do
+            mkdir -p  $STORAGE_BIN/$_mydir/${_item} 2>/dev/null || true
+         done
+      fi
+   done
    mkdir -p ${ROOT}/${BUILD_SRC} 2>/dev/null || true
    find ${ROOT}/${BUILD_SRC} -type l -exec rm -f {} \;
    cd ${ROOT}/${SRC_REF}
@@ -190,6 +225,7 @@ if [[ $resync -eq 1 ]] ; then
 fi
 
 #Force remove specially marked source dirs
+myecho 1 "++ Force remove restricted dirs"
 for mydir in ${SRC_REF} ${SRC_USR} ; do
    cd ${ROOT}/${mydir}
    for item in $(find -L . -name .restricted -type f) ; do
@@ -202,9 +238,22 @@ for mydir in ${SRC_REF} ${SRC_USR} ; do
    done
 done
 
+#Make sure all SRC_USR dir are mirrored
+myecho 1 "++ Make sure all SRC_USR dir are mirrored"
 cd ${ROOT}/${SRC_USR}
+for _item in $(cd $ROOT/$SRC_USR ; find -L . -type d) ; do
+   if [[ x$item != x. ]] ;then
+      for _mydir in $BUILD_SUB_DIR_LIST ; do
+         if [[ ! -d $STORAGE_BIN/$_mydir/${_item} ]] ; then
+            mkdir -p  $STORAGE_BIN/$_mydir/${_item} 2>/dev/null || true
+         fi
+      done
+   fi
+done
 
 #Force remove specially marked source files
+myecho 1 "++ Force remove '.rm.*' files"
+cd ${ROOT}/${SRC_USR}
 myfilelist="$(find . -type f -name '.rm.*')"
 for item0 in ${myfilelist} ; do
     itempath=${item0%/*}
@@ -217,6 +266,8 @@ for item0 in ${myfilelist} ; do
 done
 
 #re-make links to source files
+myecho 1 "++ Make links to user modified source files"
+cd ${ROOT}/${SRC_USR}
 myfilelist="$(find . -type f)"
 for item in ${myfilelist} ; do
     itemname=${item##*/}

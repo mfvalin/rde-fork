@@ -2,7 +2,7 @@
 # @Object: Remove src file, local modifications and libs
 # @Author: S.Chamberland
 # @Date:   March 2014
-. pfbase.inc.dot
+. .pfbase.inc.dot
 
 DESC='Remove src file, local modifications and libs'
 USAGE="USAGE: ${MYSELF} [-h] [-v] [-l|--local_only] FILES"
@@ -43,19 +43,7 @@ if [[ x"$PATHLIST" == x"" ]] ; then
    myerror "Must provide at least one FILE name"
 fi
 
-if [[ ! -d ${SRC_USR} || ! -w ${SRC_USR} ]] ; then
-	 echo "ERROR: source dir does not exist or not writable ${SRC_USR}/"
-	 echo "       Try running pfprep"
-	 echo "---- Abort ----"
-	 exit 1
-fi
-
-if [[ ! -d ${SRC_REF} ]] ; then
-	 echo "ERROR: library source dir does not exist or not writable ${SRC_REF}/"
-	 echo "       Try running pfprep"
-	 echo "---- Abort ----"
-	 exit 1
-fi
+pf_exit_if_not_pftopdir
 
 isfile=0
 for myfile in $PATHLIST ; do

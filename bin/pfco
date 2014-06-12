@@ -2,7 +2,7 @@
 # @Object: Checkout library version of a source file
 # @Author: S.Chamberland
 # @Date:   March 2014
-. pfbase.inc.dot
+. .pfbase.inc.dot
 
 DESC='Checkout library version of a source file'
 USAGE="USAGE: ${MYSELF} [-h] [-v] [-f] FILES"
@@ -39,26 +39,7 @@ while [[ $# -gt 0 ]] ; do
 done
 PATHLIST="$PATHLIST $@"
 
-if [[ ! -d ${BUILD_SRC} || ! -w ${BUILD_SRC} ]] ; then
-	 echo "ERROR: building dir does not exist or not writable ${BUILD_SRC}/"
-	 echo "       Try running pfprep"
-	 echo "---- Abort ----"
-	 exit 1
-fi
-
-if [[ ! -d ${SRC_USR} || ! -w ${SRC_USR} ]] ; then
-	 echo "ERROR: source dir does not exist or not writable ${SRC_USR}/"
-	 echo "       Try running pfprep"
-	 echo "---- Abort ----"
-	 exit 1
-fi
-
-if [[ ! -d ${SRC_REF} ]] ; then
-	 echo "ERROR: library source dir does not exist or not writable ${SRC_REF}/"
-	 echo "       Try running pfprep"
-	 echo "---- Abort ----"
-	 exit 1
-fi
+pf_exit_if_not_pftopdir
 
 for myfile in $PATHLIST ; do
    mypathlist="$(find_src ${SRC_REF} $myfile)"

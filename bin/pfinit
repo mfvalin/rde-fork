@@ -1,0 +1,191 @@
+#!/bin/ksh
+# @Object: Initial setup of a PF workdir
+# @Author: S.Chamberlands
+# @Date:   June 2014
+#
+# build-HOST-COMP -> $(model_path storage)/MY_NAME/COMP_ARCH
+# .../build-HOST-COMP/
+# .../build-HOST-COMP/src/...
+# .../build-HOST-COMP/f90/...
+# .../build-HOST-COMP/obj/...
+# .../build-HOST-COMP/mod/...
+# .../build-HOST-COMP/lib/...
+# .../build-HOST-COMP/bin/...
+#
+# src_ref/...
+# src/...
+
+##
+# Help
+##
+DESC='Initial setup of a PF workdir'
+USAGE="USAGE: . pfinit [-h] [-v] [-f] [--comp=COMPILER] [--add=COMPONENTS] NAME VERSION"
+usage_long() {
+   . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
+   . .pfbase.inc.dot
+
+	 toto=$(echo -e $USAGE)
+	 more <<EOF
+$DESC
+
+$toto
+
+Options:
+    -h, --help      : print this help
+    -v, --verbose   : verbose mode
+    -f, --force     : force, overwrite present installation 
+                      [Not fully implemented yet]
+    --comp=COMP     : use compiler COMP instead of the default one
+                      [Default: \${COMP_ARCH:-$(. ${purplefrog}/include/${BASE_ARCH}/default.comp.dot; echo $COMP_ARCH)}]
+    --add=COMPONENTS: List of compents/version to add/import
+    --srcpath=PATH  : List of dir where to look for src COMPONENT/VERSION
+                      [Default: $(pf_src_path)]
+    --binpath=PATH  :
+
+    NAME            : Project Name
+    VERSION         : Project Version
+
+BUILD files will be located under (uses \$storage_model): 
+    $STORAGE_BIN
+
+EOF
+}
+
+##
+# Basic dirs and links
+##
+pf_basic_dirs() {
+   mystderr 0 "++ Prep basic dirs and links: $SRC_REF, $SRC_USR, $BUILD"
+   logfile=$(pwd)/.pfinit.log
+   for mydir in $BUILD_SUB_DIR_LIST ; do
+      mkdir -p $STORAGE_BIN/$mydir 2>/dev/null || true
+   done
+   if [[ x${COMP_ARCH} == x ]] ; then
+      mystderr 0 "ERROR: COMP_ARCH is not defined; cannot create build dir"
+      exit 1
+   fi
+   rm -f $BUILD
+   ln -sf $STORAGE_BIN $BUILD 2>/dev/null || true
+   echo ${TRUE_HOST:-$(hostname)}:$STORAGE_BIN $BUILD >> $logfile
+
+   mkdir -p $SRC_REF 2>/dev/null || true
+   mkdir -p $SRC_USR 2>/dev/null || true
+
+   if [[ -d $ROOT/$BUILD_SRC ]] ; then
+      find $ROOT/$BUILD_SRC -type l -exec rm -f {} \;
+   fi
+}
+
+##
+# Basic Makefiles
+##
+pf_basic_makefiles() {
+   mystderr 1 "++ Add/Update Purplefrog build system: Makefiles"
+   if [[ x$myforce == x-f || ! -f ${ROOT}/Makefile ]] ; then
+      cp ${purplefrog}/include/Makefile.root.mk  ${ROOT}/Makefile
+      cp ${purplefrog}/include/Makefile.build.mk ${BUILD_OBJ}
+   else
+      mystderr 1 "WARNING: Purplefrog Makefiles already exists"
+      needforce=1
+   fi
+}
+
+##
+# Basic Env.Var.
+##
+pf_basic_env() {
+   mystderr 1 "++ Setting Basic Env.Var."
+   if [[ x$myforce == x-f || ! -f ${ROOT}/.setenv.dot || ! -f  ${ROOT}/.pf.ssm.bndl ]] ; then
+      cp ${purplefrog}/etc/setenv.basic.dot ${ROOT}/.setenv.dot
+      echo ${purplefrog_bndl} > ${ROOT}/.pf.ssm.bndl
+   else
+      mystderr 1 "WARNING: Purplefrog Env.Var. Setup files already exists"
+      needforce=1
+   fi
+   cat <<EOF >> ${ROOT}/.pf.comp.${TRUE_HOST}.dot
+export PF_COMPILER_VERSION=${PF_COMPILER_VERSION:-1.0.0}
+export COMP_ARCH=${COMP_ARCH}
+EOF
+   pf_src_path_add ${srcpath:-$SRC_PATH_DEFAULT}
+   if [[ x$myforce == x-f || ! -f  ${ROOT}/.pf.project.dot ]] ; then
+      cat <<EOF > ${ROOT}/.pf.project.dot
+export ATM_MODEL_NAME=${ATM_MODEL_NAME:-noname}
+export ATM_MODEL_VERSION=${ATM_MODEL_VERSION:-1.0.0}
+EOF
+   else
+      mystderr 1 "WARNING: Purplefrog Project file already exists"
+      needforce=1
+   fi
+}
+
+##
+# Basic Env.Var.
+##
+pf_init_fn() {
+   verbose=0
+   myforce=0
+   srcpath=""
+   while [[ $# -gt 0 ]] ; do
+      case $1 in
+         (-h|--help) echo "usage_long ; _status=1" ; return 1;;
+         (-v|--verbose) ((verbose++));;
+         (-f|--force) myforce=-f;;
+         (--comp=*) export COMP_ARCH=${1#*=};;
+         (--srcpath=*) srcpath=$(echo ${1#*=}|tr ' ,;\t' '::::');;
+         (--) shift ; break ;;
+         -*) echo echo  1>&2 ; "ERROR: Option Not recognized: $1" 1>&2; echo  1>&2; echo "usage_long ; _status=1" ; exit 1;;
+         *) break ;;
+      esac
+      shift
+   done
+
+   if [[ $# -ne 2 ]] ; then
+      echo  1>&2
+      echo "ERROR: Need to provide the project NAME and VERSION" 1>&2
+      echo  1>&2
+      echo "usage_long ; _status=1"
+      return 1
+   fi
+
+   export ATM_MODEL_NAME=${1}
+   export ATM_MODEL_VERSION=${2}
+   shift ; shift
+
+   needforce=0
+   . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
+   . .pfbase.inc.dot
+   pf_basic_env
+   pf_basic_dirs
+   pf_basic_makefiles
+   if [[ $needforce == 1 ]] ; then
+      mystderr 1 "Use 'pfinit -f' to force update"  1>&1
+   fi
+   echo export COMP_ARCH=$COMP_ARCH
+}
+
+## ====================================================================
+#TODO: if already init... abort
+#TODO: if not base env var... abort
+
+eval "$(pf_init_fn $*)"
+_status=${_status:-$?}
+if [[ $_status == 0 ]] ; then
+   unset _status
+   if [[ x"${0##*/}" == x"pfinit" ]] ; then
+      cat <<EOF
+
+WARNING: To complete pfinit, please source .setenv.dot
+          . .setenv.dot $COMP_ARCH
+
+EOF
+   else
+      . .setenv.dot $COMP_ARCH
+   fi
+else
+   if [[ x"${0##*/}" == x"pfinit" ]] ; then
+      exit $_status
+   else
+      unset _status
+      return 1
+   fi
+fi

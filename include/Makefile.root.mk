@@ -4,22 +4,22 @@
 
 SHELL = /bin/bash
 
-ROOT  = $(PWD)
-BUILD = $(ROOT)/$(shell pfmodel_link build)
-BUILDBIN = $(ROOT)/$(shell pfmodel_link build/bin)
-BUILDLIB = $(ROOT)/$(shell pfmodel_link build/lib)
-BUILDMOD = $(ROOT)/$(shell pfmodel_link build/mod)
-BUILDOBJ = $(ROOT)/$(shell pfmodel_link build/obj)
-BUILDPRE = $(ROOT)/$(shell pfmodel_link build/pre)
-BUILDSRC = $(ROOT)/$(shell pfmodel_link build/src)
-VPATH = $(BUILDSRC)
-VERBOSE = -v
-NJOBS = 12
+ROOT  := $(PWD)
+BUILD := $(ROOT)/$(shell pfmodel_link build)
+BUILDBIN := $(ROOT)/$(shell pfmodel_link build/bin)
+BUILDLIB := $(ROOT)/$(shell pfmodel_link build/lib)
+BUILDMOD := $(ROOT)/$(shell pfmodel_link build/mod)
+BUILDOBJ := $(ROOT)/$(shell pfmodel_link build/obj)
+BUILDPRE := $(ROOT)/$(shell pfmodel_link build/pre)
+BUILDSRC := $(ROOT)/$(shell pfmodel_link build/src)
+VPATH := $(BUILDSRC)
+VERBOSE := -v
+NJOBS := 12
 #DEP_DUP_OK = --dup_ok
 #DEP_FLAT = --flat
 #PERLPROF = perl -d:DProf $(purplefrog)/bin/
 # with PERLPROF, look at results with: dprofpp $(BUILDSRC)/tmon.out
-PFDEP_SUPP_FILE = $(purplefrog)/etc/pfdependencies.supp
+PFDEP_SUPP_FILE := $(purplefrog)/etc/pfdependencies.supp
 
 ifeq (,$(purplefrog))
    $(error FATAL ERROR: purplefrog is not defined)
@@ -31,6 +31,7 @@ ifeq ($(ROOT),$(BUILD))
    $(error FATAL ERROR: BUILD == ROOT)
 endif
 
+
 ifneq (,$(wildcard $(BUILDOBJ)/Makefile.base_arch.mk))
 	include $(BUILDOBJ)/Makefile.base_arch.mk
 endif
@@ -39,6 +40,9 @@ ifneq (,$(wildcard $(BUILDOBJ)/Makefile.ec_arch.mk))
 endif
 ifneq (,$(wildcard $(ROOT)/Makefile.user.mk))
 	include $(ROOT)/Makefile.user.mk
+endif
+ifneq (,$(wildcard $(ROOT)/Makefile.user.$(COMP_ARCH).mk))
+	include $(ROOT)/Makefile.user.$(COMP_ARCH).mk
 endif
 
 #ifeq (,$(VERBOSE))
@@ -49,8 +53,8 @@ endif
 
 .PHONY: all links links_forced sanity sanity_nodep_force dep versionfiles clean distclean distclean+ distclean++
 
-MAKE_SANITY = $(MAKE) $(BUILDOBJ)/Makefile
-MAKE_LINKS  = pfupdate_build_links.ksh ; $(MAKE_SANITY)
+MAKE_SANITY := $(MAKE) $(BUILDOBJ)/Makefile
+MAKE_LINKS  := pfupdate_build_links.ksh ; $(MAKE_SANITY)
 
 .DEFAULT: 
 	$(MAKE_LINKS)
@@ -82,7 +86,6 @@ sanity_nodep_force:
 	$(MAKE) links
 
 dep: 
-	echo "Re-Building dependency list"
 	rm -f $(BUILDOBJ)/Makefile.dep.mk $(BUILDOBJ)/Makefile.local.mk
 	$(MAKE) --no-print-directory links
 
@@ -153,7 +156,6 @@ $(BUILDOBJ)/Makefile.ec_arch.mk:
 	cp $(purplefrog)/include/$(EC_ARCH)/Makefile.arch.mk $@ 2>/dev/null || true
 	touch $@
 $(BUILDOBJ)/Makefile.dep.mk:
-	#pfupdate_build_links.ksh
 	cd $(BUILDSRC) ;\
 	pfdependencies.pl $(VERBOSE) --deep-include --soft-restriction $(DEP_DUP_OK) $(DEP_FLAT) --out=$(BUILDOBJ)/Makefile.dep.mk --any --short --supp=$(PFDEP_SUPP_FILE) --inc=`find * -type d -name include|tr '\n' ':'` `find * -type d|grep -v include`
 

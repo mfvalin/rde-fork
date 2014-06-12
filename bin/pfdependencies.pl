@@ -19,6 +19,7 @@ my $items_per_line = 4 ;   # number of items per Makefile line
 my $item_count = 0;
 my $ext = undef;
 my @listfile;
+my %listdir = ();
 my @includelist;
 my $use_strict = undef;
 my $deep_include = undef;
@@ -884,9 +885,26 @@ for (sort keys %LISTOBJECT) {
 		  } else {
 				print_item("$file->{FULLPATH_SRC}$file->{FILENAME}.o");
 		  }
+		  my(@dirs) = split("/",$file->{FULLPATH_SRC});
+		  if (!exists($listdir{$dirs[0]})) {
+				@{$listdir{$dirs[0]}} = ();
+		  }
+		  if ($flat_layout) {
+				push @{$listdir{$dirs[0]}},"$file->{FILENAME}.o";
+		  } else {
+				push @{$listdir{$dirs[0]}},"$file->{FULLPATH_SRC}$file->{FILENAME}.o";
+		  }
 	 }
 }
 print STDOUT "\n";
+
+for (keys %listdir) {
+	 print_header("OBJECTS_".$_,"=","");
+	 for my $item (@{$listdir{$_}}) {
+		  print_item("$item");
+	 }
+	 print STDOUT "\n";
+}
 
 #
 #   Build dependencie rules

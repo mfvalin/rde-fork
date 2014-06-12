@@ -28,7 +28,7 @@ VPATH    = $(ROOT)/$(shell pfmodel_link build/src)
 
 #BLAS     = blas
 
-INCLUDES = $(shell pfdir_with_files -n $(VPATH))
+INCLUDES = $(shell .pfdir_with_files -n $(VPATH))
 #INCLUDES = $(shell find $(VPATH) -type d |tr '\n' ' ')
 #INCLUDES = $(shell find $(VPATH) -type d |tr '\n' ' ' | grep '/include')
 #TODO: INCLUDE only /include when code is clean from cross dir includes
@@ -59,6 +59,9 @@ endif
 ifneq (,$(wildcard $(ROOT)/Makefile.user.mk))
 	include $(ROOT)/Makefile.user.mk
 endif
+ifneq (,$(wildcard $(ROOT)/Makefile.user.$(COMP_ARCH).mk))
+	include $(ROOT)/Makefile.user.$(COMP_ARCH).mk
+endif
 
 #.SILENT:
 
@@ -81,6 +84,7 @@ libs: $(OBJECTS) Makefile.dep.mk
 		fi ;\
 	done ;\
 	exit $${status}
+#$(BUILDLIB)/lib$(MYCOMPONENT).a: $(OBJECTS_$(MYCOMPONENT)) Makefile.dep.mk
 $(BUILDLIB)/lib$(MYCOMPONENT).a: $(OBJECTS) Makefile.dep.mk
 	status=0;\
 	if [[ -d $(MYCOMPONENT) ]] ; then \
@@ -91,14 +95,7 @@ $(BUILDLIB)/lib$(MYCOMPONENT).a: $(OBJECTS) Makefile.dep.mk
 
 LIBLOCAL = _local_
 LIBLOCALDEP = $(BUILDLIB)/lib$(LIBLOCAL).a
-libs0: $(LIBLOCALDEP)
-libs0split: $(OBJECTS)
-	for mydir in `ls -d *` ; do \
-		if [[ -d $${mydir} ]] ; then \
-			rm -f $(BUILDLIB)/lib$${mydir}.a ;\
-			ar r $(BUILDLIB)/lib$${mydir}.a `find $${mydir} -name '*.o'` ;\
-		fi ;\
-	done
+liball: $(LIBLOCALDEP)
 $(LIBLOCALDEP): $(OBJECTS) Makefile.dep.mk
 	rm -f $@ 2>/dev/null || true
 	ar r $@ `find . -name '*.o'`

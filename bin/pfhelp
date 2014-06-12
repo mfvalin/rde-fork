@@ -1,6 +1,6 @@
 #!/bin/ksh
 
-. pfbase.inc.dot
+. .pfbase.inc.dot
 DESC='Purple Frog help'
 USAGE="USAGE: ${MYSELF} [-h] [-l] [TOOL]"
 

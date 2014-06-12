@@ -2,7 +2,7 @@
 # @Object: Open editor with files in build or src directory
 # @Author: S.Chamberland
 # @Date:   March 2014
-. pfbase.inc.dot
+. .pfbase.inc.dot
 
 DESC='Open editor with files in build or src directory'
 USAGE="USAGE: ${MYSELF} [-h] [-b|-s|-l] [-v|-e] FILENAME [FILENAME2 ...]"
@@ -50,6 +50,8 @@ files="$files $@"
 if [[ x"$files" == x" " ]] ; then
    myerror "Must provide at least one filename"
 fi
+
+pf_exit_if_not_pftopdir
 
 locate_for_vi() {
    _item=$1

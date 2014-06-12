@@ -25,7 +25,7 @@ BUILDMOD = $(ROOT)/$(shell pfmodel_link build/mod)
 
 RBUILD3MPI = \
 	status=0 ;\
-	pfmakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
+	.pfmakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
 	$(MAKE) bidon_$${MAINSUBNAME}.o >/dev/null || status=1 ; \
 	rm -f bidon_$${MAINSUBNAME}.f90 ;\
 	$(RBUILD) -obj *.o -o $@ $(OMP) $(MPI) \
@@ -40,7 +40,7 @@ RBUILD3MPI = \
 
 RBUILD3NOMPI = \
 	status=0 ;\
-	pfmakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
+	.pfmakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
 	$(MAKE) bidon_$${MAINSUBNAME}.o >/dev/null || status=1 ; \
 	rm -f bidon_$${MAINSUBNAME}.f90 ;\
 	$(RBUILD) -obj *.o -o $@ $(OMP) \
@@ -55,7 +55,7 @@ RBUILD3NOMPI = \
 
 RBUILD3NOMPI_C = \
 	status=0 ;\
-	pfmakemodelbidon -c $${MAINSUBNAME} > bidon_$${MAINSUBNAME}_c.c ; \
+	.pfmakemodelbidon -c $${MAINSUBNAME} > bidon_$${MAINSUBNAME}_c.c ; \
 	$(MAKE) bidon_$${MAINSUBNAME}_c.o >/dev/null || status=1 ; \
 	rm -f bidon_$${MAINSUBNAME}_c.c ;\
 	$(RBUILD) -obj *.o -o $@ $(OMP) -conly \
@@ -77,7 +77,7 @@ FTN90_DOT_F90    = rm -f $*.f90 ; cd $(dir $@) && $(FTNC) $< && mv -f $(notdir $
 PREF_DOT_O   = cd $(dir $@) && $(FC) $(BUILDPRE)/$*.f
 PREF90_DOT_O = cd $(dir $@) && $(F90C2) $(BUILDPRE)/$*.f90
 
-#TODO: mv -f *.[mM][oO][dD] is dangerous with parallel make [-j]
+#TODO: mv -f *.[mM][oO][dD] is dangerous with parallel make [-j]; may want s.dependencies to provide list of .mod for each src file
 F90_DOT_O_MOD_MV = cd $(dir $@) && mv -f *.[mM][oO][dD] $(BUILDMOD) 2>/dev/null || true
 
 

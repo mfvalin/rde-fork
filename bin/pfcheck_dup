@@ -2,7 +2,7 @@
 # @Object: Check Duplicate files in provided PATH
 # @Author: S.Chamberland
 # @Date:   March 2014
-. pfbase.inc.dot
+. .pfbase.inc.dot
 
 DESC='Check Duplicate files in provided PATH'
 USAGE="USAGE: ${MYSELF} [-h] [-v] [--ext='.ext1 .ext2 ...'] [--src=/PATH/TO/SRC | --files=LIST_OF_FILES] [-r] PATH"

@@ -1,10 +1,11 @@
+#!/bin/ksh
 # @Object: Basic definitions and functions
 # @Author: S.Chamberland
 # @Date:   March 2014
 # @USAGE: . pfbase.inc.dot
 
 if [[ x"${0##*/}" == x"pfbase.inc.dot" ]] ; then
-   cat<<EOF
+   cat<<EOF 1>&1
 =======================================
 ERROR: This script should be sourced
        . $0
@@ -27,7 +28,38 @@ BUILD_PRE=$(pfmodel_link build/pre)
 BUILD_SRC=$(pfmodel_link build/src)
 SRC_REF=$(pfmodel_link ref)
 SRC_USR=$(pfmodel_link local)
-verbose=0
+verbose=${verbose:-0}
+
+SRC_PATH_FILE=.pf.srcpath
+SRC_PATH_DEFAULT=/users/dor/armn/sch/SsmBundles/data/purplefrog-src
+
+##
+# Check if PWD is a PF dir
+##
+pf_exit_if_not_pftopdir() {
+   pf_check_dir
+   if [[ $? -ne 0 ]] ; then
+      cat<<EOF 1>&1
+=======================================
+ERROR: $MYSELF should be run in a PurpleFrog top development dir
+       Maybe you forgot to run "pfinit"?
+=======================================
+EOF
+      exit 1
+   fi
+}
+pf_check_dir() {
+   [[ ! -d $BUILD ]] && return 1 || true
+   [[ ! -d $SRC_REF ]] && return 1 || true
+   [[ ! -d $SRC_USR ]] && return 1 || true
+   [[ ! -f .pf.ssm.bndl ]] && return 1 || true
+   [[ ! -f .pf.project.dot ]] && return 1 || true
+   [[ ! -f .pf.comp.${TRUE_HOST}.dot ]] && return 1 || true
+   #[[ ! -f .pf.srcpath ]] && return 1 || true
+   #[[ ! -f .pf.components ]] && return 1 || true
+   [[ ! -f Makefile ]] && return 1 || true
+   return 0
+}
 
 ##
 #
@@ -125,6 +157,7 @@ find_src_file_list() {
    fi
    cd ${_here}
 }
+
 ##
 #
 ##
@@ -155,4 +188,18 @@ is_src_local_deleted() {
       echo ${_itempath}/${_itemname2}
    fi
    echo ""
+}
+
+##
+#
+##
+pf_src_path() {
+   srcpath="$(cat ${SRC_PATH_FILE} 2>/dev/null | tr ' \n' '::')"
+   echo ${srcpath:-$SRC_PATH_DEFAULT}
+}
+pf_src_path_add() {
+   echo ${1:-$SRC_PATH_DEFAULT} | tr ':' '\n' >> $SRC_PATH_FILE
+   cp $SRC_PATH_FILE $TMPDIR/${SRC_PATH_FILE}_$$
+   cat $TMPDIR/${SRC_PATH_FILE}_$$ | sort -u > $SRC_PATH_FILE
+   rm -f $TMPDIR/${SRC_PATH_FILE}_$$
 }

@@ -1,0 +1,1 @@
+export COMP_ARCH=${COMP_ARCH:-pgi9xx}

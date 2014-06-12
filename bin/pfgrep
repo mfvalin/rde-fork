@@ -1,5 +1,5 @@
 #!/bin/ksh
-. pfbase.inc.dot
+. .pfbase.inc.dot
 
 DESC='Grep (print lines matching a pattern) in src and src_ref'
 USAGE="USAGE: ${MYSELF} [-l] [GREP_OPTIONS] SEARCH_STRING [PATH]"
@@ -38,6 +38,8 @@ SEARCH_PATH=""
 if [[ $# -gt 0 ]] ; then
    SEARCH_PATH="$1"
 fi
+
+pf_exit_if_not_pftopdir
 
 SEARCH_PATH_BASE="${SRC_USR} ${SRC_REF}"
 if [[ $localonly == 1 ]] ; then

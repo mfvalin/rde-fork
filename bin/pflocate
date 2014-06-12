@@ -2,7 +2,7 @@
 # @Object: Locate files in build or src directory
 # @Author: S.Chamberland
 # @Date:   March 2014
-. pfbase.inc.dot
+. .pfbase.inc.dot
 
 DESC='Locate files in build or src directory'
 USAGE="USAGE: ${MYSELF} [-h] [-b|-r|-l|-a] FILENAME [FILENAME2 ...]"
@@ -46,6 +46,8 @@ files="$files $@"
 if [[ x"$files" == x" " ]] ; then
    myerror "Must provide at least one filename"
 fi
+
+pf_exit_if_not_pftopdir
 
 find_file() {
    _myfile=$1

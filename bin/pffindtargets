@@ -1,5 +1,5 @@
 #!/bin/ksh
-. pfbase.inc.dot
+. .pfbase.inc.dot
 
 DESC='Find the list of targets in Makefiles'
 USAGE="USAGE: ${MYSELF}"

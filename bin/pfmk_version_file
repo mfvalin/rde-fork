@@ -2,9 +2,8 @@
 # @Object: Create version files
 # @Author: S.Chamberland
 # @Date:   March 2014
-. pfbase.inc.dot
 DESC='Create version files'
-USAGE="USAGE: ${MYSELF} [-h] [-f] PKGNAME PKGVERSION [DESTDIR [TYPE [FORMAT]]]"
+USAGE="USAGE: ${MYSELF} [-h] [-f] PKGNAME PKGVERSION [DESTDIR [TYPE]]"
 
 usage_long() {
 	 toto=$(echo -e $USAGE)
@@ -19,8 +18,7 @@ Options:
     PKGNAME      : Package Name
     PKGVERSION   : Package Version Number
     DESTDIR      : Dir where to creat the file [Default: .]
-    TYPE         : Version File Type of  [c, f, sh] [Default: sh]
-    FORMAT       : Version File Name Format [s, l] [Default: l]
+    TYPE         : Version File Type of  [c, f, sh, shl] [Default: sh]
 EOF
 }
 
@@ -38,9 +36,10 @@ PKGNAME=$1
 PKGVERSION=$2
 DESTDIR=${3:-.}
 MODE=${4:-sh}
-NAMEFMT=${5:-l}
 if [[ x$PKGNAME == x || x$PKGVERSION == x ]] ; then
-   myerror "PKGNAME or PKGVERSION not provided"
+   echo "ERROR: PKGNAME or PKGVERSION not provided"
+   usage_long
+   exit 1
 fi
 
 PKGNAME=$(echo $PKGNAME | tr 'a-z' 'A-Z')
@@ -59,6 +58,10 @@ elif [[ x$MODE == xf ]] ; then
    prefix='       character(len=50),parameter ::'
    sep=' = '
 elif [[ x$MODE == xsh ]] ; then
+   versionfilename=${DESTDIR}/.VERSION
+   prefix='export'
+   sep='='
+elif [[ x$MODE == xshl ]] ; then
    versionfilename=${DESTDIR}/${pkgname_}_version.dot
    [[ x${NAMEFMT} == xs ]] && versionfilename=${DESTDIR}/.VERSION
    prefix='export'
