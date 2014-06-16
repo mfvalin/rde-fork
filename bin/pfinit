@@ -19,7 +19,7 @@
 # Help
 ##
 DESC='Initial setup of a PF workdir'
-USAGE="USAGE: . pfinit [-h] [-v] [-f] [--comp=COMPILER] [--add=COMPONENTS] NAME VERSION"
+USAGE="USAGE: . pfinit [-h] [-v] [-f] [--comp=COMPILER] [--import=COMPONENTS] NAME VERSION"
 usage_long() {
    . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
    . .pfbase.inc.dot
@@ -37,7 +37,7 @@ Options:
                       [Not fully implemented yet]
     --comp=COMP     : use compiler COMP instead of the default one
                       [Default: \${COMP_ARCH:-$(. ${purplefrog}/include/${BASE_ARCH}/default.comp.dot; echo $COMP_ARCH)}]
-    --add=COMPONENTS: List of compents/version to add/import
+    --import=COMPONENTS: List of component/version to import
     --srcpath=PATH  : List of dir where to look for src COMPONENT/VERSION
                       [Default: $(pf_src_path)]
     --binpath=PATH  :
@@ -49,6 +49,42 @@ BUILD files will be located under (uses \$storage_model):
     $STORAGE_BIN
 
 EOF
+}
+
+##
+# Cloning fn
+##
+pf_clone_dir() {
+   echo "WARNING: clone dir Not implemented yet" 1>&2
+   return 1
+
+   _clonedir=$1
+   if [[ -f ${_clonedir}/.pf.comp.${BASE_ARCH}.dot ]] ; then
+      . ${_clonedir}/.pf.comp.${BASE_ARCH}.dot
+   fi
+   . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
+   . .pfbase.inc.dot
+   _here=$(pwd)
+   cd $_clonedir
+   #TODO: BUILD=
+   if [[ pf_check_dir -ne 0 ]] ; then
+      mystderr 0 "WARNING: clonedir is not PF dev dir: $_clonedir"
+      return 1
+   fi
+   for _myfile in $PF_BASE_FILE ; do
+      cp $_myfile . 1>&2
+   done
+   rsync -a $SRC_REF/ $_here/$SRC_REF/
+   rsync -a $SRC_USR/ $_here/$SRC_USR/
+   rsync -a $BUILD/ $_here/$(pfmodel_link build)/ 1>&2
+   cd $_here/$(pfmodel_link build/src)
+   find . -name ${_myfile} -type l -exec rm -f {} \;
+}
+
+pf_clone_file() {
+   echo "WARNING: clone file Not implemented yet" 1>&2
+   return 1
+
 }
 
 ##
@@ -102,9 +138,9 @@ pf_basic_env() {
       mystderr 1 "WARNING: Purplefrog Env.Var. Setup files already exists"
       needforce=1
    fi
-   cat <<EOF >> ${ROOT}/.pf.comp.${TRUE_HOST}.dot
-export PF_COMPILER_VERSION=${PF_COMPILER_VERSION:-1.0.0}
-export COMP_ARCH=${COMP_ARCH}
+   cat <<EOF >> ${ROOT}/.pf.comp.${BASE_ARCH}.dot
+export PF_COMPILER_VERSION=\${PF_COMPILER_VERSION:-${PF_COMPILER_VERSION:-1.0.0}}
+export COMP_ARCH=\${COMP_ARCH:-${COMP_ARCH}}
 EOF
    pf_src_path_add ${srcpath:-$SRC_PATH_DEFAULT}
    if [[ x$myforce == x-f || ! -f  ${ROOT}/.pf.project.dot ]] ; then
@@ -119,12 +155,14 @@ EOF
 }
 
 ##
-# Basic Env.Var.
+# Main PF init fn
 ##
 pf_init_fn() {
    verbose=0
    myforce=0
    srcpath=""
+   addcomponents=""
+   clone=""
    while [[ $# -gt 0 ]] ; do
       case $1 in
          (-h|--help) echo "usage_long ; _status=1" ; return 1;;
@@ -132,6 +170,8 @@ pf_init_fn() {
          (-f|--force) myforce=-f;;
          (--comp=*) export COMP_ARCH=${1#*=};;
          (--srcpath=*) srcpath=$(echo ${1#*=}|tr ' ,;\t' '::::');;
+         (--import=*) addcomponents="${1#*=}";;
+         (--clone=*) clone=${1#*=};;
          (--) shift ; break ;;
          -*) echo echo  1>&2 ; "ERROR: Option Not recognized: $1" 1>&2; echo  1>&2; echo "usage_long ; _status=1" ; exit 1;;
          *) break ;;
@@ -139,17 +179,30 @@ pf_init_fn() {
       shift
    done
 
-   if [[ $# -ne 2 ]] ; then
+   if [[ x"$clone" != x ]] ; then
+      if [[ -d $clone ]] ; then
+         pf_clone_dir $clone
+      elif [[ -f $clone ]] ; then
+         pf_clone_file $clone
+      else
+         cat <<EOF 1>&2
+WARNING: Clone not found, ignoring: $clone
+EOF
+      fi
+      if [[ -f .pf.project.dot ]] ; then
+         . .pf.project.dot
+      fi
+   fi
+
+   export ATM_MODEL_NAME=${ATM_MODEL_NAME:-$1}
+   export ATM_MODEL_VERSION=${ATM_MODEL_VERSION:-2}
+   if [[ x"$ATM_MODEL_NAME" == x || x"$ATM_MODEL_VERSION" == x ]] ; then
       echo  1>&2
       echo "ERROR: Need to provide the project NAME and VERSION" 1>&2
       echo  1>&2
       echo "usage_long ; _status=1"
       return 1
    fi
-
-   export ATM_MODEL_NAME=${1}
-   export ATM_MODEL_VERSION=${2}
-   shift ; shift
 
    needforce=0
    . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
@@ -159,6 +212,13 @@ pf_init_fn() {
    pf_basic_makefiles
    if [[ $needforce == 1 ]] ; then
       mystderr 1 "Use 'pfinit -f' to force update"  1>&1
+   fi
+   if [[ x$addcomponents != x ]] ; then
+      if [[ -f $addcomponents ]] ; then
+         pfimport --file="$addcomponents"
+      else
+         pfimport $addcomponents
+      fi
    fi
    echo export COMP_ARCH=$COMP_ARCH
 }

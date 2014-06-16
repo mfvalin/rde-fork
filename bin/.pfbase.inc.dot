@@ -33,6 +33,9 @@ verbose=${verbose:-0}
 SRC_PATH_FILE=.pf.srcpath
 SRC_PATH_DEFAULT=/users/dor/armn/sch/SsmBundles/data/purplefrog-src
 
+PF_BASE_DIR="\$BUILD $SRC_REF $SRC_USR"
+PF_BASE_FILE=".setenv.dot .pf.ssm.bndl .pf.project.dot .pf.comp.${BASE_ARCH}.dot .pf.srcpath .pf.components Makefile"
+
 ##
 # Check if PWD is a PF dir
 ##
@@ -49,15 +52,12 @@ EOF
    fi
 }
 pf_check_dir() {
-   [[ ! -d $BUILD ]] && return 1 || true
-   [[ ! -d $SRC_REF ]] && return 1 || true
-   [[ ! -d $SRC_USR ]] && return 1 || true
-   [[ ! -f .pf.ssm.bndl ]] && return 1 || true
-   [[ ! -f .pf.project.dot ]] && return 1 || true
-   [[ ! -f .pf.comp.${TRUE_HOST}.dot ]] && return 1 || true
-   #[[ ! -f .pf.srcpath ]] && return 1 || true
-   #[[ ! -f .pf.components ]] && return 1 || true
-   [[ ! -f Makefile ]] && return 1 || true
+   for _mydir in $PF_BASE_DIR ; do
+      [[ ! -d $_mydir ]] && return 1 || true
+   done
+   for _myfile in $PF_BASE_FILE ; do
+      [[ ! -f $_myfile ]] && return 1 || true
+   done
    return 0
 }
 

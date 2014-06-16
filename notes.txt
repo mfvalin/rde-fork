@@ -1,0 +1,36 @@
+TODO:
+* clone
+* pfupdate_build_links.ksh: get_dep_list, myrm_dep, myrm_bidon, myrm_empty
+* pfupdate_build_links.ksh: .restricted; make sure src_usr/*/.restricted have precedence over src_ref
+* pfmv
+* test if src_usr is added
+* test if file recompiled when back to ref version
+* Use s.f90, s.f77 instead of s.compile
+* allow Compiler_rules override in topdir, src_ref and src
+* Make -j (no NJOBS)
+* foolib(hack.o) : hack.o
+        ar r foolib hack.o
+  http://www.cs.utah.edu/dept/old/texinfo/make/make.html#SEC101
+
+Done:
+* pfinit/import
+* make sure .version_file in src_usr have precedence over src_ref
+* pf scripts should check if it's ok to run in PWD
+* refactor s.dependencies.pl
+
+Special files:
+* .restricted: whitelist of "$BASE_ARCH:" or "$EC_ARCH:" for dir access; located in src_ref, src dir to restrict; NOT recursive
+* .version_file: whitelist of version files to produce; located in main src_ref, src dir of a component, version files are created in the component's include dir
+* .rm.NAME: removed file (do not use src_ref version); location same src dir as where fiel was; NOT working for dir
+* .setenv.dot
+* .pf.ssm.bndl
+* .pf.project.dot
+* .pf.comp.BASE_ARCH.dot
+* .pf.srcpath
+* .pf.components
+* Makefile
+* Makefile.user.mk
+* Makefile.user.COMP_ARCH.mk
+* .compiler_rules.dot
+
+

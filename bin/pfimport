@@ -37,7 +37,7 @@ EOF
 pf_rm_component() {
    _comp=$1
    _do_src_usr=$2
-   myecho 1 "Remove Component dir and src: $_comp/$_ver"
+   mystderr 1 "Remove Component dir and src: $_comp/$_ver"
    #rm src_ref
    rm -f $ROOT/$SRC_REF/$_comp 2>/dev/null || true
    rm -rf $ROOT/$SRC_REF/$_comp 2>/dev/null || true
@@ -73,7 +73,7 @@ pf_find_component() {
 pf_add_component() {
    _comp=$1
    _ver=$2
-   myecho 0 "++ Importing Component: $_comp/$_ver"
+   mystderr 0 "++ Importing Component: $_comp/$_ver"
 
    pf_add_component_ref $_comp $_ver
    if [[ $? -ne 0 ]] ; then
@@ -110,7 +110,7 @@ pf_add_component_ref() {
    fi
    PF_src=$(pf_find_component $_comp $_ver)
    if [[ -d $PF_src/$_comp/$_ver ]] ; then
-      myecho 1 "Linking Existing Component: $_comp/$_ver"
+      mystderr 1 "Linking Existing Component: $_comp/$_ver"
       if [[ -d $PF_src/$_comp/$_ver/src ]] ; then
          ln -sf $PF_src/$_comp/$_ver/src $ROOT/$SRC_REF/$_comp
       else
@@ -124,7 +124,7 @@ pf_add_component_ref() {
    #    mystderr 0 "WARNING: Component already linked in $SRC_REF"
 
    #    #TODO: should be an error if not forced
-   #    myecho 1 "Creating New Component: $_comp/$_ver"
+   #    mystderr 1 "Creating New Component: $_comp/$_ver"
    #    mkdir -p $ROOT/$SRC_REF/$_comp/include 2>/dev/null
    #    #TODO: add basic include file?
    # fi
@@ -132,7 +132,7 @@ pf_add_component_ref() {
 
 pf_add_component_mirror_dir() {
    _comp=$1
-   myecho 1 "Mirror components ref dir to src, build: $_comp"
+   mystderr 1 "Mirror components ref dir to src, build: $_comp"
    for _item in $(cd $ROOT/$SRC_REF/$_comp ; find -L . -type d) ; do
       if [[ x$item != x. ]] ;then
          mkdir -p $ROOT/$SRC_USR/$_comp/$_item 2>/dev/null
@@ -147,7 +147,7 @@ pf_add_component_version_file() {
    _comp=$1
    _ver=$2
    if [[ -f $ROOT/$SRC_REF/$_comp/.version_file ]] ; then
-      myecho 1 "++ Add version file to: $_comp"
+      mystderr 1 "++ Add version file to: $_comp"
       mkdir -p $ROOT/$SRC_USR/$_comp/include 2>/dev/null || true
       for _item in $(cat $ROOT/$SRC_REF/$_comp/.version_file) ; do
          pfmk_version_file ${myforce} $_comp $_ver $ROOT/$SRC_USR/$_comp/include $_item >/dev/null 2>&1
@@ -160,7 +160,7 @@ pf_add_component_version_file() {
 ##
 pf_fill_component_build() {
    _comp=$1
-   myecho 1 "Copy Component src to build: $_comp"
+   mystderr 1 "Copy Component src to build: $_comp"
    #TODO: if [[ $hasclonesrc -eq 0 || x$myforce != x ]] ; then
    find $ROOT/$BUILD_SRC/$_comp -type l -exec rm -f {} \;
    for _item in $(cd $ROOT/$SRC_REF/$_comp ; find -L . -type d) ; do
@@ -180,7 +180,7 @@ pf_clone_component_build() {
    if [[ x$_clonepath == x ]] ;then
       return 0
    fi
-   myecho 1 "++ Clone Component build: $_comp/$_ver"
+   mystderr 1 "++ Clone Component build: $_comp/$_ver"
 }
 
 ## ====================================================================
@@ -217,7 +217,7 @@ if [[ x$compfile != x ]] ; then
    if [[ ! -f $compfile ]] ; then
       myerror "No such file: $compfile"
    fi
-   myecho 0 "Using components list from: $compfile"
+   mystderr 0 "Using components list from: $compfile"
    compverlist="${compverlist} $(cat $compfile)"
 fi
 
@@ -234,7 +234,7 @@ for item in $(echo $compverlist | tr ' ' '\n' | sort -u); do
    pf_add_component $mycomp $myver
 done
 
-myecho 0 "++ Update Makefiles"
+mystderr 0 "++ Update Makefiles"
 #make links
 #make dep
 make links_forced
