@@ -67,7 +67,8 @@ tar rf $clonefile ${SRC_USR}-user
 mv ${SRC_USR}-user $SRC_USR 
 mystderr 0 "++Cloning build dir ${BUILD}"
 cd ${BUILD}
-clonesubdirlist="src mod obj lib bin"
+#clonesubdirlist="src mod obj lib bin"
+clonesubdirlist="src mod obj"
 tar rf $clonefile $clonesubdirlist
 
 gzip $clonefile

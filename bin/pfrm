@@ -49,7 +49,10 @@ isfile=0
 for myfile in $PATHLIST ; do
    myfile0=$myfile
    if [[ ! -f ${SRC_USR}/$myfile && ! -f ${SRC_REF}/$myfile ]] ; then
-      myfile="$(pflocate $myfile 2>/dev/null | grep -v "Missing file"| tr "\n" " " | cut -d" " -f1)"
+      myfile="$(pflocate $myfile0 2>/dev/null | grep -v "Missing file"| tr "\n" " " | cut -d" " -f1)"
+      if [[ ! -n $myfile ]] ; then
+         myfile="$(pflocate -r $myfile0 2>/dev/null | grep -v "Missing file"| tr "\n" " " | cut -d" " -f1)"
+      fi
       myfile=${myfile#*/}
    fi
    if [[ ! -n $myfile ]] ; then

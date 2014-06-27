@@ -27,6 +27,7 @@ Options:
                      [Default: $(pf_src_path)]
     --file=/PATH/TO/COMPONENT_LIST_FILE
                      File with list of COMPNAME/COMPVERSION
+    --skip_mkdep     :Do not redo dependencies
 
 EOF
 }
@@ -73,17 +74,20 @@ pf_find_component() {
 pf_add_component() {
    _comp=$1
    _ver=$2
-   mystderr 0 "++ Importing Component: $_comp/$_ver"
+   mystderr 1 "++ Importing Component: $_comp/$_ver"
 
    pf_add_component_ref $_comp $_ver
-   if [[ $? -ne 0 ]] ; then
+   _status=$?
+   if [[ $_status -eq 0 || x$myforce == xbin ]] ; then
+      pf_add_component_mirror_dir $_comp
+      pf_clone_component_build $_comp $_ver $_clonepath
+      #TODO: prevent src cp if hasclonesource
+      pf_fill_component_build $_comp
+   fi
+   if [[ $_status -ne 0 ]] ; then
       return 1
    fi
-   pf_add_component_mirror_dir $_comp
    pf_add_component_version_file $_comp $_ver
-   pf_clone_component_build $_comp $_ver $_clonepath
-   #TODO: prevent src cp if hasclonesource
-   pf_fill_component_build $_comp
 
    #Keep track
    echo $_comp/$_ver >> $ROOT/.pf.components
@@ -98,13 +102,17 @@ pf_add_component_ref() {
    _comp=$1
    _ver=$2
    if [[ -d $ROOT/$SRC_REF/$_comp ]] ; then
-      mystderr 0 "WARNING: Component already linked in $SRC_REF"
+      mystderr $((1+$nowarn_if_exists)) "WARNING: Component already linked in $SRC_REF"
       if [[ x$myforce == x-f ]] ; then
-          mystderr 0 "........ Replacing existing $_comp"
+          mystderr $((1+nowarn_if_exists)) "........ Replacing existing $_comp"
           pf_rm_component $_comp no
+      elif [[ x$myforce == xbin ]] ; then
+         mystderr $((1+$nowarn_if_exists)) "........ Will only update the build src for: $_comp"
+         mystderr $((1+$nowarn_if_exists)) "........ To replace existing $_comp, Use: ${MYSELF} -f  $_comp/$_ver"
+         return 1
       else
-         mystderr 0 "........ Nothing done for: $_comp/$_ver"
-         mystderr 0 "........ To replace existing $_comp, Use: ${MYSELF} -f  $_comp/$_ver"
+         mystderr $((1+$nowarn_if_exists)) "........ Nothing done for: $_comp/$_ver"
+         mystderr $((1+$nowarn_if_exists)) "........ To replace existing $_comp, Use: ${MYSELF} -f  $_comp/$_ver"
          return 1
       fi
    fi
@@ -132,7 +140,7 @@ pf_add_component_ref() {
 
 pf_add_component_mirror_dir() {
    _comp=$1
-   mystderr 1 "Mirror components ref dir to src, build: $_comp"
+   mystderr 2 "Mirror components ref dir to src, build: $_comp"
    for _item in $(cd $ROOT/$SRC_REF/$_comp ; find -L . -type d) ; do
       if [[ x$item != x. ]] ;then
          mkdir -p $ROOT/$SRC_USR/$_comp/$_item 2>/dev/null
@@ -160,7 +168,7 @@ pf_add_component_version_file() {
 ##
 pf_fill_component_build() {
    _comp=$1
-   mystderr 1 "Copy Component src to build: $_comp"
+   mystderr 2 "Copy Component src to build: $_comp"
    #TODO: if [[ $hasclonesrc -eq 0 || x$myforce != x ]] ; then
    find $ROOT/$BUILD_SRC/$_comp -type l -exec rm -f {} \;
    for _item in $(cd $ROOT/$SRC_REF/$_comp ; find -L . -type d) ; do
@@ -192,13 +200,18 @@ myforce=""
 srcpath0=""
 compfile=""
 compverlist=""
+skip_mkdep=0
+nowarn_if_exists=0
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
       (-v|--verbose) ((verbose++));;
       (-f|--force) myforce=-f;;
+      (--force=*) myforce=${1#*=};;
       (--srcpath=*) srcpath0=$(echo ${1#*=}|tr ' ,;\t' '::::');;
       (--file=*) compfile=${1#*=} ;;
+      (--skip_mkdep) skip_mkdep=1 ;;
+      (--nowarn_if_exists) nowarn_if_exists=9;;
       (--) shift ; break ;;
       -*) myerror "Option Not recognized: $1";;
       *) break ;;
@@ -217,7 +230,7 @@ if [[ x$compfile != x ]] ; then
    if [[ ! -f $compfile ]] ; then
       myerror "No such file: $compfile"
    fi
-   mystderr 0 "Using components list from: $compfile"
+   mystderr 0 "++ Importing components, using list from: $compfile"
    compverlist="${compverlist} $(cat $compfile)"
 fi
 
@@ -234,7 +247,13 @@ for item in $(echo $compverlist | tr ' ' '\n' | sort -u); do
    pf_add_component $mycomp $myver
 done
 
-mystderr 0 "++ Update Makefiles"
-#make links
-#make dep
-make links_forced
+if [[ $skip_mkdep == 0 ]] ; then
+   mystderr 0 "++ Update Makefiles"
+   #make links
+   #make dep
+   if [[ $verbose -eq 0 ]] ; then
+      make -s links_forced VERBOSE=
+   else
+      make links_forced VERBOSE=-v
+   fi
+fi

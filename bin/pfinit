@@ -201,6 +201,7 @@ EOF
 # Main PF init fn
 ##
 pf_init_fn() {
+   myverbose=""
    verbose=0
    myforce=0
    srcpath=""
@@ -208,8 +209,8 @@ pf_init_fn() {
    clone=""
    while [[ $# -gt 0 ]] ; do
       case $1 in
-         (-h|--help) usage_long ; return 1;;
-         (-v|--verbose) ((verbose++));;
+         (-h|--help) return 1;;
+         (-v|--verbose) ((verbose++));myverbose='-v';;
          (-f|--force) myforce=-f;;
          (--comp=*) export COMP_ARCH=${1#*=};;
          (--srcpath=*) srcpath=$(echo ${1#*=}|tr ' ,;\t' '::::');;
@@ -225,9 +226,9 @@ pf_init_fn() {
    needforce=0
    . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
    . .pfbase.inc.dot
-   pf_basic_dirs
 
    if [[ x"$clone" != x ]] ; then
+      pf_basic_dirs
       if [[ -d $clone ]] ; then
          pf_clone_dir $clone
       elif [[ -f $clone ]] ; then
@@ -237,21 +238,29 @@ pf_init_fn() {
 WARNING: Clone not found, ignoring: $clone
 EOF
       fi
-      if [[ -f .pf.project.dot ]] ; then
-         . .pf.project.dot
+   fi
+
+   arg1=${1%%/*}
+   arg2=${2:-${1##*/}}
+   if [[ -f .pf.project.dot ]] ; then
+      . .pf.project.dot
+      if [[ "${ATM_MODEL_NAME}/${ATM_MODEL_VERSION}" != "${arg1}/${arg2}" ]] ; then
+         mystderr 0 "Using existing dev dir setup for ${ATM_MODEL_NAME}/${ATM_MODEL_VERSION}, ignoring provided NAME/VERSION ${arg1}/${arg2}" 1>&2
       fi
    fi
 
-   export ATM_MODEL_NAME=${ATM_MODEL_NAME:-$1}
-   export ATM_MODEL_VERSION=${ATM_MODEL_VERSION:-$2}
-   if [[ x"$ATM_MODEL_NAME" == x || x"$ATM_MODEL_VERSION" == x ]] ; then
-      echo  1>&2
-      echo "ERROR: Need to provide the project NAME and VERSION" 1>&2
-      echo  1>&2
-      echo "usage_long ; _status=1"
+   export ATM_MODEL_NAME=${ATM_MODEL_NAME:-$arg1}
+   export ATM_MODEL_VERSION=${ATM_MODEL_VERSION:-$arg2}
+   if [[ x"$ATM_MODEL_NAME" == x || x"$ATM_MODEL_VERSION" == x || x"$ATM_MODEL_NAME" == x"$ATM_MODEL_VERSION" ]] ; then
+      mystderr 0
+      mystderr 0 "ERROR: Need to provide the project NAME and VERSION"
+      mystderr 0
       return 1
    fi
 
+   if [[ x"$clone" == x ]] ; then
+      pf_basic_dirs
+   fi
    pf_basic_env
    pf_basic_makefiles
    if [[ $needforce == 1 ]] ; then
@@ -259,10 +268,13 @@ EOF
    fi
    if [[ x$addcomponents != x ]] ; then
       if [[ -f $addcomponents ]] ; then
-         pfimport --file="$addcomponents"
+         pfimport $myverbose --skip_mkdep --file="$addcomponents"
       else
-         pfimport $addcomponents
+         pfimport $myverbose --skip_mkdep $addcomponents
       fi
+   fi
+   if [[ -f .pf.components ]] ; then
+      pfimport $myverbose --file="$(pwd)/.pf.components" --force=bin --nowarn_if_exists
    fi
 }
 
@@ -283,9 +295,14 @@ WARNING: To complete pfinit, please source .setenv.dot
 
 EOF
    else
-      . .setenv.dot $COMP_ARCH
+      if [[ $verbose -eq 0 ]] ; then
+         . .setenv.dot $COMP_ARCH >/dev/null
+      else
+         . .setenv.dot $COMP_ARCH
+      fi
    fi
 else
+   usage_long
    if [[ x"${0##*/}" == x"pfinit" ]] ; then
       exit $_status
    else

@@ -750,7 +750,10 @@ sub find_inc_file {
 # @print_missing: Print the missing module(s) / file(s) from the current tree
 #------------------------------------------------------------------------
 sub print_missing {
-    print STDERR "Includes missing from the current tree: ".join(" ",@outside_tree_list)."\n" if ($#outside_tree_list );
+    #print STDERR "Includes missing from the current tree: ".join(" ",@outside_tree_list)."\n" if ($#outside_tree_list);
+	 my $missing_list_string = "";
+	 $missing_list_string = join(" ",@outside_tree_list) if ($#outside_tree_list);
+    print STDERR "Includes missing from the current tree: ".$missing_list_string."\n" if ($missing_list_string);
     #TODO: do as module below, print first filename for each missing inc
     %module_missing = ();
     for my $filename (keys %LISTOBJECT) {

@@ -54,7 +54,7 @@ EOF
          #mypath=${mypath#*/}
          if [[ -e ${ROOT}/${SRC_USR}/$mypath ]] ; then
             if [[ $myforce == 0 ]] ; then
-               myecho 0 "
+               mystderr 0 "
     WARNING: File $mypath already exists, to overwrite:
              use: ${MYSELF} -f $myfile"
                mypath=""

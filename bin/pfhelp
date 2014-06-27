@@ -44,7 +44,7 @@ cat <<EOF
 Purple Frog: code devlopment environment
 
 Basic setup  :
-   pfprep --clone -v #in working dir
+   pfinit -v   #in working dir
 
 Makefile help (after basic setup):
    make help
