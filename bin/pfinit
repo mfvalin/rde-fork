@@ -25,7 +25,7 @@ usage_long() {
    . .pfbase.inc.dot
 
 	 toto=$(echo -e $USAGE)
-	 more <<EOF
+	 cat <<EOF
 $DESC
 
 $toto
@@ -37,10 +37,12 @@ Options:
                       [Not fully implemented yet]
     --comp=COMP     : use compiler COMP instead of the default one
                       [Default: \${COMP_ARCH:-$(. ${purplefrog}/include/${BASE_ARCH}/default.comp.dot; echo $COMP_ARCH)}]
-    --import=COMPONENTS: List of component/version to import
     --srcpath=PATH  : List of dir where to look for src COMPONENT/VERSION
                       [Default: $(pf_src_path)]
-    --binpath=PATH  :
+    --import=COMPONENTS: List of component/version to import,
+                         or components list file
+    --clone=PATH    : Path to PF dir to clone
+                      or Path to PF build clone file
 
     NAME            : Project Name
     VERSION         : Project Version
@@ -55,9 +57,6 @@ EOF
 # Cloning fn
 ##
 pf_clone_dir() {
-   echo "WARNING: clone dir Not implemented yet" 1>&2
-   return 1
-
    _clonedir=$1
    if [[ -f ${_clonedir}/.pf.comp.${BASE_ARCH}.dot ]] ; then
       . ${_clonedir}/.pf.comp.${BASE_ARCH}.dot
@@ -71,19 +70,61 @@ pf_clone_dir() {
       mystderr 0 "WARNING: clonedir is not PF dev dir: $_clonedir"
       return 1
    fi
+   #TODO: if _here is already a PF dev dir, check if consistent
    for _myfile in $PF_BASE_FILE ; do
-      cp $_myfile . 1>&2
+      cp $_myfile $_here/ 1>&2
    done
+   cp Makefile* $_here/ 1>&2
    rsync -a $SRC_REF/ $_here/$SRC_REF/
    rsync -a $SRC_USR/ $_here/$SRC_USR/
-   rsync -a $BUILD/ $_here/$(pfmodel_link build)/ 1>&2
+   if [[ ! -d $BUILD ]] ; then
+      for item in $(ls -d build-*-${COMP_ARCH}) ; do
+         if [[ -d $item ]] ; then
+            BUILD=$item
+            break
+         fi
+      done
+   fi
+   if [[ -d $BUILD ]] ; then
+      mystderr 0 "++ Cloning Build dir: $BUILD "
+      rsync -a $BUILD/ $_here/$(pfmodel_link build)/ 1>&2
+   else
+      mystderr 0 "++ No Build dir found for: build-*-${COMP_ARCH}"
+   fi
+   BUILD=$(pfmodel_link build)
    cd $_here/$(pfmodel_link build/src)
    find . -name ${_myfile} -type l -exec rm -f {} \;
+   cd $_here
 }
 
 pf_clone_file() {
    echo "WARNING: clone file Not implemented yet" 1>&2
    return 1
+
+   _clonefile=$1
+   clonesubdirlist="src mod obj lib bin"
+   hasclonesrc=0
+   _here=$(pwd)
+   cd $STORAGE_BIN/
+   for mysubdir in $clonesubdirlist ; do
+      myecho 1 "++ Clone build dir: $mysubdir .tgz"
+         #TODO: check tar options for --force
+      tar xzf $_clonefile $mysubdir
+      if [[ $? -ne 0 ]] ; then
+         myecho 0 "WARNING: incomplete clone, missing $mysubdir in $_clonefile"
+      elif [[ $mysubdir == src ]] ; then 
+         hasclonesrc=1
+      fi
+   done
+   cd $_here/$(pfmodel_link build/src)
+   find . -name ${_myfile} -type l -exec rm -f {} \;
+   cd $_here
+   #tar xzf $_clonefile $SRC_REF
+   #tar xzf $_clonefile src_usr
+   #mv src_usr $SRC_USR
+   for _myfile in $PF_BASE_FILE ; do
+      tar xzf $_clonefile $_myfile
+   done
 
 }
 
@@ -152,6 +193,8 @@ EOF
       mystderr 1 "WARNING: Purplefrog Project file already exists"
       needforce=1
    fi
+
+   touch .pf.components
 }
 
 ##
@@ -165,7 +208,7 @@ pf_init_fn() {
    clone=""
    while [[ $# -gt 0 ]] ; do
       case $1 in
-         (-h|--help) echo "usage_long ; _status=1" ; return 1;;
+         (-h|--help) usage_long ; return 1;;
          (-v|--verbose) ((verbose++));;
          (-f|--force) myforce=-f;;
          (--comp=*) export COMP_ARCH=${1#*=};;
@@ -173,11 +216,16 @@ pf_init_fn() {
          (--import=*) addcomponents="${1#*=}";;
          (--clone=*) clone=${1#*=};;
          (--) shift ; break ;;
-         -*) echo echo  1>&2 ; "ERROR: Option Not recognized: $1" 1>&2; echo  1>&2; echo "usage_long ; _status=1" ; exit 1;;
+         -*) echo  1>&2 ; echo "ERROR: Option Not recognized: $1" 1>&2; echo  1>&2; usage_long ; return 1;;
          *) break ;;
       esac
       shift
    done
+
+   needforce=0
+   . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
+   . .pfbase.inc.dot
+   pf_basic_dirs
 
    if [[ x"$clone" != x ]] ; then
       if [[ -d $clone ]] ; then
@@ -195,7 +243,7 @@ EOF
    fi
 
    export ATM_MODEL_NAME=${ATM_MODEL_NAME:-$1}
-   export ATM_MODEL_VERSION=${ATM_MODEL_VERSION:-2}
+   export ATM_MODEL_VERSION=${ATM_MODEL_VERSION:-$2}
    if [[ x"$ATM_MODEL_NAME" == x || x"$ATM_MODEL_VERSION" == x ]] ; then
       echo  1>&2
       echo "ERROR: Need to provide the project NAME and VERSION" 1>&2
@@ -204,11 +252,7 @@ EOF
       return 1
    fi
 
-   needforce=0
-   . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
-   . .pfbase.inc.dot
    pf_basic_env
-   pf_basic_dirs
    pf_basic_makefiles
    if [[ $needforce == 1 ]] ; then
       mystderr 1 "Use 'pfinit -f' to force update"  1>&1
@@ -220,17 +264,17 @@ EOF
          pfimport $addcomponents
       fi
    fi
-   echo export COMP_ARCH=$COMP_ARCH
 }
 
 ## ====================================================================
 #TODO: if already init... abort
 #TODO: if not base env var... abort
 
-eval "$(pf_init_fn $*)"
+pf_init_fn $*
 _status=${_status:-$?}
 if [[ $_status == 0 ]] ; then
    unset _status
+   . .pf.comp.${BASE_ARCH}.dot
    if [[ x"${0##*/}" == x"pfinit" ]] ; then
       cat <<EOF
 

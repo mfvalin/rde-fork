@@ -33,6 +33,7 @@ verbose=${verbose:-0}
 SRC_PATH_FILE=.pf.srcpath
 SRC_PATH_DEFAULT=/users/dor/armn/sch/SsmBundles/data/purplefrog-src
 
+PF_BASE_DIR0="$SRC_REF $SRC_USR"
 PF_BASE_DIR="\$BUILD $SRC_REF $SRC_USR"
 PF_BASE_FILE=".setenv.dot .pf.ssm.bndl .pf.project.dot .pf.comp.${BASE_ARCH}.dot .pf.srcpath .pf.components Makefile"
 
@@ -42,7 +43,7 @@ PF_BASE_FILE=".setenv.dot .pf.ssm.bndl .pf.project.dot .pf.comp.${BASE_ARCH}.dot
 pf_exit_if_not_pftopdir() {
    pf_check_dir
    if [[ $? -ne 0 ]] ; then
-      cat<<EOF 1>&1
+      cat<<EOF 1>&2
 =======================================
 ERROR: $MYSELF should be run in a PurpleFrog top development dir
        Maybe you forgot to run "pfinit"?
@@ -52,11 +53,19 @@ EOF
    fi
 }
 pf_check_dir() {
-   for _mydir in $PF_BASE_DIR ; do
-      [[ ! -d $_mydir ]] && return 1 || true
+   for _mydir in $PF_BASE_DIR0 ; do
+      if [[ ! -d $_mydir ]] ;then
+         echo  "PF Dir not found: $_mydir" 1>&2
+         mystderr 1 "PF Dir not found: $_mydir"
+         return 1
+      fi
    done
    for _myfile in $PF_BASE_FILE ; do
-      [[ ! -f $_myfile ]] && return 1 || true
+      if [[ ! -f $_myfile ]] ;then
+         echo "PF File not found: $_myfile" 1>&2
+         mystderr 1 "PF File not found: $_myfile"
+         return 1
+      fi
    done
    return 0
 }

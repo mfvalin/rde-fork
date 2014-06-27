@@ -11,6 +11,7 @@ TODO:
 * foolib(hack.o) : hack.o
         ar r foolib hack.o
   http://www.cs.utah.edu/dept/old/texinfo/make/make.html#SEC101
+* option to use BASE_ARCH instead of TRUE_HOST for build dir name
 
 Done:
 * pfinit/import
