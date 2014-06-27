@@ -1,0 +1,127 @@
+#!/bin/ksh
+# @Object: Initial setup of a GEM PF workdir
+# @Author: S.Chamberlands
+# @Date:   June 2014
+
+##
+# Help
+##
+DESC='Initial setup of a GEM PF workdir'
+USAGE="USAGE: . geminit [-h] [-v] [--comp=COMPILER] [VERSION]"
+usage_long() {
+   . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
+   . .pfbase.inc.dot
+
+	 toto=$(echo -e $USAGE)
+	 cat <<EOF
+$DESC
+
+$toto
+
+Options:
+    -h, --help      : print this help
+    -v, --verbose   : verbose mode
+    -f, --force     : force, overwrite present installation 
+                      [Not fully implemented yet]
+    --comp=COMP     : use compiler COMP instead of the default one
+                      [Default: \${COMP_ARCH:-$(. ${purplefrog}/include/${BASE_ARCH}/default.comp.dot; echo $COMP_ARCH)}]
+
+    VERSION         : GEM Version
+
+BUILD files will be located under (uses \$storage_model): 
+    $STORAGE_BIN
+
+EOF
+}
+
+##
+# Main PF init fn
+##
+gempf_init_fn() {
+   myverbose=""
+   verbose=0
+   myforce=0
+   while [[ $# -gt 0 ]] ; do
+      case $1 in
+         (-h|--help) usage_long ; return 1;;
+         (-v|--verbose) ((verbose++));myverbose='-v';;
+         (-f|--force) myforce=-f;;
+         (--comp=*) export COMP_ARCH=${1#*=};;
+         (--) shift ; break ;;
+         -*) echo  1>&2 ; echo "ERROR: Option Not recognized: $1" 1>&2; echo  1>&2; usage_long ; return 1;;
+         *) break ;;
+      esac
+      shift
+   done
+
+   needforce=0
+   . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
+   . .pfbase.inc.dot
+
+   if [[ x$myforce == x-f ]] ; then
+      rm -f $PF_BASE_FILE
+      rm -rf $SRC_REF
+      rm -rf $BUILD/
+   fi
+
+   arg1=gem
+   arg2=${1}
+   if [[ -f .pf.project.dot ]] ; then
+      . .pf.project.dot
+      if [[ "${ATM_MODEL_NAME}/${ATM_MODEL_VERSION}" != "${arg1}/${arg2}" ]] ; then
+         mystderr 2 "Using existing dev dir setup for ${ATM_MODEL_NAME}/${ATM_MODEL_VERSION}, ignoring provided NAME/VERSION ${arg1}/${arg2}" 1>&2
+      fi
+   fi
+
+   export ATM_MODEL_NAME=${ATM_MODEL_NAME:-$arg1}
+   export ATM_MODEL_VERSION=${ATM_MODEL_VERSION:-$arg2}
+   if [[ x"$ATM_MODEL_NAME" == x || x"$ATM_MODEL_VERSION" == x || x"$ATM_MODEL_NAME" == x"$ATM_MODEL_VERSION" ]] ; then
+      mystderr 0
+      mystderr 0 "ERROR: Need to provide the project NAME and VERSION"
+      mystderr 0
+      return 1
+   fi
+
+   if [[ ! -f $purplefrog/etc/models/gem/${ATM_MODEL_VERSION}/components.txt ]] ; then
+      mystderr 0
+      mystderr 0 "ERROR: Nothing found for gem/${ATM_MODEL_VERSION}"
+      mystderr 0
+      return 1
+   fi
+
+   pfinit $myverbose --comp=$COMP_ARCH \
+      --srcpath=/users/dor/armn/sch/Data/ords/SsmBundles/data/purplefrog-src \
+      --import=$purplefrog/etc/models/gem/${ATM_MODEL_VERSION}/components.txt \
+      gem ${ATM_MODEL_VERSION} | grep -v .setenv.dot
+}
+
+## ====================================================================
+
+gempf_init_fn $*
+_status=${_status:-$?}
+if [[ $_status == 0 ]] ; then
+   unset _status
+   . .pf.comp.${BASE_ARCH}.dot
+   if [[ x"${0##*/}" == x"geminit" ]] ; then
+      cat <<EOF
+
+WARNING: To complete geminit, please source .setenv.dot
+          . .setenv.dot $COMP_ARCH
+
+EOF
+   else
+      if [[ $verbose -eq 0 ]] ; then
+         . .setenv.dot $COMP_ARCH >/dev/null
+      else
+         . .setenv.dot $COMP_ARCH
+      fi
+   fi
+else
+   usage_long
+   if [[ x"${0##*/}" == x"geminit" ]] ; then
+      exit $_status
+   else
+      unset _status
+      return 1
+   fi
+fi

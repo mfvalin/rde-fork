@@ -2,7 +2,6 @@ TODO:
 * clone
 * pfupdate_build_links.ksh: get_dep_list, myrm_dep, myrm_bidon, myrm_empty
 * pfupdate_build_links.ksh: .restricted; make sure src_usr/*/.restricted have precedence over src_ref
-* pfmv
 * test if src_usr is added
 * test if file recompiled when back to ref version
 * Use s.f90, s.f77 instead of s.compile
@@ -18,6 +17,7 @@ Done:
 * make sure .version_file in src_usr have precedence over src_ref
 * pf scripts should check if it's ok to run in PWD
 * refactor s.dependencies.pl
+* pfmv
 
 Special files:
 * .restricted: whitelist of "$BASE_ARCH:" or "$EC_ARCH:" for dir access; located in src_ref, src dir to restrict; NOT recursive
