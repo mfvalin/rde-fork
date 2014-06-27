@@ -122,6 +122,7 @@ myrm_dep() {
 #
 ##
 myrm_bidon() {
+   toto=""
    #TOTO: update
 	 # _list="$(grep c_to_f_sw *.c 2>/dev/null | cut -d':' -f1)"
 	 # for _item in ${_list} ; do
@@ -133,6 +134,7 @@ myrm_bidon() {
 #
 ##
 myrm_empty() {
+   toto=""
    #TOTO: update
 }
 

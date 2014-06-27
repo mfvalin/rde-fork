@@ -19,9 +19,9 @@ fi
 
 findtargetfn() {
    for item in Makefile* ; do
-      pffindtargetsinfile --nodep --norules $item
+      .pffindtargetsinfile --nodep --norules $item
    done
-   find -L $BUILD/ -name 'Makefile*' -exec pffindtargetsinfile --nodep --norules {} \;
+   find -L $BUILD/ -name 'Makefile*' -exec .pffindtargetsinfile --nodep --norules {} \;
 }
 
 findtargetfn | sort -u

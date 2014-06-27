@@ -54,7 +54,7 @@ endif
 .PHONY: all links links_forced sanity sanity_nodep_force dep versionfiles clean distclean distclean+ distclean++
 
 MAKE_SANITY := $(MAKE) $(BUILDOBJ)/Makefile
-MAKE_LINKS  := pfupdate_build_links.ksh ; $(MAKE_SANITY)
+MAKE_LINKS  := .pfupdate_build_links.ksh ; $(MAKE_SANITY)
 
 .DEFAULT: 
 	$(MAKE_LINKS)
@@ -71,7 +71,7 @@ help:
 	@more $(purplefrog)/etc/pf_make_help.txt
 	@echo "Raw list of Makefile targets:"
 	@echo
-	@pffindtargets
+	@.pffindtargets
 	@echo "=============================================================="
 
 links: 
@@ -109,6 +109,10 @@ distclean:
 			`find . -type f -exec rm -f {} \; ` ;\
 		fi ;\
 	done
+	cd $(ROOT) ;\
+	touch $(BUILDOBJ)/Makefile.dep.mk ;\
+	$(MAKE_LINKS) ;\
+	rm -f $(BUILDOBJ)/Makefile.dep.mk
 distclean+:
 	cd $(BUILD) ;\
 	chmod -R u+w . 2> /dev/null || true ;\
