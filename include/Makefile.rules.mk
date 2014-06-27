@@ -30,7 +30,7 @@ RBUILD3MPI = \
 	rm -f bidon_$${MAINSUBNAME}.f90 ;\
 	$(RBUILD) -obj *.o -o $@ $(OMP) $(MPI) \
 		-libpath $(LIBPATH) \
-		-libappl $(LIBAPPL) \
+		-libappl $(LIBS_PRE) $${LIBLOCAL} $(LIBAPPL) \
 		-librmn $(RMN_VERSION) \
 		-libsys $(LIBSYS) \
 		-codebeta $(CODEBETA) \
@@ -45,9 +45,9 @@ RBUILD3NOMPI = \
 	rm -f bidon_$${MAINSUBNAME}.f90 ;\
 	$(RBUILD) -obj *.o -o $@ $(OMP) \
 		-libpath $(LIBPATH) \
-		-libappl $(LIBAPPL) $${COMM_stubs1} \
+		-libappl $(LIBS_PRE) $${LIBLOCAL} $(LIBAPPL) \
 		-librmn $(RMN_VERSION) \
-		-libsys $(LIBSYS) \
+		-libsys $${COMM_stubs1} $(LIBSYS) \
 		-codebeta $(CODEBETA) \
 		-optf "=$(LFLAGS)"  || status=1 ;\
 	rm -f bidon_$${MAINSUBNAME}.o 2>/dev/null || true ;\
@@ -60,9 +60,9 @@ RBUILD3NOMPI_C = \
 	rm -f bidon_$${MAINSUBNAME}_c.c ;\
 	$(RBUILD) -obj *.o -o $@ $(OMP) -conly \
 		-libpath $(LIBPATH) \
-		-libappl $(LIBAPPL) $${COMM_stubs1} \
+		-libappl $(LIBS_PRE) $${LIBLOCAL} $(LIBAPPL) \
 		-librmn $(RMN_VERSION) \
-		-libsys $(LIBSYS) \
+		-libsys $${COMM_stubs1} $(LIBSYS) \
 		-codebeta $(CODEBETA) \
 		-optc "=$(LCLAGS)"  || status=1 ;\
 	rm -f bidon_$${MAINSUBNAME}_c.o 2>/dev/null || true ;\
