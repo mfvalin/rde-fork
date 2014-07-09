@@ -7,7 +7,7 @@
 # Help
 ##
 DESC='Initial setup of a GEM PF workdir'
-USAGE="USAGE: . geminit [-h] [-v] [--comp=COMPILER] [VERSION]"
+USAGE="USAGE: . geminit [-h] [-v] [--comp=COMPILER] [--clone] [VERSION]"
 usage_long() {
    . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
    . .pfbase.inc.dot
@@ -25,6 +25,7 @@ Options:
                       [Not fully implemented yet]
     --comp=COMP     : use compiler COMP instead of the default one
                       [Default: \${COMP_ARCH:-$(. ${purplefrog}/include/${BASE_ARCH}/default.comp.dot; echo $COMP_ARCH)}]
+    --clone         : use clone file for GEM version if found
 
     VERSION         : GEM Version
 
@@ -41,12 +42,14 @@ gempf_init_fn() {
    myverbose=""
    verbose=0
    myforce=0
+   myclone=0
    while [[ $# -gt 0 ]] ; do
       case $1 in
          (-h|--help) usage_long ; return 1;;
          (-v|--verbose) ((verbose++));myverbose='-v';;
          (-f|--force) myforce=-f;;
          (--comp=*) export COMP_ARCH=${1#*=};;
+         (--clone) myclone=1;;
          (--) shift ; break ;;
          -*) echo  1>&2 ; echo "ERROR: Option Not recognized: $1" 1>&2; echo  1>&2; usage_long ; return 1;;
          *) break ;;
@@ -77,7 +80,7 @@ gempf_init_fn() {
    export ATM_MODEL_VERSION=${ATM_MODEL_VERSION:-$arg2}
    if [[ x"$ATM_MODEL_NAME" == x || x"$ATM_MODEL_VERSION" == x || x"$ATM_MODEL_NAME" == x"$ATM_MODEL_VERSION" ]] ; then
       mystderr 0
-      mystderr 0 "ERROR: Need to provide the project NAME and VERSION"
+      mystderr 0 "ERROR: Need to provide the project gem VERSION"
       mystderr 0
       return 1
    fi
@@ -89,10 +92,19 @@ gempf_init_fn() {
       return 1
    fi
 
-   pfinit $myverbose --comp=$COMP_ARCH \
-      --srcpath=/users/dor/armn/sch/Data/ords/SsmBundles/data/purplefrog-src \
-      --import=$purplefrog/etc/models/gem/${ATM_MODEL_VERSION}/components.txt \
+   myclone=0
+   clonefile=$purplefrog/share/clone/gem/$ATM_MODEL_VERSION/gem_${ATM_MODEL_VERSION}_${BASE_ARCH}_${COMP_ARCH}.tar.gz
+   if [[ -f $clonefile && x$myclone == x1 ]] ;then
+      pfinit $myverbose --comp=$COMP_ARCH \
+         --srcpath=/users/dor/armn/sch/Data/ords/SsmBundles/data/purplefrog-src \
+         --clone=$clonefile \
       gem ${ATM_MODEL_VERSION} | grep -v .setenv.dot
+   else
+      pfinit $myverbose --comp=$COMP_ARCH \
+         --srcpath=/users/dor/armn/sch/Data/ords/SsmBundles/data/purplefrog-src \
+         --import=$purplefrog/etc/models/gem/${ATM_MODEL_VERSION}/components.txt \
+         gem ${ATM_MODEL_VERSION} | grep -v .setenv.dot
+   fi
 }
 
 ## ====================================================================

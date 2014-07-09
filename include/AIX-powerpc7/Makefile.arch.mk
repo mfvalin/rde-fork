@@ -17,6 +17,7 @@ BINDCPU     =
 LIBMASSWRAP = massv_wrap
 LIBMASS     = $(LIBMASSWRAP) massvp7 mass
 LAPACK      = lapack_340
+BLAS        = blas
 LIBHPC      = hpc
 LIBPMAPI    = pmapi
 

@@ -19,7 +19,7 @@
 # Help
 ##
 DESC='Initial setup of a PF workdir'
-USAGE="USAGE: . pfinit [-h] [-v] [-f] [--comp=COMPILER] [--import=COMPONENTS] NAME VERSION"
+USAGE="USAGE: . pfinit [-h] [-v] [-f] [--comp=COMPILER] [--import=COMPONENTS] [--clone=PATH] NAME VERSION"
 usage_long() {
    . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
    . .pfbase.inc.dot

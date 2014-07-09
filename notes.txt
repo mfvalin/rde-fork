@@ -4,6 +4,8 @@ TODO:
 * pfupdate_build_links.ksh: .restricted; make sure src_usr/*/.restricted have precedence over src_ref
 * test if src_usr is added
 * test if file recompiled when back to ref version
+* test .setenv.dot COMP_ARCH not existing
+* test .geminit [w/o version] in empty dir : 2cases with and without ATM_MODEL_VERSION defined
 * Use s.f90, s.f77 instead of s.compile
 * allow Compiler_rules override in topdir, src_ref and src
 * Make -j (no NJOBS)
@@ -11,6 +13,7 @@ TODO:
         ar r foolib hack.o
   http://www.cs.utah.edu/dept/old/texinfo/make/make.html#SEC101
 * option to use BASE_ARCH instead of TRUE_HOST for build dir name
+* Running env (gemdev)
 
 Done:
 * pfinit/import
