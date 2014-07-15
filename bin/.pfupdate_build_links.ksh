@@ -20,7 +20,7 @@ Options:
     -h, --help     : print this help
     -v, --verbose  : verbose mode
     -f, --force    : force, overwrite present installation 
-                     [Not fully yet implemented]
+                     [Not fully implemented yet]
     --resync       : re-do build/src from scratch (from src_ref, src)
 
 EOF
@@ -285,10 +285,17 @@ for item in ${myfilelist} ; do
 	    /bin/rm -f ${ROOT}/${BUILD_SRC}/${item} > /dev/null || true
        for mydir in ${BUILD_SUB_DIR_LIST} ; do
           if [[ ! -d ${ROOT}/${BUILD}/${mydir}/${item%/*} ]] ; then
-             mkdir -p ${ROOT}/${BUILD}/${mydir}/${item%/*} > /dev/null || true
+             if [[ x$mydir != xbin && x$mydir != xlib && x$mydir != xmod ]] ; then
+                mkdir -p ${ROOT}/${BUILD}/${mydir}/${item%/*} > /dev/null || true
+             else
+                mkdir -p ${ROOT}/${BUILD}/${mydir} > /dev/null || true
+             fi
           fi
        done
 	    ln -sf ${ROOT}/${SRC_USR}/${item} ${ROOT}/${BUILD_SRC}/${item}
     fi
 done
 
+if [[ -f .pf.flatsrc ]] ; then
+   pflinkflat
+fi

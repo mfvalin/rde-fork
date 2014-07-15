@@ -1,5 +1,5 @@
 #!/bin/ksh
-DESC='Find the list of targets the specified file (Makefile)'
+DESC='Find the list of targets in the specified file (Makefile)'
 USAGE="USAGE: ${0##*/} [--nodep] [--norules] File"
 usage_long() {
 	 toto=$(echo -e $USAGE)
@@ -26,20 +26,25 @@ while [[ $# -gt 0 ]] ; do
 done
 
 if [[ -x $filelist ]] ; then
-   echo "ERROR: Must provided at least one file"
+   echo "ERROR: Must provide at least one file"
    usage_long
    exit 1
 fi
 
 for item in $filelist ; do
-   if [[ $nodep == 1 && x"${item##*/}" == x"Makefile.dep.mk" ]] ; then
-      a=1
-      #echo ignoring ${item##*/}
-   elif [[ $norules == 1 && x"${item##*/}" == x"Makefile.rules.mk" ]] ; then
+   # if [[ $nodep == 1 && x"${item##*/}" == x"Makefile.dep.mk" ]] ; then
+   #    a=1
+   #    #echo ignoring ${item##*/}
+   # elif [[ $norules == 1 && x"${item##*/}" == x"Makefile.rules.mk" ]] ; then
+   if [[ $norules == 1 && x"${item##*/}" == x"Makefile.rules.mk" ]] ; then
       a=1
       #echo ignoring ${item##*/}
    else
       #echo Parsing ${item} : ${item##*/}
-      grep [a-zA-Z0-9]: ${item} | grep -v PHONY | grep -v .DEFAULT | cut -d: -f1 | grep -v \# | grep -v \( | grep -v \"
+      if [[ $nodep == 1 ]] ; then
+         grep [a-zA-Z0-9]: ${item} | grep -v PHONY | grep -v .DEFAULT | grep -v '\.o:' | cut -d: -f1 | grep -v \# | grep -v \( | grep -v \"
+      else
+         grep [a-zA-Z0-9]: ${item} | grep -v PHONY | grep -v .DEFAULT | cut -d: -f1 | grep -v \# | grep -v \( | grep -v \"
+      fi
    fi
 done

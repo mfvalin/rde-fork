@@ -28,7 +28,7 @@ RBUILD3MPI = \
 	.pfmakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
 	$(MAKE) bidon_$${MAINSUBNAME}.o >/dev/null || status=1 ; \
 	rm -f bidon_$${MAINSUBNAME}.f90 ;\
-	$(RBUILD) -obj *.o -o $@ $(OMP) $(MPI) \
+	$(RBUILD) -obj bidon_$${MAINSUBNAME}.o -o $@ $(OMP) $(MPI) \
 		-libpath $(LIBPATH) \
 		-libappl $(LIBS_PRE) $${LIBLOCAL} $(LIBAPPL) \
 		-librmn $(RMN_VERSION) \
@@ -43,7 +43,7 @@ RBUILD3NOMPI = \
 	.pfmakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
 	$(MAKE) bidon_$${MAINSUBNAME}.o >/dev/null || status=1 ; \
 	rm -f bidon_$${MAINSUBNAME}.f90 ;\
-	$(RBUILD) -obj *.o -o $@ $(OMP) \
+	$(RBUILD) -obj bidon_$${MAINSUBNAME}.o -o $@ $(OMP) \
 		-libpath $(LIBPATH) \
 		-libappl $(LIBS_PRE) $${LIBLOCAL} $(LIBAPPL) \
 		-librmn $(RMN_VERSION) \
@@ -58,7 +58,7 @@ RBUILD3NOMPI_C = \
 	.pfmakemodelbidon -c $${MAINSUBNAME} > bidon_$${MAINSUBNAME}_c.c ; \
 	$(MAKE) bidon_$${MAINSUBNAME}_c.o >/dev/null || status=1 ; \
 	rm -f bidon_$${MAINSUBNAME}_c.c ;\
-	$(RBUILD) -obj *.o -o $@ $(OMP) -conly \
+	$(RBUILD) -obj bidon_$${MAINSUBNAME}_c.o -o $@ $(OMP) -conly \
 		-libpath $(LIBPATH) \
 		-libappl $(LIBS_PRE) $${LIBLOCAL} $(LIBAPPL) \
 		-librmn $(RMN_VERSION) \
@@ -72,13 +72,18 @@ C_DOT_O      = cd $(dir $@) ; $(CC) $<
 F_DOT_O      = cd $(dir $@) ; $(FC) $<
 F90_DOT_O    = cd $(dir $@) ; $(F90C2) $<
 
-FTN_DOT_F    = rm -f $*.f ; cd $(dir $@) && $(FTNC) $< && mv -f $(notdir $*.f) $(BUILDPRE)/$*.f
-FTN90_DOT_F90    = rm -f $*.f90 ; cd $(dir $@) && $(FTNC) $< && mv -f $(notdir $*.f90) $(BUILDPRE)/$*.f90
-PREF_DOT_O   = cd $(dir $@) && $(FC) $(BUILDPRE)/$*.f
-PREF90_DOT_O = cd $(dir $@) && $(F90C2) $(BUILDPRE)/$*.f90
+FTN_DOT_F    = rm -f $*.f ; cd $(dir $@) && $(FTNC) $< && mv -f $(notdir $*.f) $(BUILDPRE)/$*.f || exit 1
+FTN90_DOT_F90    = rm -f $*.f90 ; cd $(dir $@) && $(FTNC) $< && mv -f $(notdir $*.f90) $(BUILDPRE)/$*.f90 || exit 1
+#FTN90_DOT_F90    = rm -f $(BUILDPRE)/$*.f90; cd $(dir $@) && ln -sf $(BUILDPRE)/$*.f90 $(notdir $*.f90) && $(FTNC) $<
+#FTN90_DOT_F90    = rm -f $(BUILDPRE)/$*.f90 ; cd $(dir $@) && $(FTNC) -predir $(BUILDPRE)/$(dir $@) $< 
+PREF_DOT_O_CD   = cd $(dir $@) && $(FC) $(BUILDPRE)/$*.f || exit 1
+PREF90_DOT_O_CD = cd $(dir $@) && $(F90C2) $(BUILDPRE)/$*.f90 || exit 1
+PREF_DOT_O   = $(FC) $(BUILDPRE)/$*.f || exit 1
+PREF90_DOT_O = $(F90C2) $(BUILDPRE)/$*.f90 || exit 1
 
 #TODO: mv -f *.[mM][oO][dD] is dangerous with parallel make [-j]; may want s.dependencies to provide list of .mod for each src file
-F90_DOT_O_MOD_MV = cd $(dir $@) && mv -f *.[mM][oO][dD] $(BUILDMOD) 2>/dev/null || true
+F90_DOT_O_MOD_CDMV = if [[ x"$(OPTF_MODULE)" == x ]] ; then cd $(dir $@) ; mv -f *.[mM][oO][dD] $(BUILDMOD) 2>/dev/null || true ; fi
+F90_DOT_O_MOD_MV = [[ x"$(OPTF_MODULE)" == x ]] && mv -f *.[mM][oO][dD] $(BUILDMOD) 2>/dev/null || true
 
 
 .c.o:
@@ -91,35 +96,35 @@ F90_DOT_O_MOD_MV = cd $(dir $@) && mv -f *.[mM][oO][dD] $(BUILDMOD) 2>/dev/null 
 	#.f.o
 .f90.o:
 	#.f90.o:
-	$(F90_DOT_O)
+	$(F90_DOT_O) ;\
 	$(F90_DOT_O_MOD_MV)
 	#.f90.o:
 .F.o:
 	s.f77 -c -o $@ -src $<  $(COMPILE_FLAGS) $(FFLAGS)
 .F90.o:
-	s.f90 -c -o $@ -src $<  $(COMPILE_FLAGS) $(FFLAGS)
-	$(F90_DOT_O_MOD_MV)
+	s.f90 -c -o $@ -src $<  $(COMPILE_FLAGS) $(FFLAGS) ;\
+	$(F90_DOT_O_MOD_CDMV)
 .ftn.o:
 	#.ftn.o
-	$(FTN_DOT_F)
+	$(FTN_DOT_F) ;\
 	$(PREF_DOT_O)
 	#.ftn.o
 .ftn90.o:
 	#.ftn90.o
-	$(FTN90_DOT_F90)
-	$(PREF90_DOT_O)
+	$(FTN90_DOT_F90) ;\
+	$(PREF90_DOT_O) ;\
 	$(F90_DOT_O_MOD_MV)
 	#.ftn90.o
 .cdk90.o:
 	#.cdk90.o:
-	$(FTN90_DOT_F90)
-	$(PREF90_DOT_O)
+	$(FTN90_DOT_F90) ;\
+	$(PREF90_DOT_O) ;\
 	$(F90_DOT_O_MOD_MV)
 	#.cdk90.o:
 .tmpl90.o: #TODO
 	#.tmpl90.
-	echo "Not yet implemented" ; exit 1
-	s.tmpl90.ftn90 < $<  > $*.ftn90
+	echo "Not yet implemented" ; exit 1 ;\
+	s.tmpl90.ftn90 < $<  > $*.ftn90 ;\
 	s.ftn90 -c -o $@ -src $(EC_ARCH)/$*.ftn90 $(COMPILE_FLAGS) $(FFLAGS)
 	#.tmpl90.
 

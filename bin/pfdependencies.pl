@@ -615,13 +615,21 @@ sub print_object_list {
 
     #TODO: this should be optional
     for (keys %listdir) {
-        print STDOUT "lib".$_.".a: \$(OBJECTS_".$_.")\n";
         print_header("OBJECTS_".$_,"=","");
         for my $item (@{$listdir{$_}}) {
             print_item("$item");
         }
         print STDOUT "\n";
+        print STDOUT "\$(LIBDIR)/lib".$_.".a: \$(OBJECTS_".$_.") \$(LIBDEP_".$_.")\n";
+        print STDOUT "\t".'rm -f $@; ar r $@_$$$$ $(OBJECTS_'.$_.'); mv $@_$$$$ $@'."\n";
+        print STDOUT "lib".$_.".a: \$(LIBDIR)/lib".$_.".a\n";
     }
+
+	 print_header("ALL_LIBS=","");
+	 for (keys %listdir) {
+		  print_item("\$(LIBDIR)/lib".$_.".a");
+	 }
+	 print STDOUT "\n";
 }
 
 #------------------------------------------------------------------------

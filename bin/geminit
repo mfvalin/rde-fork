@@ -7,7 +7,7 @@
 # Help
 ##
 DESC='Initial setup of a GEM PF workdir'
-USAGE="USAGE: . geminit [-h] [-v] [--comp=COMPILER] [--clone] [VERSION]"
+USAGE="USAGE: . geminit [-h] [-v] [--comp=COMPILER] [--clone] [--flat] [VERSION]"
 usage_long() {
    . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
    . .pfbase.inc.dot
@@ -26,6 +26,7 @@ Options:
     --comp=COMP     : use compiler COMP instead of the default one
                       [Default: \${COMP_ARCH:-$(. ${purplefrog}/include/${BASE_ARCH}/default.comp.dot; echo $COMP_ARCH)}]
     --clone         : use clone file for GEM version if found
+    --flat          : mirror modified source in a flat layout in the topdir
 
     VERSION         : GEM Version
 
@@ -43,6 +44,7 @@ gempf_init_fn() {
    verbose=0
    myforce=0
    myclone=0
+   myflat=''
    while [[ $# -gt 0 ]] ; do
       case $1 in
          (-h|--help) usage_long ; return 1;;
@@ -50,6 +52,7 @@ gempf_init_fn() {
          (-f|--force) myforce=-f;;
          (--comp=*) export COMP_ARCH=${1#*=};;
          (--clone) myclone=1;;
+         (--flat) myflat="$1";;
          (--) shift ; break ;;
          -*) echo  1>&2 ; echo "ERROR: Option Not recognized: $1" 1>&2; echo  1>&2; usage_long ; return 1;;
          *) break ;;
@@ -98,12 +101,12 @@ gempf_init_fn() {
       pfinit $myverbose --comp=$COMP_ARCH \
          --srcpath=/users/dor/armn/sch/Data/ords/SsmBundles/data/purplefrog-src \
          --clone=$clonefile \
-      gem ${ATM_MODEL_VERSION} | grep -v .setenv.dot
+         $myflat gem ${ATM_MODEL_VERSION} | grep -v .setenv.dot
    else
       pfinit $myverbose --comp=$COMP_ARCH \
          --srcpath=/users/dor/armn/sch/Data/ords/SsmBundles/data/purplefrog-src \
          --import=$purplefrog/etc/models/gem/${ATM_MODEL_VERSION}/components.txt \
-         gem ${ATM_MODEL_VERSION} | grep -v .setenv.dot
+         $myflat gem ${ATM_MODEL_VERSION} | grep -v .setenv.dot
    fi
 }
 
@@ -129,7 +132,7 @@ EOF
       fi
    fi
 else
-   usage_long
+   #usage_long
    if [[ x"${0##*/}" == x"geminit" ]] ; then
       exit $_status
    else

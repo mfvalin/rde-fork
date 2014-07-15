@@ -1,36 +1,33 @@
 ==============================================================
 The following are some of the valid targets for this Makefile:
 
-dep          : Update dependencies
-objects      : Compile all out of date objects
-libs         : Build libs after compiling all out of date objects
-allbin       : Build bins after compiling all out of date objects, libs
-allbincheck  : Check if all bins have been built
-all          : Equivalent to 'make objects libs allbin'
+dep            : Update dependencies
+obj            : Compile all out of date objects
+lib            : Build libs after compiling all out of date objects
+all            : Build bins after compiling all out of date objects, libs
+bin_check      : Check if all binanies have been built
 
-FILENAME.o   : Build a single .o if not up to date
-               To force a build of a .o you need to 'touch' its source file
+FILENAME.o     : Build a single .o if not up to date
+                 To force a build of a .o you need to 'touch' its source file
 
-clean        : rm *.o *.mod src and pre from build tree (keep lib and bin)
-distclean    : rm all files in known build tree sub dir
-distclean+   : rm all files in build tree
-distclean++  : rm all files and dir (rm -rf *) in build tree
+clean          : rm *.o *.mod src and pre from build tree (keep lib and bin)
+distclean      : rm all files in known build tree sub dir
 
-check_inc_dup      : Check if there are any include file duplicate name
-sanity             : Build Makefiles including dep if need be
-sanity_nodep_force : Force update of Makefiles (without dep)
-links              : Update links in build tree then make sanity
-links_forced
+sanity         : Build Makefiles including dep if need be
+sanity_forced  : Force update of Makefiles (without dep unless needed)
+links          : Update links in build tree then make sanity
+links_forced   : Update links in build tree then make sanity_forced
 
-versionfiles       : Create/force_update versionfiles in src
+check_inc_dup  : Check if there are any include file duplicate name
+
+versionfiles   : Create/force_update versionfiles in src
 
 --------------------------------------------------------------
-User overrides file: Makefile.user.mk
+User overrides files: Makefile.user.mk, Makefile.user.${COMP_ARCH}.mk
 
 Example content:
 
 VERBOSE = -v
-NJOBS   = 12
 OPTIL   = 2
 OMP     = -openmp
 MPI     = -mpi

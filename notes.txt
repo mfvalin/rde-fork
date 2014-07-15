@@ -15,6 +15,8 @@ TODO:
   http://www.cs.utah.edu/dept/old/texinfo/make/make.html#SEC101
 * option to use BASE_ARCH instead of TRUE_HOST for build dir name
 * Running env (gemdev)
+* xfl
+* gfortran
 
 Done:
 * pfinit/import

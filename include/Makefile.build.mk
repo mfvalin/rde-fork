@@ -36,10 +36,18 @@ INCLUDES = $(shell .pfdir_with_files -n $(VPATH))
 INCLUDE_PATH=". $(INCLUDES)"
 INCLUDE_MOD="$(BUILDMOD)"
 
+LIBDIR=$(BUILDLIB)
+BINDIR=$(BUILDBIN)
+
 LIBPATH = $(PWD) $(LIBPATH_PRE) $(BUILDLIB) $(LIBPATHEXTRA) $(LIBSYSPATHEXTRA) $(LIBPATHOTHER) $(LIBPATH_POST)
 #LIBAPPL = $(LIBS_PRE) $(LIBLOCAL) $(LIBOTHERS) $(LIBEXTRA) $(LIBS_POST)
 LIBAPPL = $(LIBS_PRE) $(LIBOTHERS) $(LIBEXTRA) $(LIBS_POST)
 LIBSYS  = $(LIBSYS_PRE) $(LIBSYSOTHERS) $(LIBSYSEXTRA) $(LIBSYS_POST)
+
+SUBDIRLIST  = $(foreach mydir,$(wildcard $(VPATH)/*),$(notdir $(mydir)))
+SUBDIRLIST2 = $(foreach mydir,$(SUBDIRLIST),$(shell if [[ -f $(VPATH)/$(mydir)/include/Makefile.local.mk ]] ; then echo $(mydir) ; fi))
+ALL_BINS = $(foreach mydir,$(SUBDIRLIST2),allbin_$(mydir))
+ALL_BINS_CHECK = $(foreach mydir,$(SUBDIRLIST2),allbincheck_$(mydir))
 
 ## Arch specific and Local/user definitons, targets and overrides
 ifneq (,$(wildcard Makefile.dep.mk))
@@ -70,102 +78,40 @@ endif
 
 .DEFAULT: all
 
-.PHONY: all allbin allbincheck libs objects objloc
+.PHONY: all allbin allbincheck lib obj objloc clean0 clean check_inc_dup
 
-all: objects libs allbin
+obj: | Makefile.dep.mk $(OBJECTS)
+objloc: obj
 
-objects: $(OBJECTS)
-objloc: objects
+lib: | Makefile.dep.mk $(OBJECTS) $(ALL_LIBS)
 
-libs: $(OBJECTS) Makefile.dep.mk
-	status=0;\
-	for mydir in `ls` ; do \
-		if [[ -d $${mydir} ]] ; then \
-			$(MAKE_ARCH) $(BUILDLIB)/lib$${mydir}.a MYCOMPONENT=$${mydir} || status=1;\
-		fi ;\
-	done ;\
-	exit $${status}
-#$(BUILDLIB)/lib$(MYCOMPONENT).a: $(OBJECTS_$(MYCOMPONENT)) Makefile.dep.mk
-$(BUILDLIB)/lib$(MYCOMPONENT).a: $(OBJECTS) Makefile.dep.mk
-	status=0;\
-	if [[ -d $(MYCOMPONENT) ]] ; then \
-		rm -f $@  2>/dev/null || true ;\
-		ar r $@ `find $(MYCOMPONENT) -name '*.o'` || status=1;\
-	fi ;\
-	exit $${status}
+all: | Makefile.dep.mk $(OBJECTS) $(ALL_LIBS) $(ALL_BINS)
 
-LIBLOCAL = _local_
-LIBLOCALDEP = $(BUILDLIB)/lib$(LIBLOCAL).a
-liball: $(LIBLOCALDEP)
-$(LIBLOCALDEP): $(OBJECTS) Makefile.dep.mk
-	rm -f $@ 2>/dev/null || true
-	ar r $@ `find . -name '*.o'`
+bin_check: $(ALL_BINS_CHECK)
 
-#TODO: what about $(VPATH)/include ?
-allbin: $(BUILDLIB)/lib$(LIBLOCAL).a
-	for mydir in `ls $(VPATH)` ; do \
-		if [[ -f $(VPATH)/$${mydir}/include/Makefile.local.mk ]] ; then \
-			$(MAKE) allbin_$${mydir##*/} BINDIR=$(BUILDBIN) LIBPATHEXTRA=$(BUILDLIB) LIBLOCALDEP=$(LIBLOCALDEP) || exit 1;\
-		fi ;\
-	done
-
-#		   mydir_uc=`echo $${mydir##*/} | tr 'a-z' 'A-Z'` ;\
-#			$(MAKE) allbin_subdir SUBDIR_BINLIST=$(eval \$\($${mydir_uc}_BINLIST\)) BINDIR=$(BUILDBIN) LIBPATHEXTRA=$(BUILDLIB) LIBLOCALDEP=$(LIBLOCALDEP) || exit 1;\
-# allbin_subdir:
-# 	status=0 ;\
-# 	for item in $(SUBDIR_BINLIST); do \
-# 		$(MAKE) $(BINDIR)/$${item} || status=1 ;\
-# 	done ;\
-# 	exit $${status}
-
-allbincheck:
-	for mydir in `ls $(VPATH)` ; do \
-		if [[ -f $(VPATH)/$${mydir}/include/Makefile.local.mk ]] ; then \
-			$(MAKE) allbincheck_$${mydir##*/} BINDIR=$(BUILDBIN) LIBPATHEXTRA=$(BUILDLIB) LIBLOCALDEP=$(LIBLOCALDEP) || exit 1;\
-		fi ;\
-	done
-allbinsplit: $(BUILDLIB)/lib$(LIBLOCAL).a
-	for mydir in `ls $(VPATH)` ; do \
-		if [[ -f $(VPATH)/$${mydir##*/}/include/Makefile.local.mk ]] ; then \
-			$(MAKE) allbin_$${mydir##*/} BINDIR=$(BUILDBIN)/$${mydir##*/} LIBPATHEXTRA="$(BUILDLIB) $(BUILDLIB)/$${mydir##*/}" LIBLOCALDEP=$(LIBLOCALDEP) || exit 1;\
-		fi ;\
-	done
-
-.PHONY: clean check_inc_dup
 clean0:
-	chmod -R u+w . 2> /dev/null || true
+	chmod -R u+w . 2> /dev/null || true  ;\
 	for mydir in `find . -type d` ; do \
 		for ext in $(INCSUFFIXES) $(SRCSUFFIXES) .o .[mM][oO][dD]; do \
 			rm -f $${mydir}/*$${ext} 2>/dev/null ;\
 		done ;\
-	done
+	done ;\
 	for mydir in $(BUILDMOD) $(BUILDPRE) ; do \
 		cd $${mydir} ;\
 		chmod -R u+w . 2> /dev/null || true ;\
 		`find . -type f -exec rm -f {} \; ` ;\
 	done
 
-	#TODO: get .o .mod from libs again?
+#TODO: get .o .mod from lib again after make clean?
+#TODO: should we keep .mod after make clean?
 
 clean:
-	chmod -R u+w . $(BUILDMOD) $(BUILDPRE) 2> /dev/null || true
-	rm -f $(foreach mydir,. * */* */*/* */*/*/* */*/*/*/*,$(foreach exte,$(INCSUFFIXES) $(SRCSUFFIXES) .o .[mM][oO][dD],$(mydir)/*$(exte))) 2>/dev/null || true
+	chmod -R u+w . $(BUILDMOD) $(BUILDPRE) 2> /dev/null || true ;\
+	rm -f $(foreach mydir,. * */* */*/* */*/*/* */*/*/*/*,$(foreach exte,$(INCSUFFIXES) $(SRCSUFFIXES) .o .[mM][oO][dD],$(mydir)/*$(exte))) 2>/dev/null || true  ;\
 	rm -f $(foreach mydir,. * */* */*/* */*/*/* */*/*/*/*,$(foreach mydir0,$(BUILDMOD) $(BUILDPRE),$(mydir0)/$(mydir)/*)) 2>/dev/null || true
 
-	# for mydir in `find . -type d` ; do \
-	# 	for ext in $(INCSUFFIXES) $(SRCSUFFIXES) .o .[mM][oO][dD]; do \
-	# 		rm -f $${mydir}/*$${ext} 2>/dev/null ;\
-	# 	done ;\
-	# done
-
-	# for mydir in $(BUILDMOD) $(BUILDPRE) ; do \
-	# 	cd $${mydir} ;\
-	# 	`find . -type f -exec rm -f {} \; ` ;\
-	# done
-	#TODO: get .o .mod from libs again?
-
 check_inc_dup: links
-	echo "Checking for duplicated include files"
+	echo "Checking for duplicated include files" ;\
 	pfcheck_dup -r --src=$(VPATH) --ext="$(INCSUFFIXES)" . $(INCLUDES) $(EC_INCLUDE_PATH) #$(shell s.generate_ec_path --include)
 
 ## ====================================================================

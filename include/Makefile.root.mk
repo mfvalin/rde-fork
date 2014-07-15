@@ -14,7 +14,6 @@ BUILDPRE := $(ROOT)/$(shell pfmodel_link build/pre)
 BUILDSRC := $(ROOT)/$(shell pfmodel_link build/src)
 VPATH := $(BUILDSRC)
 VERBOSE := -v
-NJOBS := 12
 #DEP_DUP_OK = --dup_ok
 #DEP_FLAT = --flat
 #PERLPROF = perl -d:DProf $(purplefrog)/bin/
@@ -51,21 +50,17 @@ endif
 
 ## ==== Phony targets
 
-.PHONY: all links links_forced sanity sanity_nodep_force dep versionfiles clean distclean distclean+ distclean++
+.PHONY: all help rm_makefiles rm_makefiles2 rm_makefiles_dep links0 links links_forced sanity sanity_nodep_force dep versionfiles clean distclean distclean+ distclean++
 
-MAKE_SANITY := $(MAKE) $(BUILDOBJ)/Makefile
-MAKE_LINKS  := .pfupdate_build_links.ksh ; $(MAKE_SANITY)
+MAKE_LINKS  := .pfupdate_build_links.ksh ; $(BUILDOBJ)/Makefile
 
-.DEFAULT: 
-	$(MAKE_LINKS)
-	cd $(BUILDOBJ);\
-	$(MAKE_ARCH) -j $(NJOBS) $@ ROOT=$(ROOT) VPATH=$(VPATH)
+.DEFAULT: | links0
+	cd $(BUILDOBJ) ;\
+	$(MAKE_ARCH) $@ ROOT=$(ROOT) VPATH=$(VPATH)
 
-all: 
-	$(MAKE_LINKS)
-	cd $(BUILDOBJ);\
-	$(MAKE_ARCH) -j $(NJOBS) $@ ROOT=$(ROOT) VPATH=$(VPATH)
-
+all: | links0
+	cd $(BUILDOBJ) ;\
+	$(MAKE_ARCH) $@ ROOT=$(ROOT) VPATH=$(VPATH)
 
 help:
 	@more $(purplefrog)/etc/pf_make_help.txt
@@ -74,20 +69,22 @@ help:
 	@.pffindtargets
 	@echo "=============================================================="
 
-links: 
-	$(MAKE_LINKS)
-links_forced:
+rm_makefiles:
 	rm -f $(BUILDOBJ)/Makefile*
-	$(MAKE) links
-
-sanity: $(BUILDOBJ)/Makefile
-sanity_nodep_force:
+rm_makefiles2:
 	rm -f $(BUILDOBJ)/Makefile $(BUILDOBJ)/Makefile.build.mk $(BUILDOBJ)/Makefile.local.mk $(BUILDOBJ)/Makefile.rules.mk $(BUILDOBJ)/Makefile.base_arch.mk $(BUILDOBJ)/Makefile.ec_arch.mk
-	$(MAKE) links
-
-dep: 
+rm_makefiles_dep:
 	rm -f $(BUILDOBJ)/Makefile.dep.mk $(BUILDOBJ)/Makefile.local.mk
-	$(MAKE) --no-print-directory links
+
+links0:
+	.pfupdate_build_links.ksh
+links: | links0 $(BUILDOBJ)/Makefile
+links_forced: | rm_makefiles links
+
+sanity: | $(BUILDOBJ)/Makefile
+sanity_forced: | rm_makefiles2 sanity
+
+dep: | rm_makefiles_dep links
 
 versionfiles:
 	for mydir in `ls $(BUILDSRC)` ; do \
@@ -98,8 +95,8 @@ versionfiles:
 		fi ;\
 	done
 
-clean: sanity
-	cd $(BUILDOBJ);\
+clean: | sanity
+	cd $(BUILDOBJ) ;\
 	$(MAKE_ARCH) $@ ROOT=$(ROOT) VPATH=$(VPATH)
 distclean:
 	for mydir in $(shell pfmodel_link -l build) ; do \
@@ -108,7 +105,7 @@ distclean:
 			chmod -R u+w . 2> /dev/null || true ;\
 			`find . -type f -exec rm -f {} \; ` ;\
 		fi ;\
-	done
+	done ;\
 	cd $(ROOT) ;\
 	touch $(BUILDOBJ)/Makefile.dep.mk ;\
 	$(MAKE_LINKS) ;\
@@ -117,14 +114,12 @@ distclean+:
 	cd $(BUILD) ;\
 	chmod -R u+w . 2> /dev/null || true ;\
 	`find . -type f -exec rm -f {} \; `
-
-	#TODO: need to re-run pfprep, no more src
+	#TODO: need to re-run pfinit, no more src
 distclean++:
 	cd $(BUILD) ;\
 	chmod -R u+w . 2> /dev/null || true ;\
 	rm -rf * 2> /dev/null || true
-
-	#TODO: need to re-run pfprep, no more dir and src
+	#TODO: need to re-run pfinit, no more dir and src
 
 
 ## ====  Real Targets and Dependencies
@@ -132,18 +127,18 @@ distclean++:
 Makefile.user.mk: Makefile.user.$(COMP_ARCH).mk
 	if [[ -f $(purplefrog)/etc/$@ ]] ; then \
 	   cp $(purplefrog)/etc/$@ $@ ;\
-	else ;\
+	else \
 	   touch $@ ;\
 	fi
 Makefile.user.$(COMP_ARCH).mk:
 	if [[ -f $(purplefrog)/etc/Makefile.user.mk ]] ; then \
 	   cp $(purplefrog)/etc/Makefile.user.mk $@ ;\
-	else ;\
+	else \
 	   touch $@ ;\
 	fi
 
 $(BUILDOBJ)/Makefile: Makefile.user.mk $(BUILDOBJ)/Makefile.local.mk $(BUILDOBJ)/Makefile.rules.mk $(BUILDOBJ)/Makefile.base_arch.mk $(BUILDOBJ)/Makefile.ec_arch.mk $(BUILDOBJ)/Makefile.dep.mk
-	cp $(purplefrog)/include/Makefile.build.mk $(BUILDOBJ)/ 2>/dev/null || true
+	cp $(purplefrog)/include/Makefile.build.mk $(BUILDOBJ)/ 2>/dev/null || true ;\
 	ln -sf $(BUILDOBJ)/Makefile.build.mk $@
 $(BUILDOBJ)/Makefile.local.mk:
 	touch $@
@@ -162,13 +157,13 @@ $(BUILDOBJ)/Makefile.local.mk:
 		done ;\
 	done
 $(BUILDOBJ)/Makefile.rules.mk:
-	cp $(purplefrog)/include/Makefile.rules.mk $@ 2>/dev/null || true
+	cp $(purplefrog)/include/Makefile.rules.mk $@ 2>/dev/null || true ;\
 	touch $@
 $(BUILDOBJ)/Makefile.base_arch.mk:
-	cp $(purplefrog)/include/$(BASE_ARCH)/Makefile.arch.mk $@ 2>/dev/null || true
+	cp $(purplefrog)/include/$(BASE_ARCH)/Makefile.arch.mk $@ 2>/dev/null || true ;\
 	touch $@
 $(BUILDOBJ)/Makefile.ec_arch.mk:
-	cp $(purplefrog)/include/$(EC_ARCH)/Makefile.arch.mk $@ 2>/dev/null || true
+	cp $(purplefrog)/include/$(EC_ARCH)/Makefile.arch.mk $@ 2>/dev/null || true ;\
 	touch $@
 $(BUILDOBJ)/Makefile.dep.mk:
 	cd $(BUILDSRC) ;\

@@ -151,6 +151,7 @@ eval `cclargs_lite -D '' $0 "[Compiler des sources .f, .f90, .c, etc...]"\
  -bidon "NULL" "fortran" "[Si s.makebidon est necessaire]"\
  -main "" "" "[Nom du ou des programmes a appeler dans le code pour s.makebidon]"\
  -o "" "" "[Nom de l'absolu si r.make est appele]"\
+ -predir "." "." "[dirname where to put r.gppf result]"\
  -libpath "" "" "[Path de librairies supplementaires]"\
  -libappl "" "" "[Librairie d'application usager]"\
  -libgraph "" "graph" "[Librairie NCAR locale  (graph par defaut)]"\
@@ -379,22 +380,22 @@ for fichier in ${sources[@]}; do
 	case ${fichier} in
 	( *.ftn )
 		nombase=$(basename ${fichier%%.ftn})
-		if [[ -f ./`basename ${fichier%%.ftn}`.f ]]; then
-			chmod 644 ./${nombase}.f
+		if [[ -f ${predir}/`basename ${fichier%%.ftn}`.f ]]; then
+			chmod 644 ${predir}/${nombase}.f
 		fi
-		r.gppf ${GPP_OPTS} ${vincludes[@]} $defines ${fichier} > ./${nombase}-$$.f
+		r.gppf ${GPP_OPTS} ${vincludes[@]} $defines ${fichier} > ${predir}/${nombase}-$$.f
       istat=$?
       if [[ $istat == 0 ]] ; then
-         mv ./${nombase}-$$.f ./${nombase}.f 
+         mv ${predir}/${nombase}-$$.f ${predir}/${nombase}.f 
       else
-         rm -f ./${nombase}-$$.f
+         rm -f ${predir}/${nombase}-$$.f
       fi
 		let STATUT_TOT=STATUT_TOT+$istat
-		chmod 444 ./${nombase}.f
-		echo "r.gppf ${GPP_OPTS} ${vincludes[@]} $defines ${fichier} > ./${nombase}.f"
-		sources[((compteur))]=./${nombase}.f
+		chmod 444 ${predir}/${nombase}.f
+		echo "r.gppf ${GPP_OPTS} ${vincludes[@]} $defines ${fichier} > ${predir}/${nombase}.f"
+		sources[((compteur))]=${predir}/${nombase}.f
 		if [[ $ignorempty = ON ]]; then
-			if [[ ! -s ./${nombase}.f ]]; then
+			if [[ ! -s ${predir}/${nombase}.f ]]; then
 				rm -f ./${nombase}.o 2>/dev/null
 				touch ./${nombase}.o
 			else
@@ -408,17 +409,17 @@ for fichier in ${sources[@]}; do
 		;;
 	( *.ptn )
 		nombase=`basename ${fichier%%.ptn}`
-		if [[ -f ./`basename ${fichier%%.ptn}`.f ]]; then
-			chmod 644 ./${nombase}.f
+		if [[ -f ${predir}/`basename ${fichier%%.ptn}`.f ]]; then
+			chmod 644 ${predir}/${nombase}.f
 		fi
 		r.gppf ${GPP_OPTS} ${vincludes[@]} $defines ${fichier} | \
 		let STATUT_TOT=STATUT_TOT+$?
-		sed 's/^[[:blank:]].*PROGRAM /      SUBROUTINE /' | sed 's/^[[:blank:]].*program /        subroutine /' > ./${nombase}.f
-		chmod 444 ./${nombase}.f
-		echo "r.gppf ${GPP_OPTS} ${vincludes[@]} $defines ${fichier} \| sed .... > ./${nombase}.f"
-		sources[((compteur))]=./${nombase}.f
+		sed 's/^[[:blank:]].*PROGRAM /      SUBROUTINE /' | sed 's/^[[:blank:]].*program /        subroutine /' > ${predir}/${nombase}.f
+		chmod 444 ${predir}/${nombase}.f
+		echo "r.gppf ${GPP_OPTS} ${vincludes[@]} $defines ${fichier} \| sed .... > ${predir}/${nombase}.f"
+		sources[((compteur))]=${predir}/${nombase}.f
 		if [[ $ignorempty = ON ]]; then
-			if [[ ! -s ./${nombase}.f ]]; then
+			if [[ ! -s ${predir}/${nombase}.f ]]; then
 				rm -f ./${nombase}.o 2>/dev/null
 				touch ./${nombase}.o
 			else
@@ -431,20 +432,20 @@ for fichier in ${sources[@]}; do
 		fi
 		;;
 	( *.ftn90 )
-		if [[ -f ./`basename ${fichier%%.ftn90}`.f90 ]]; then
-			chmod 644 ./`basename ${fichier%%.ftn90}`.f90
+		if [[ -f ${predir}/`basename ${fichier%%.ftn90}`.f90 ]]; then
+			chmod 644 ${predir}/`basename ${fichier%%.ftn90}`.f90
 		fi
-		r.gppf -lang-f90+ ${GPP_OPTS} ${vincludes[@]} $defines ${fichier} > ./`basename ${fichier%%.ftn90}`-$$.f90
+		r.gppf -lang-f90+ ${GPP_OPTS} ${vincludes[@]} $defines ${fichier} > ${predir}/`basename ${fichier%%.ftn90}`-$$.f90
       istat=$?
       if [[ $istat == 0 ]] ; then
-         mv ./`basename ${fichier%%.ftn90}`-$$.f90 ./`basename ${fichier%%.ftn90}`.f90
+         mv ${predir}/`basename ${fichier%%.ftn90}`-$$.f90 ${predir}/`basename ${fichier%%.ftn90}`.f90
       else
-         rm -f ./`basename ${fichier%%.ftn90}`-$$.f90
+         rm -f ${predir}/`basename ${fichier%%.ftn90}`-$$.f90
       fi
 		let STATUT_TOT=STATUT_TOT+$istat
-		chmod 444  ./`basename ${fichier%%.ftn90}`.f90
-		echo "r.gppf -lang-f90+ ${GPP_OPTS} ${vincludes[@]} $defines ${fichier} > ./`basename ${fichier%%.ftn90}`.f90"
-		sources[((compteur))]=./`basename ${fichier%%.ftn90}`.f90
+		chmod 444  ${predir}/`basename ${fichier%%.ftn90}`.f90
+		echo "r.gppf -lang-f90+ ${GPP_OPTS} ${vincludes[@]} $defines ${fichier} > ${predir}/`basename ${fichier%%.ftn90}`.f90"
+		sources[((compteur))]=${predir}/`basename ${fichier%%.ftn90}`.f90
 		sources_f90[((compteur))]=${sources[((compteur))]}
 		((nbf90=nbf90+1))
 		;;
@@ -491,19 +492,19 @@ for fichier in ${sources[@]}; do
 	( *.cdk90 )
 		ls ${fichier} 1>/dev/null 2>&1
 		status=$?
-		chmod 644 ${fichier%%.cdk90}.f90 2>/dev/null
+		chmod 644 ${predir}/${fichier%%.cdk90}.f90 2>/dev/null
 		if [[ $status = 0 ]]; then			      
-			r.gppf -lang-f90+ ${GPP_OPTS} ${vincludes[@]} $defines ${fichier} > ./`basename ${fichier%%.cdk90}`-$$.f90
+			r.gppf -lang-f90+ ${GPP_OPTS} ${vincludes[@]} $defines ${fichier} > ${predir}/`basename ${fichier%%.cdk90}`-$$.f90
          istat=$?
          if [[ $istat == 0 ]] ; then
-            mv  ./`basename ${fichier%%.cdk90}`-$$.f90 ./`basename ${fichier%%.cdk90}`.f90
+            mv  ${predir}/`basename ${fichier%%.cdk90}`-$$.f90 ${predir}/`basename ${fichier%%.cdk90}`.f90
          else
-            rm -f ./`basename ${fichier%%.cdk90}`-$$.f90
+            rm -f ${predir}//`basename ${fichier%%.cdk90}`-$$.f90
          fi
 		   let STATUT_TOT=STATUT_TOT+$istat
-			sources[((compteur))]=./`basename ${fichier%%.cdk90}`.f90
+			sources[((compteur))]=${predir}/`basename ${fichier%%.cdk90}`.f90
 			sources_f90[((compteur))]=${sources[((compteur))]}
-			chmod 444 ${fichier%%.cdk90}.f90 2>/dev/null
+			chmod 444 ${predir}/${fichier%%.cdk90}.f90 2>/dev/null
 			((nbf90=nbf90+1)) 
 		else
 			echo "s.compile: WARNING  '${fichier}' not found, SKIPPING"
