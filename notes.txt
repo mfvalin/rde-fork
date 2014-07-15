@@ -1,4 +1,6 @@
 TODO:
+* make all w/o make lib should work
+* sticky compiler... should prepend to .pf.comp.BASE_ARCH.dot (not append) 
 * clone
 * pfupdate_build_links.ksh: get_dep_list, myrm_dep, myrm_bidon, myrm_empty
 * pfupdate_build_links.ksh: .restricted; make sure src_usr/*/.restricted have precedence over src_ref
@@ -8,7 +10,6 @@ TODO:
 * test .geminit [w/o version] in empty dir : 2cases with and without ATM_MODEL_VERSION defined
 * Use s.f90, s.f77 instead of s.compile
 * allow Compiler_rules override in topdir, src_ref and src
-* Make -j (no NJOBS)
 * foolib(hack.o) : hack.o
         ar r foolib hack.o
   http://www.cs.utah.edu/dept/old/texinfo/make/make.html#SEC101
@@ -21,6 +22,11 @@ Done:
 * pf scripts should check if it's ok to run in PWD
 * refactor s.dependencies.pl
 * pfmv
+* flat src
+* Makefile.user.km default
+* rm subdirs in bin,lib,...
+* make gemdm should work
+* Make -j (no NJOBS)
 
 Special files:
 * .restricted: whitelist of "$BASE_ARCH:" or "$EC_ARCH:" for dir access; located in src_ref, src dir to restrict; NOT recursive
@@ -32,9 +38,16 @@ Special files:
 * .pf.comp.BASE_ARCH.dot
 * .pf.srcpath
 * .pf.components
+* .pf.flatsrc
 * Makefile
 * Makefile.user.mk
 * Makefile.user.COMP_ARCH.mk
 * .compiler_rules.dot
 
+
+Why not to use Makefile target as mylib(mysub.o):
+http://www.gnu.org/software/make/manual/make.html#Archives
+11.3 Dangers When Using Archives
+It is important to be careful when using parallel execution (the -j switch; see Parallel Execution) and archives. If multiple ar commands run at the same time on the same archive file, they will not know about each other and can corrupt the file.
+Possibly a future version of make will provide a mechanism to circumvent this problem by serializing all recipes that operate on the same archive file. But for the time being, you must either write your makefiles to avoid this problem in some other way, or not use -j.
 

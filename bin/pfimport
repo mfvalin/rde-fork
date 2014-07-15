@@ -145,7 +145,11 @@ pf_add_component_mirror_dir() {
       if [[ x$item != x. ]] ;then
          mkdir -p $ROOT/$SRC_USR/$_comp/$_item 2>/dev/null
          for _mydir in $BUILD_SUB_DIR_LIST ; do
-            mkdir -p  $STORAGE_BIN/$_mydir/$_comp/${_item} 2>/dev/null || true
+            if [[ x$_mydir != xbin && x$_mydir != xlib && x$_mydir != xmod ]] ; then
+               mkdir -p  $STORAGE_BIN/$_mydir/$_comp/${_item} 2>/dev/null || true
+            else
+               mkdir -p  $STORAGE_BIN/$_mydir
+            fi
          done
       fi
    done

@@ -212,7 +212,11 @@ if [[ $resync -eq 1 ]] ; then
    for _item in $(cd $ROOT/$SRC_REF ; find -L . -type d) ; do
       if [[ x$item != x. ]] ;then
          for _mydir in $BUILD_SUB_DIR_LIST ; do
-            mkdir -p  $STORAGE_BIN/$_mydir/${_item} 2>/dev/null || true
+            if [[ x$_mydir != xbin && x$_mydir != xlib && x$_mydir != xmod ]] ; then
+               mkdir -p  $STORAGE_BIN/$_mydir/${_item} 2>/dev/null || true
+            else
+               mkdir -p  $STORAGE_BIN/$_mydir
+            fi
          done
       fi
    done
@@ -247,7 +251,11 @@ for _item in $(cd $ROOT/$SRC_USR ; find -L . -type d) ; do
    if [[ x$item != x. ]] ;then
       for _mydir in $BUILD_SUB_DIR_LIST ; do
          if [[ ! -d $STORAGE_BIN/$_mydir/${_item} ]] ; then
-            mkdir -p  $STORAGE_BIN/$_mydir/${_item} 2>/dev/null || true
+            if [[ x$_mydir != xbin && x$_mydir != xlib && x$_mydir != xmod ]] ; then
+               mkdir -p  $STORAGE_BIN/$_mydir/${_item} 2>/dev/null || true
+            else
+               mkdir -p  $STORAGE_BIN/$_mydir 2>/dev/null || true
+            fi
          fi
       done
    fi

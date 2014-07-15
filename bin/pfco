@@ -79,4 +79,8 @@ EOF
    fi
 done
 
+if [[ -f .pf.flatsrc ]] ; then
+   pflinkflat
+fi
+
 exit $mystatus

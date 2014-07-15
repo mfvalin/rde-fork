@@ -77,3 +77,7 @@ else
 fi
 pfrm  $OLDNAME >/dev/null 2>&1
 myecho 0 "++ WARNING: You need to do 'make dep' before recompiling"
+
+if [[ -f .pf.flatsrc ]] ; then
+   pflinkflat
+fi

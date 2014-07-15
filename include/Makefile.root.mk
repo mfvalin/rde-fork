@@ -129,8 +129,19 @@ distclean++:
 
 ## ====  Real Targets and Dependencies
 
-Makefile.user.mk:
-	touch Makefile.user.mk
+Makefile.user.mk: Makefile.user.$(COMP_ARCH).mk
+	if [[ -f $(purplefrog)/etc/$@ ]] ; then \
+	   cp $(purplefrog)/etc/$@ $@ ;\
+	else ;\
+	   touch $@ ;\
+	fi
+Makefile.user.$(COMP_ARCH).mk:
+	if [[ -f $(purplefrog)/etc/Makefile.user.mk ]] ; then \
+	   cp $(purplefrog)/etc/Makefile.user.mk $@ ;\
+	else ;\
+	   touch $@ ;\
+	fi
+
 $(BUILDOBJ)/Makefile: Makefile.user.mk $(BUILDOBJ)/Makefile.local.mk $(BUILDOBJ)/Makefile.rules.mk $(BUILDOBJ)/Makefile.base_arch.mk $(BUILDOBJ)/Makefile.ec_arch.mk $(BUILDOBJ)/Makefile.dep.mk
 	cp $(purplefrog)/include/Makefile.build.mk $(BUILDOBJ)/ 2>/dev/null || true
 	ln -sf $(BUILDOBJ)/Makefile.build.mk $@

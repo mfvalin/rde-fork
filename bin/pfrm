@@ -98,4 +98,8 @@ if [[ $isfile == 1 ]] ; then
    myecho 1 "WARNING: files were removed, you may want to update dependencies with:\n\tmake dep"
 fi
 
+if [[ -f .pf.flatsrc ]] ; then
+   pflinkflat
+fi
+
 exit $mystatus

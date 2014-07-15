@@ -1,0 +1,12 @@
+chm_stubs/1.0.0
+cpl_stubs/1.0.0
+envhpcs/1.1.0
+gem/4.7.0-b6
+gemdyn/4.7.0-b6
+massv_wrap/1.0.0
+modelutils/1.3.0-b6
+prof_stubs/1.0.0
+rpn_comm/4.5.12
+rpn_comm_stubs/4.5.12
+rpnphy/5.7.0-b6
+vgrid/4.5.0-a1
