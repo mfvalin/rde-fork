@@ -620,7 +620,7 @@ sub print_object_list {
             print_item("$item");
         }
         print STDOUT "\n";
-        print STDOUT "\$(LIBDIR)/lib".$_.".a: \$(OBJECTS_".$_.") \$(LIBDEP_".$_.")\n";
+        print STDOUT "\$(LIBDIR)/lib".$_.".a: \$(OBJECTS_".$_.") \$(LIBDEP_".$_.") \$(LIBDEP_ALL)\n";
         print STDOUT "\t".'rm -f $@; ar r $@_$$$$ $(OBJECTS_'.$_.'); mv $@_$$$$ $@'."\n";
         print STDOUT "lib".$_.".a: \$(LIBDIR)/lib".$_.".a\n";
     }

@@ -54,11 +54,13 @@ endif
 
 MAKE_LINKS  := .pfupdate_build_links.ksh ; $(BUILDOBJ)/Makefile
 
-.DEFAULT: | links0
+.DEFAULT:
+	.pfupdate_build_links.ksh ;\
 	cd $(BUILDOBJ) ;\
 	$(MAKE_ARCH) $@ ROOT=$(ROOT) VPATH=$(VPATH)
 
-all: | links0
+all:
+	.pfupdate_build_links.ksh ;\
 	cd $(BUILDOBJ) ;\
 	$(MAKE_ARCH) $@ ROOT=$(ROOT) VPATH=$(VPATH)
 
@@ -78,13 +80,13 @@ rm_makefiles_dep:
 
 links0:
 	.pfupdate_build_links.ksh
-links: | links0 $(BUILDOBJ)/Makefile
-links_forced: | rm_makefiles links
+links: links0 $(BUILDOBJ)/Makefile
+links_forced: rm_makefiles links
 
-sanity: | $(BUILDOBJ)/Makefile
-sanity_forced: | rm_makefiles2 sanity
+sanity: $(BUILDOBJ)/Makefile
+sanity_forced: rm_makefiles2 sanity
 
-dep: | rm_makefiles_dep links
+dep: rm_makefiles_dep links
 
 versionfiles:
 	for mydir in `ls $(BUILDSRC)` ; do \
@@ -95,7 +97,7 @@ versionfiles:
 		fi ;\
 	done
 
-clean: | sanity
+clean: sanity
 	cd $(BUILDOBJ) ;\
 	$(MAKE_ARCH) $@ ROOT=$(ROOT) VPATH=$(VPATH)
 distclean:

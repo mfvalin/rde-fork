@@ -36,8 +36,9 @@ INCLUDES = $(shell .pfdir_with_files -n $(VPATH))
 INCLUDE_PATH=". $(INCLUDES)"
 INCLUDE_MOD="$(BUILDMOD)"
 
-LIBDIR=$(BUILDLIB)
-BINDIR=$(BUILDBIN)
+LIBDIR = $(BUILDLIB)
+BINDIR = $(BUILDBIN)
+LIBDEP_ALL =  Makefile.dep.mk
 
 LIBPATH = $(PWD) $(LIBPATH_PRE) $(BUILDLIB) $(LIBPATHEXTRA) $(LIBSYSPATHEXTRA) $(LIBPATHOTHER) $(LIBPATH_POST)
 #LIBAPPL = $(LIBS_PRE) $(LIBLOCAL) $(LIBOTHERS) $(LIBEXTRA) $(LIBS_POST)
@@ -80,12 +81,12 @@ endif
 
 .PHONY: all allbin allbincheck lib obj objloc clean0 clean check_inc_dup
 
-obj: | Makefile.dep.mk $(OBJECTS)
+obj: Makefile.dep.mk $(OBJECTS)
 objloc: obj
 
-lib: | Makefile.dep.mk $(OBJECTS) $(ALL_LIBS)
+lib: Makefile.dep.mk $(OBJECTS) $(ALL_LIBS)
 
-all: | Makefile.dep.mk $(OBJECTS) $(ALL_LIBS) $(ALL_BINS)
+all: Makefile.dep.mk $(OBJECTS) $(ALL_LIBS) $(ALL_BINS)
 
 bin_check: $(ALL_BINS_CHECK)
 
