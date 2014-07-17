@@ -2,21 +2,22 @@ TODO:
 * make all w/o make lib should work
 * sticky compiler... should prepend to .pf.comp.BASE_ARCH.dot (not append) 
 * clone
-* pfupdate_build_links.ksh: get_dep_list, myrm_dep, myrm_bidon, myrm_empty
-* pfupdate_build_links.ksh: .restricted; make sure src_usr/*/.restricted have precedence over src_ref
 * test if src_usr is added
 * test if file recompiled when back to ref version
 * test .setenv.dot COMP_ARCH not existing
 * test .geminit [w/o version] in empty dir : 2cases with and without ATM_MODEL_VERSION defined
 * Use s.f90, s.f77 instead of s.compile
 * allow Compiler_rules override in topdir, src_ref and src
-* foolib(hack.o) : hack.o
-        ar r foolib hack.o
-  http://www.cs.utah.edu/dept/old/texinfo/make/make.html#SEC101
 * option to use BASE_ARCH instead of TRUE_HOST for build dir name
 * Running env (gemdev)
-* xfl
-* gfortran
+* xfl13
+* gfortran... pending librmn
+*.updatebuild: pool find operation together
+*.updatebuild: look for alternatives for links (file with file origine/rm) to avoid find operations
+*.updatebuild: as in pfdiff, check .restricted recursively from top dir
+*.updatebuild: .restricted in srs_usr should have precedence over src_ref
+*.updatebuild: get_dep_list, myrm_dep, myrm_bidon, myrm_empty
+*.updatebuild: .restricted; make sure src_usr/*/.restricted have precedence over src_ref
 
 Done:
 * pfinit/import
@@ -29,6 +30,10 @@ Done:
 * rm subdirs in bin,lib,...
 * make gemdm should work
 * Make -j (no NJOBS)
+* add sample abs target in Makefile.user.mk
+* (NOT DONE see why below) foolib(hack.o) : hack.o
+        ar r foolib hack.o
+  http://www.cs.utah.edu/dept/old/texinfo/make/make.html#SEC101
 
 Special files:
 * .restricted: whitelist of "$BASE_ARCH:" or "$EC_ARCH:" for dir access; located in src_ref, src dir to restrict; NOT recursive

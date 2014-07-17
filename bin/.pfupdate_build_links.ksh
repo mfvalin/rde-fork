@@ -4,6 +4,10 @@
 # @Date:   March 2014
 . .pfbase.inc.dot
 
+#TODO: pool find operation together
+#TODO: look for alternatives for links (file with file origine/rm) to avoid find operations
+#TODO: as in pfdiff, check .restricted recursively from top dir
+
 ##
 # Help
 ##

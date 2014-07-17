@@ -37,12 +37,12 @@ endif
 ifneq (,$(wildcard $(BUILDOBJ)/Makefile.ec_arch.mk))
 	include $(BUILDOBJ)/Makefile.ec_arch.mk
 endif
-ifneq (,$(wildcard $(ROOT)/Makefile.user.mk))
-	include $(ROOT)/Makefile.user.mk
-endif
-ifneq (,$(wildcard $(ROOT)/Makefile.user.$(COMP_ARCH).mk))
-	include $(ROOT)/Makefile.user.$(COMP_ARCH).mk
-endif
+# ifneq (,$(wildcard $(ROOT)/Makefile.user.mk))
+# 	include $(ROOT)/Makefile.user.mk
+# endif
+# ifneq (,$(wildcard $(ROOT)/Makefile.user.$(COMP_ARCH).mk))
+# 	include $(ROOT)/Makefile.user.$(COMP_ARCH).mk
+# endif
 
 #ifeq (,$(VERBOSE))
 #.SILENT:
@@ -133,8 +133,8 @@ Makefile.user.mk: Makefile.user.$(COMP_ARCH).mk
 	   touch $@ ;\
 	fi
 Makefile.user.$(COMP_ARCH).mk:
-	if [[ -f $(purplefrog)/etc/Makefile.user.mk ]] ; then \
-	   cp $(purplefrog)/etc/Makefile.user.mk $@ ;\
+	if [[ -f $(purplefrog)/etc/$@ ]] ; then \
+	   cp $(purplefrog)/etc/$@ $@ ;\
 	else \
 	   touch $@ ;\
 	fi

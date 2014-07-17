@@ -56,25 +56,50 @@ fi
 
 pf_exit_if_not_pftopdir
 
+isrestricted() {
+   #set -x
+   _myfile=$1
+   _myfiledel=$1
+   _isrestricted=""
+   for _mydir in ${SRC_REF} ${SRC_USR} ; do
+      _subdirall=""
+      _subdirlist="$(echo ${_myfile%/*} | tr '/' ' ')"
+      for _subdir in ${_subdirlist} ; do
+         _subdirall="${_subdirall}/${_subdir}/"
+         _restricfile=${_mydir}/${_subdirall}/.restricted
+         if [[ -f $_restricfile ]] ; then
+            if [[ x"$(cat $_restricfile | grep ${BASE_ARCH}:)" == x && \
+               x"$(cat $_restricfile | grep ${EC_ARCH}:)" == x ]] ; then
+               _isrestricted="RESTRICTED"
+            else
+               _isrestricted=""
+            fi
+         fi
+      done
+   done
+   echo ${_isrestricted}
+}
+
 echo_file_status() {
    _myfile=$1
    _itemname2=$(is_src_local_deleted ${_myfile})
+   _isrestricted="$(isrestricted ${_myfile} ${_itemname2})"
    if [[ x${_itemname2} != x ]] ; then
-      echo DEL ${_itemname2}
+      echo DEL ${_itemname2} ${_isrestricted}
    elif [[ -f ${ROOT}/${SRC_USR}/${_myfile} ]] ; then
       if [[ -f ${ROOT}/${SRC_REF}/${_myfile} ]] ; then
          _isdiff=1
          diff -q ${ROOT}/${SRC_REF}/${_myfile} ${ROOT}/${SRC_USR}/${_myfile} >/dev/null && _isdiff=0
          if [[ ${_isdiff} == 1 ]] ; then
-            echo MOD ${_myfile}
+            echo MOD ${_myfile} ${_isrestricted}
          else
-            echo REF ${_myfile}
+            echo REF ${_myfile} ${_isrestricted}
          fi
       else
-         echo NEW ${_myfile}
+         echo NEW ${_myfile} ${_isrestricted}
       fi
    else
-      echo ??? ${_myfile}
+      echo ??? ${_myfile} ${_isrestricted}
    fi
 }
 

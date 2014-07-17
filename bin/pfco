@@ -54,9 +54,10 @@ EOF
          #mypath=${mypath#*/}
          if [[ -e ${ROOT}/${SRC_USR}/$mypath ]] ; then
             if [[ $myforce == 0 ]] ; then
-               mystderr 0 "
-    WARNING: File $mypath already exists, to overwrite:
-             use: ${MYSELF} -f $myfile"
+            cat 1>&2 <<EOF
+    WARNING: File $mypath already exists, overwrite with: 
+             ${MYSELF} -f $myfile
+EOF
                mypath=""
             else
                rm -f ${ROOT}/${SRC_USR}/$mypath

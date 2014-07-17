@@ -25,7 +25,7 @@ versionfiles   : Create/force_update versionfiles in src
 --------------------------------------------------------------
 User overrides files: Makefile.user.mk, Makefile.user.${COMP_ARCH}.mk
 
-Example content:
+Example of content:
 
 VERBOSE = -v
 OPTIL   = 2
@@ -35,7 +35,31 @@ MPI     = -mpi
 FFLAGS  = '-g -C -traceback'
 #CFLAGS  =
 
-myall: dep objects libs allbin
+## Sample dummy target
+
+.PHONY: mydummyall
+mydummyall: dep objects libs allbin
+
+## Sample abs/binary target
+
+MYDUMMY_DEPLIST = modelutils vgrid rpn_comm rpn_comm_stubs massv_wrap envhpcs
+MYDUMMY_BINDEP  = $(addprefix $(LIBDIR)/lib,$(addsuffix .a,$(MYDUMMY_DEPLIST)))
+
+mydummyabs: $(BINDIR)/mydummyabs.Abs
+$(BINDIR)/mydummyabs.Abs: $(MYDUMMY_BINDEP)
+	export ATM_MODEL_NAME=mydummy ;\
+	export MAINSUBNAME=mydummy_mainsub ;\
+	COMM_stubs1=rpn_comm_stubs ;\
+	LIBLOCAL="modelutils" ;\
+	$(RBUILD3NOMPI)
+
+mydummyabsmpi: $(BINDIR)/mydummyabsmpi.Abs
+$(BINDIR)/mydummyabsmpi.Abs: $(MYDUMMY_BINDEP)
+	export ATM_MODEL_NAME=mydummy ;\
+	export MAINSUBNAME=mydummy_mainsub ;\
+	LIBLOCAL="modelutils" ;\
+	$(RBUILD3MPI)
+
 --------------------------------------------------------------
 For a list and details of tools use:
   pfhelp [--long]

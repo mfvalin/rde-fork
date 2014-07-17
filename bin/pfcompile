@@ -83,17 +83,20 @@ function oncompile {
 	compilateur_et_options=$1
 	lecode=$2
 	options_supp=$3
+   mycompilateur=${compilateur_et_options%% *}
 
 	if [[ -z ${varlog} ]]; then
 		echo 
 		echo  Commande effectuee
-		echo  "${compilateur_et_options} $options_supp $lecode ${MPILIB}"
+		echo  "${compilateur_et_options} $options_supp $lecode ${MPILIB}" | sed 's/\s\s*/ \\\n\t/g' || true
+      echo "==== BEGIN $mycompilateur $lecode"
 		${compilateur_et_options} $options_supp $lecode ${MPILIB}
+      echo "==== END $lecode"
 		STATUT=$?
 	else
 		echo 
 		echo  Commande effectuee
-		echo  "${compilateur_et_options} $options_supp $lecode ${MPILIB} >> ${varlog} 2>&1"
+		echo  "${compilateur_et_options} $options_supp $lecode ${MPILIB} >> ${varlog} 2>&1" | sed 's/\s\s*/ \\\n\t/g' || true
 		${compilateur_et_options} $options_supp $lecode ${MPILIB} >> ${varlog} 2>&1
 		STATUT=$?
 	fi
@@ -444,7 +447,7 @@ for fichier in ${sources[@]}; do
       fi
 		let STATUT_TOT=STATUT_TOT+$istat
 		chmod 444  ${predir}/`basename ${fichier%%.ftn90}`.f90
-		echo "r.gppf -lang-f90+ ${GPP_OPTS} ${vincludes[@]} $defines ${fichier} > ${predir}/`basename ${fichier%%.ftn90}`.f90"
+		echo "r.gppf -lang-f90+ ${GPP_OPTS} ${vincludes[@]} $defines ${fichier} > ${predir}/`basename ${fichier%%.ftn90}`.f90" | sed 's/\s\s*/ \\\n\t/g' || true
 		sources[((compteur))]=${predir}/`basename ${fichier%%.ftn90}`.f90
 		sources_f90[((compteur))]=${sources[((compteur))]}
 		((nbf90=nbf90+1))
@@ -505,6 +508,7 @@ for fichier in ${sources[@]}; do
 			sources[((compteur))]=${predir}/`basename ${fichier%%.cdk90}`.f90
 			sources_f90[((compteur))]=${sources[((compteur))]}
 			chmod 444 ${predir}/${fichier%%.cdk90}.f90 2>/dev/null
+		   echo "r.gppf -lang-f90+ ${GPP_OPTS} ${vincludes[@]} $defines ${fichier} > ${predir}/`basename ${fichier%%.cdk90}`.f90" | sed 's/\s\s*/ \\\n\t/g' || true
 			((nbf90=nbf90+1)) 
 		else
 			echo "s.compile: WARNING  '${fichier}' not found, SKIPPING"
