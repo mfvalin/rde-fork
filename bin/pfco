@@ -50,6 +50,7 @@ EOF
       mystatus=0
    else
       for mypath in ${mypathlist} ; do
+         isdir=0
          replaced=""
          #mypath=${mypath#*/}
          if [[ -e ${ROOT}/${SRC_USR}/$mypath ]] ; then
@@ -60,14 +61,24 @@ EOF
 EOF
                mypath=""
             else
-               rm -f ${ROOT}/${SRC_USR}/$mypath
-               replaced="(overwritting existing file)"
+               if [[ -d ${ROOT}/${SRC_USR}/$mypath ]] ; then
+                  isdir=1
+                  rm -rf ${ROOT}/${SRC_USR}/$mypath
+                  replaced="(overwritting existing dir)"
+              else
+                  rm -f ${ROOT}/${SRC_USR}/$mypath
+                  replaced="(overwritting existing file)"
+               fi
             fi
          fi
 
          if [[ x$mypath != x ]] ; then
             rm -f ${ROOT}/${SRC_USR}/$(echo_deleted_tag ${mypath}) 2> /dev/null || true
-            rsync -a ${ROOT}/${SRC_REF}/$mypath ${ROOT}/${SRC_USR}/$mypath
+            if [[ $isdir == 1 ]] ; then
+               rsync -a ${ROOT}/${SRC_REF}/$mypath/ ${ROOT}/${SRC_USR}/$mypath
+            else
+               rsync -a ${ROOT}/${SRC_REF}/$mypath ${ROOT}/${SRC_USR}/$mypath
+            fi
             chmod -R u+w ${ROOT}/${SRC_USR}/$mypath
             if [[ x${replaced} != x ]] ; then
                touch ${ROOT}/${SRC_USR}/$mypath

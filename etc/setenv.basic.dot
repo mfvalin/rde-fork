@@ -76,5 +76,27 @@ done
 mytmp="$(echo $mytmp)"
 export EC_INCLUDE_PATH="$mytmp"
 
+##
+# PATH
+##
+#for myarch in  / /${BASE_ARCH} /${EC_ARCH} ; do
+for myarch in  / /${BASE_ARCH} ; do
+   for item in bin_ref bin ; do
+      export PATH=$(pwd)/${item}${myarch}:$PATH
+   done
+done
+export PATH=$(pwd)/$(pfmodel_link build/bin):$PATH
+. s.ssmuse.dot ovbin
+
+if [[ -f .setenv.user.dot ]] ; then
+   . .setenv.user.dot
+fi
+if [[ -f .setenv.user.${BASE_ARCH}.dot ]] ; then
+   . .setenv.user.${BASE_ARCH}.dot
+fi
+if [[ -f .setenv.user.${COMP_ARCH}.dot ]] ; then
+   . .setenv.user.${COMP_ARCH}.dot
+fi
+
 return 0
 

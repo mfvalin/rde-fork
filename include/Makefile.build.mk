@@ -87,7 +87,7 @@ objloc: obj
 lib: Makefile.dep.mk $(OBJECTS) $(ALL_LIBS)
 
 all: Makefile.dep.mk $(OBJECTS) $(ALL_LIBS) $(ALL_BINS)
-
+bin: all
 bin_check: $(ALL_BINS_CHECK)
 
 clean0:

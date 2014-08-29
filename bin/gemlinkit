@@ -1,0 +1,39 @@
+#!/bin/ksh
+#
+. .pfbase.inc.dot
+pf_exit_if_not_pftopdir
+
+DESC='Create dir and links to run GEM interactively'
+USAGE="USAGE: ${MYSELF}"
+
+BUILD_RUN=${BUILD}/run
+mkdir ${BUILD_BIN} 2> /dev/null
+mkdir ${BUILD_RUN} 2> /dev/null
+
+absname() {
+   echo ${1}${2}_${BASE_ARCH}.Abs
+}
+abslist="maingemntr maingemdm"
+for item in $abslist ; do
+  item2=$(absname $item)
+  /bin/rm -f ${item2}
+  ln -sf ${BUILD_BIN}/${item2} ${item2}
+  if [[ ! -s ${BUILD_BIN}/${item2} ]] ; then
+     item3=$(which $(absname $item _REL))
+     if [[ x$item3 == x ]] ; then
+        item3=$(which $item2)
+     fi
+     if [[ x$item3 != x ]] ; then
+        cp $item3 ${BUILD_BIN}/${item2}
+        chmod 755 ${BUILD_BIN}/${item2}
+     fi
+  fi
+done
+
+dirlist="RUNENT RUNMOD RUNENT_output RUNMOD_output"
+/bin/rm -rf $dirlist
+for item in $dirlist ; do
+   mkdir ${BUILD_RUN}/$item 2> /dev/null
+   ln -s ${BUILD_RUN}/$item $item
+done
+

@@ -41,7 +41,7 @@ fi
 
 cat <<EOF
 ========================================
-Purple Frog: code devlopment environment
+Purple Frog: code development environment
 
 Basic setup  :
    pfinit -v   #in working dir

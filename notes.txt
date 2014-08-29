@@ -1,23 +1,26 @@
 TODO:
-* make all w/o make lib should work
-* sticky compiler... should prepend to .pf.comp.BASE_ARCH.dot (not append) 
+*.updatebuild: get_dep_list, myrm_dep, myrm_bidon, myrm_empty
 * clone
-* test if src_usr is added
+* sticky compiler... should prepend to .pf.comp.BASE_ARCH.dot (not append) 
+* xfl13
+* pfimport should not load component twice
+* Use s.f90, s.f77 instead of s.compile
+** allow Compiler_rules override in topdir, src_ref and src
+
+
+* make all w/o make lib should work
 * test if file recompiled when back to ref version
 * test .setenv.dot COMP_ARCH not existing
 * test .geminit [w/o version] in empty dir : 2cases with and without ATM_MODEL_VERSION defined
-* Use s.f90, s.f77 instead of s.compile
-* allow Compiler_rules override in topdir, src_ref and src
 * option to use BASE_ARCH instead of TRUE_HOST for build dir name
 * Running env (gemdev)
-* xfl13
 * gfortran... pending librmn
-*.updatebuild: pool find operation together
 *.updatebuild: look for alternatives for links (file with file origine/rm) to avoid find operations
-*.updatebuild: as in pfdiff, check .restricted recursively from top dir
-*.updatebuild: .restricted in srs_usr should have precedence over src_ref
-*.updatebuild: get_dep_list, myrm_dep, myrm_bidon, myrm_empty
-*.updatebuild: .restricted; make sure src_usr/*/.restricted have precedence over src_ref
+* Makefile: replace for loops and recurse make by automatic targets as in Makefile.user.mk
+* mv Makefile.user.mk my_bin into Makefile.build.mk
+* pfdependencies add option to produec lib targets (not default)
+* pfdependencies should also take list of file from stdin
+* pfimport should also import etc?,shared? (on top of src,bin) in ref/ (maybe src_ref should become ref/src)
 
 Done:
 * pfinit/import
@@ -34,6 +37,14 @@ Done:
 * (NOT DONE see why below) foolib(hack.o) : hack.o
         ar r foolib hack.o
   http://www.cs.utah.edu/dept/old/texinfo/make/make.html#SEC101
+* add build/bin root/bin to PATH
+* Better doc, wiki, make help, pfhelp, pfTOOL -h
+* .setenv.dot should load .setenv.user.dot if it exists
+*.updatebuild: pool find operation together
+*.updatebuild: as in pfdiff, check .restricted recursively from top dir
+*.updatebuild: .restricted; make sure src_usr/*/.restricted have precedence over src_ref
+* test if src_usr is added
+* pfimport should also import bin (on top of src) in bin_ref
 
 Special files:
 * .restricted: whitelist of "$BASE_ARCH:" or "$EC_ARCH:" for dir access; located in src_ref, src dir to restrict; NOT recursive

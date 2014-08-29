@@ -5,6 +5,7 @@
 SHELL = /bin/bash
 
 ROOT  := $(PWD)
+SRC_USR := $(ROOT)/$(shell pfmodel_link local)
 BUILD := $(ROOT)/$(shell pfmodel_link build)
 BUILDBIN := $(ROOT)/$(shell pfmodel_link build/bin)
 BUILDLIB := $(ROOT)/$(shell pfmodel_link build/lib)
@@ -50,7 +51,7 @@ endif
 
 ## ==== Phony targets
 
-.PHONY: all help rm_makefiles rm_makefiles2 rm_makefiles_dep links0 links links_forced sanity sanity_nodep_force dep versionfiles clean distclean distclean+ distclean++
+.PHONY: all help rm_makefiles rm_makefiles2 rm_makefiles_dep links0 links links_forced sanity sanity_nodep_force dep versionfiles clean distclean distclean+ distclean++ obj_touch obj_forced objloc lib_rm lib_forced bin_rm bin_forced all_forced
 
 MAKE_LINKS  := .pfupdate_build_links.ksh ; $(BUILDOBJ)/Makefile
 
@@ -63,6 +64,22 @@ all:
 	.pfupdate_build_links.ksh ;\
 	cd $(BUILDOBJ) ;\
 	$(MAKE_ARCH) $@ ROOT=$(ROOT) VPATH=$(VPATH)
+
+obj_touch:
+	@find $(SRC_USR) -type f -exec touch {} \;
+obj_forced: obj_touch obj
+objloc: obj_forced
+
+lib_rm:
+	@rm -f $(BUILDLIB)/lib*.a 
+lib_forced: lib_rm lib
+
+bin: all
+bin_rm:
+	@rm -f $(BUILDBIN)/* 
+bin_forced: bin_rm bin
+
+all_forced: obj_forced lib_forced bin_forced
 
 help:
 	@more $(purplefrog)/etc/pf_make_help.txt
@@ -126,14 +143,14 @@ distclean++:
 
 ## ====  Real Targets and Dependencies
 
-Makefile.user.mk: Makefile.user.$(COMP_ARCH).mk
-	if [[ -f $(purplefrog)/etc/$@ ]] ; then \
+Makefile.user.mk:
+	if [[ -f $(purplefrog)/etc/$@ && ! -f $@ ]] ; then \
 	   cp $(purplefrog)/etc/$@ $@ ;\
 	else \
 	   touch $@ ;\
 	fi
 Makefile.user.$(COMP_ARCH).mk:
-	if [[ -f $(purplefrog)/etc/$@ ]] ; then \
+	if [[ -f $(purplefrog)/etc/$@ && ! -f $@ ]] ; then \
 	   cp $(purplefrog)/etc/$@ $@ ;\
 	else \
 	   touch $@ ;\

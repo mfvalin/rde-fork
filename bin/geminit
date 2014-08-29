@@ -95,6 +95,17 @@ gempf_init_fn() {
       return 1
    fi
 
+   if [[ -f $purplefrog/etc/models/gem/${ATM_MODEL_VERSION}/ssmusedep.bndl ]] ; then
+      touch .setenv.user.dot
+      echo ". s.ssmuse.dot $(cat $purplefrog/etc/models/gem/${ATM_MODEL_VERSION}/ssmusedep.bndl | tr '\n' ' ')" >> .setenv.user.dot
+   fi
+
+   if [[ -f $purplefrog/etc/models/gem/${ATM_MODEL_VERSION}/setenv.dot ]] ; then
+      touch .setenv.user.dot
+      cat $purplefrog/etc/models/gem/${ATM_MODEL_VERSION}/setenv.dot >> .setenv.user.dot
+   fi
+
+
    myclone=0
    clonefile=$purplefrog/share/clone/gem/$ATM_MODEL_VERSION/gem_${ATM_MODEL_VERSION}_${BASE_ARCH}_${COMP_ARCH}.tar.gz
    if [[ -f $clonefile && x$myclone == x1 ]] ;then

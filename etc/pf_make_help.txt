@@ -5,10 +5,18 @@ dep            : Update dependencies
 obj            : Compile all out of date objects
 lib            : Build libs after compiling all out of date objects
 all            : Build bins after compiling all out of date objects, libs
-bin_check      : Check if all binanies have been built
+bin_check      : Check if all bin/abs have been built
+
+obj_forced     : Force compile all locally modified source files
+                 and all source files depending on them
+lib_forced     : Force build all libs
+bin_forced     : Force build all bin/abs
+all_forced     : make obj_forced lib_forced bin_forced
 
 FILENAME.o     : Build a single .o if not up to date
                  To force a build of a .o you need to 'touch' its source file
+libMYNAME.a    : Build libMYNAME.a and it's dependencies
+MYPROG.Abs     : Build MYPROG.Abs and it's dependencies
 
 clean          : rm *.o *.mod src and pre from build tree (keep lib and bin)
 distclean      : rm all files in known build tree sub dir

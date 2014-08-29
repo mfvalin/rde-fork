@@ -40,22 +40,23 @@ my $help = 0;
 my $output_file='';
 my $include_dirs='';
 my $suppress_errors_file='';
-GetOptions('verbose:+' => \$msg,
-           'quiet' => sub{$msg=0;},
-           'help' => \$help,
-           'flat_layout' => \$flat_layout,
-           'short_target_names' => \$short_target_names,
-           # 'local' => \$local_dir,
-           # 'dup_ok' => \$dup_ok,
+GetOptions('help'   => \$help,
+			  'verbose:+' => \$msg,
+           'quiet'  => sub{$msg=0;},
+           'supp=s' => \$suppress_errors_file,
+           'exp=s'  => \$export_list,
+           'out=s'  => \$output_file,
            'side_dir_inc' => \$side_dir_inc,
            'any_inc' => \$anywhere_inc,
+           'includes=s' => \$include_dirs,
+           # 'local' => \$local_dir,
            'strict' => \$use_strict,
            'deep-include' => \$deep_include,
            'soft-restriction' => \$soft_restriction,
-           'exp=s' => \$export_list,
-           'out=s' => \$output_file,
-           'includes=s' => \$include_dirs,
-           'supp=s' => \$suppress_errors_file,
+           # 'dup_ok' => \$dup_ok,
+           'flat_layout' => \$flat_layout,
+           'short_target_names' => \$short_target_names,
+           # 'lib_target' => \$lib_target,
     )
     or $help=1;
 
@@ -66,20 +67,47 @@ if (!$help and !($#listfile+1)) {
 }
 if ($help) {
     print STDERR "
-Usage: s.dependencies.pl [-v|--quiet] \\
+Build source file dependencies list, GMakefile format
+
+Usage: pfdependencies.pl [-v|--quiet] \\
+                         [--supp=suppress_errors_file]  \\ 
+                         [--exp=output_of_produced_file] [--out=outfile] \\
+                         [--includes=list_of_inc_dirs]  \\ 
+                         [--side_dir_inc] [--any_inc] \\
                          [--strict] [--deep-include] [--soft-restriction] \\
                          [--flat_layout] [--short_target_names] \\
-                         [--exp=output_of_produced_file] [--out=outfile] \\
-                         [--side_dir_inc] [--any_inc] \\
-                         [--includes=list_of_inc_dirs]  \\ 
-                         list_of_targets
-       list_of_targets : must be a list of files or dirs
-       list_of_inc_dirs: must be a list of ':'-separated dirs\n\n";
+                         list_of_files_dirs
+Options:
+    -v     : verbose mode (multipe time to increaselevel)
+   --quiet : no printed message
+   --supp  : suppress_errors_file contains known error message to not print
+   --exp   : Output the list of dependencies to the output file
+   --out   : Output dependency rules to the output file [Default: STDOUT]
+
+   --includes         : Search for include file in the listed dir, do not process these dir
+   --any_inc          : add all dir in list_of_files_dirs to the include_path
+   --side_dir_inc     : 
+
+   --strict           : Error on include 'myfile' if myfile is compilable
+   --deep-include     : Deep search for dependencies, recusive include
+   --soft-restriction : Allow to include files to have the same name
+
+   --flat_layout        : remove dir part in dependencies list
+   --short_target_names : add PHONY obj target without path as
+                          filename.o: path/filename.o
+
+list_of_files_dirs      : full list of files or dirs to process
+
+suppress_errors_file sample:
+   module_missing iso_c_binding
+   include_missing model_macros_f.h
+\n\n";
+
     exit;
 }
 
 print STDERR "
-s.dependencies.pl \\
+pfdependencies.pl \\
    -v=$msg --strict=$use_strict --deep-include=$deep_include --soft-restriction=$soft_restriction \\
    --flat_layout=$flat_layout --short_target_names=$short_target_names \\
    --exp=$export_list --out=$output_file \\
