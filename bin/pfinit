@@ -76,8 +76,9 @@ pf_clone_dir() {
       cp $_myfile $_here/ 1>&2
    done
    cp Makefile* $_here/ 1>&2
-   rsync -a $SRC_REF/ $_here/$SRC_REF/
-   rsync -a $SRC_USR/ $_here/$SRC_USR/
+   for _mydir in $PF_BASE_DIR0 ; do
+      rsync -a $_mydir/ $_here/$_mydir/
+   done
    if [[ ! -d $BUILD ]] ; then
       for item in $(ls -d build-*-${COMP_ARCH}) ; do
          if [[ -d $item ]] ; then
@@ -146,8 +147,7 @@ pf_basic_dirs() {
    ln -sf $STORAGE_BIN $BUILD 2>/dev/null || true
    echo ${TRUE_HOST:-$(hostname)}:$STORAGE_BIN $BUILD >> $logfile
 
-   mkdir -p $SRC_REF 2>/dev/null || true
-   mkdir -p $SRC_USR 2>/dev/null || true
+   mkdir -p $PF_BASE_DIR0 2>/dev/null || true
 
    if [[ -d $ROOT/$BUILD_SRC ]] ; then
       find $ROOT/$BUILD_SRC -type l -exec rm -f {} \;

@@ -50,6 +50,7 @@ pf_rm_component() {
    if [[ x$_do_src_usr == xyes ]] ;then
       rm -rf $ROOT/$SRC_USR/$_comp 2>/dev/null || true
    fi
+   #TODO: rm ref/bin
 }
 
 ##
@@ -119,6 +120,29 @@ pf_add_component_ref() {
    PF_src=$(pf_find_component $_comp $_ver)
    if [[ -d $PF_src/$_comp/$_ver ]] ; then
       mystderr 1 "Linking Existing Component: $_comp/$_ver"
+      if [[ -d $PF_src/$_comp/$_ver/bin ]] ; then
+         mkdir -p $BINREF
+         cd $PF_src/$_comp/$_ver/bin
+         for _mydir in $(find . -type d) ; do
+            mkdir -p $ROOT/$BINREF/$_mydir 2>/dev/null || true
+            for _myfile in $(ls -d $_mydir/* $_mydir/.[a-zA-Z0-9_]*) ; do
+               if [[ -f $_myfile ]] ; then
+                  rm -f $ROOT/$BINREF/$_mydir/$_myfile 2>/dev/null || true
+                  ln -s $PF_src/$_comp/$_ver/bin/$_mydir/$_myfile \
+                                   $ROOT/$BINREF/$_mydir/$_myfile
+               fi
+            done
+         done
+         cd $ROOT/
+         # mkdir -p $ROOT/$BINDIR/$BASE_ARCH/ 2/dev/null || true
+         # ln -sf $PF_src/$_comp/$_ver/bin $ROOT/$BINDIR/$_comp
+         # cp $PF_src/$_comp/$_ver/bin/* \
+         #    $PF_src/$_comp/$_ver/bin/.[a-zA-Z0-9_]* \
+         #    $ROOT/$BINDIR/
+         # cp $PF_src/$_comp/$_ver/bin/$BASE_ARCH/* \
+         #    $PF_src/$_comp/$_ver/bin/$BASE_ARCH/.[a-zA-Z0-9_]* \
+         #    $ROOT/$BINDIR/$BASE_ARCH/
+      fi
       if [[ -d $PF_src/$_comp/$_ver/src ]] ; then
          ln -sf $PF_src/$_comp/$_ver/src $ROOT/$SRC_REF/$_comp
       else

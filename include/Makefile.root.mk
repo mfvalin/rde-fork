@@ -5,7 +5,7 @@
 SHELL = /bin/bash
 
 ROOT  := $(PWD)
-SRC_USR := $(ROOT)/$(shell pfmodel_link local)
+SRC_USR := $(ROOT)/$(shell pfmodel_link local/src)
 BUILD := $(ROOT)/$(shell pfmodel_link build)
 BUILDBIN := $(ROOT)/$(shell pfmodel_link build/bin)
 BUILDLIB := $(ROOT)/$(shell pfmodel_link build/lib)

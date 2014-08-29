@@ -18,23 +18,26 @@ MYSELF=${0##*/}
 COMP_ARCH=${COMP_ARCH:-${EC_ARCH#*/}}
 STORAGE_BIN=$(model_path storage)/${COMP_ARCH}
 ROOT=$(pwd)
+BINDIR=$(pfmodel_link local/bin)
+BINREF=$(pfmodel_link ref/bin)
 BUILD=$(pfmodel_link build)
 BUILD_SUB_DIR_LIST="$(pfmodel_link -l build)"
+BUILD_SUB_DIR_LIST0="$(pfmodel_link -l build-)"
 BUILD_BIN=$(pfmodel_link build/bin)
 BUILD_LIB=$(pfmodel_link build/lib)
 BUILD_MOD=$(pfmodel_link build/mod)
 BUILD_OBJ=$(pfmodel_link build/obj)
 BUILD_PRE=$(pfmodel_link build/pre)
 BUILD_SRC=$(pfmodel_link build/src)
-SRC_REF=$(pfmodel_link ref)
-SRC_USR=$(pfmodel_link local)
+SRC_REF=$(pfmodel_link ref/src)
+SRC_USR=$(pfmodel_link local/src)
 verbose=${verbose:-0}
 
 SRC_PATH_FILE=.pf.srcpath
 SRC_PATH_DEFAULT=/users/dor/armn/sch/SsmBundles/data/purplefrog-src
 
-PF_BASE_DIR0="$SRC_REF $SRC_USR"
-PF_BASE_DIR="\$BUILD $SRC_REF $SRC_USR"
+PF_BASE_DIR0="$BINDIR $BINREF $SRC_REF $SRC_USR"
+PF_BASE_DIR="\$BUILD $PF_BASE_DIR0"
 PF_BASE_FILE=".setenv.dot .pf.ssm.bndl .pf.project.dot .pf.comp.${BASE_ARCH}.dot .pf.srcpath .pf.components Makefile"
 
 ##

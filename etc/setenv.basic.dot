@@ -81,7 +81,7 @@ export EC_INCLUDE_PATH="$mytmp"
 ##
 #for myarch in  / /${BASE_ARCH} /${EC_ARCH} ; do
 for myarch in  / /${BASE_ARCH} ; do
-   for item in bin_ref bin ; do
+   for item in ref/bin bin ; do
       export PATH=$(pwd)/${item}${myarch}:$PATH
    done
 done

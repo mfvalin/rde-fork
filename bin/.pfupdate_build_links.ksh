@@ -4,13 +4,10 @@
 # @Date:   March 2014
 . .pfbase.inc.dot
 
-#TODO: pool find operation together
 #TODO: look for alternatives for links (file with file origine/rm) to avoid find operations
-#TODO: as in pfdiff, check .restricted recursively from top dir
+#TODO: myrm dep, bidon, empty, mod...
 
-##
-# Help
-##
+## Help
 DESC='Update files, dirs and links in Build tree for locally modified source'
 USAGE="USAGE: ${MYSELF} [-h] [-v] [-f] [--resync]"
 usage_long() {
@@ -31,16 +28,12 @@ EOF
 }
 
 ##
-#
-##
 myrm_obj() {
 	 _filename=$1
 	 _name=${_filename%.*}
 	 /bin/rm -f ${ROOT}/${BUILD_OBJ}/${_name}.o > /dev/null || true
 }
 
-##
-#
 ##
 myrm_pre() {
 	 _filename=$1
@@ -56,8 +49,6 @@ myrm_pre() {
 }
 
 ##
-#
-##
 get_present_modules() {
 	 _filename=$1
 	 _mylist=""
@@ -69,8 +60,6 @@ get_present_modules() {
 }
 
 ##
-#
-##
 myrm_mod() {
 	 _filename=$1
     if [[ x"$(echo "${EXT4MODLIST} " | grep '\.${_filename##*.}\ ')" == x ]] ; then
@@ -78,7 +67,6 @@ myrm_mod() {
     fi
 	 _modlist=$(get_present_modules ${_filename})
 	 for _item in ${_modlist} ; do
-	 	  #find . -depth 1 -iname ${_item}.mod -delete 2>/dev/null
 		  for _item2 in ${modlist} ; do
 				_item2i=$(echo ${_item2} |tr 'A-Z' 'a-z')
 				if [[ x${_item2i} == x${_item} ]] ; then
@@ -88,8 +76,6 @@ myrm_mod() {
 	 done
 }
 
-##
-#
 ##
 get_dep_list() {
    #TOTO: update
@@ -109,8 +95,6 @@ get_dep_list() {
 
 
 ##
-#
-##
 myrm_dep() {
 	 _filename=$1
 	 _deplist=$(get_dep_list ${_filename})
@@ -123,19 +107,15 @@ myrm_dep() {
 }
 
 ##
-#
-##
 myrm_bidon() {
    toto=""
-   #TOTO: update
+   #TODO: update
 	 # _list="$(grep c_to_f_sw *.c 2>/dev/null | cut -d':' -f1)"
 	 # for _item in ${_list} ; do
 	 #     /bin/rm -f ${_item%.*}.[co]
 	 # done
 }
 
-##
-#
 ##
 myrm_empty() {
    toto=""
@@ -144,9 +124,7 @@ myrm_empty() {
 
 ## ====================================================================
 
-##
-# Inline Args
-##
+## Inline Args
 resync=0
 myforce=""
 while [[ $# -gt 0 ]] ; do
@@ -174,130 +152,93 @@ for item in ${BUILD_SRC} ${SRC_USR} ${SRC_REF} ; do
    fi
 done
 
-# INCSUFFIXES=".cdk .h .hf .fh .itf90 .inc"
-# SRCSUFFIXES=".c .f .ftn .ptn .f90 .ftn90 .ptn90 .cdk90 .tmpl90 .F .FOR .F90"
-# VALIDEXT=""
-# for item in ${INCSUFFIXES} ${SRCSUFFIXES} ; do
-#    VALIDEXT="${VALIDEXT} *${item}"
-# done
-
-#mylist=$(ls $VALIDEXT 2>/dev/null)
-#modlist=$(ls *.mod 2>/dev/null)
-#modnamelist=""
-
-
 #==============================================================================
 
-#remove links and obsolete files
-if [[ -d ${ROOT}/${BUILD_SRC} ]] ; then
-   myecho 1 "++ Remove links and obsolete files from BUILD_SRC"
-   cd ${ROOT}/${BUILD_SRC}
-   myfilelist="$(find . -type l)"
-   for item in ${myfilelist} ; do
-      if [[ ! -f ${ROOT}/${SRC_USR}/${item} ]] ; then
-		   myrm_obj $item
-		   myrm_pre $item
-		   myrm_mod $item
-         /bin/rm -f $item > /dev/null || true
-         if [[ -f ${ROOT}/${SRC_REF}/${item} ]] ; then
-	         cp ${ROOT}/${SRC_REF}/${item} ${item}
-            touch ${item}
-         fi
+myecho 1 "++ Remove links and obsolete files from BUILD_SRC"
+cd ${ROOT}/${BUILD_SRC}
+for myrelpath in $(find . -type l) ; do
+   if [[ ! -f ${ROOT}/${SRC_USR}/${myrelpath} ]] ; then
+		myrm_obj $myrelpath
+		myrm_pre $myrelpath
+		myrm_mod $myrelpath
+      /bin/rm -f $myrelpath > /dev/null || true
+      if [[ -f ${ROOT}/${SRC_REF}/${myrelpath} ]] ; then
+	      cp ${ROOT}/${SRC_REF}/${myrelpath} ${myrelpath}
+         touch ${myrelpath}
       fi
-   done
-   myrm_bidon
-   myrm_empty
-fi
+   fi
+done
+myrm_bidon
+myrm_empty
 
-#sync build_src with src_ref
 if [[ $resync -eq 1 ]] ; then
    myecho 1 "++ reSync BUILD_SRC with src_ref"
    #TODO: remove exiting ${BUILD_SRC}?
-   for _item in $(cd $ROOT/$SRC_REF ; find -L . -type d) ; do
-      if [[ x$item != x. ]] ;then
-         for _mydir in $BUILD_SUB_DIR_LIST ; do
-            if [[ x$_mydir != xbin && x$_mydir != xlib && x$_mydir != xmod ]] ; then
-               mkdir -p  $STORAGE_BIN/$_mydir/${_item} 2>/dev/null || true
-            else
-               mkdir -p  $STORAGE_BIN/$_mydir
-            fi
-         done
-      fi
+   srcrefdirlist="$(cd $ROOT/$SRC_REF ; find -L . -type d | sort | sed 's!\(.\|./\)!!)"
+   for _mydir in $BUILD_SUB_DIR_LIST ; do
+      mkdir -p  $STORAGE_BIN/$_mydir 2>/dev/null || true
    done
-   mkdir -p ${ROOT}/${BUILD_SRC} 2>/dev/null || true
-   find ${ROOT}/${BUILD_SRC} -type l -exec rm -f {} \;
+   for _item in ${srcrefdirlist} ; do
+      for _mydir in $BUILD_SUB_DIR_LIST0 ; do
+         mkdir -p  $STORAGE_BIN/$_mydir/${_item} 2>/dev/null || true
+      done
+   done
    cd ${ROOT}/${SRC_REF}
    for item in $(ls); do
       if [[ -d $item/ ]] ; then
          cp -R $item $ROOT/$BUILD_SRC 2>/dev/null || true
       fi
    done
-fi
+fi #end if resync
 
-#Force remove specially marked source dirs
+cd ${ROOT}/${SRC_USR}
+srcusrdirlist="$(find -L . -type d | sort | sed 's!\(.\|./\)!!)"
+
 myecho 1 "++ Force remove restricted dirs"
-for mydir in ${SRC_REF} ${SRC_USR} ; do
-   cd ${ROOT}/${mydir}
-   for item in $(find -L . -name .restricted -type f) ; do
-      if [[ x"$(cat $item | grep ${BASE_ARCH}:)" == x && \
-            x"$(cat $item | grep ${EC_ARCH}:)" == x ]] ; then
+for myreldir in ${srcusrdirlist} ; do
+   restricfile=''
+   if [[ -f ${SRC_USR}/${myreldir}/.restricted ]] ; then
+      restricfile=${SRC_USR}/${myreldir}/.restricted
+   elif [[ -f ${SRC_REF}/${myreldir}/.restricted ]] ; then
+      restricfile=${SRC_REF}/${myreldir}/.restricted
+   fi
+   if [[ x${restricfile} != x ]] ; then
+      if [[ x"$(cat ${restricfile} | grep ${BASE_ARCH}:)" == x && \
+            x"$(cat ${restricfile} | grep ${EC_ARCH}:)" == x ]] ; then
          for mysubdir in ${BUILD_SUB_DIR_LIST} ; do
-            rm -rf ${ROOT}/${BUILD}/${mysubdir}/${item%/*} 2>/dev/null || true
+            rm -rf ${ROOT}/${BUILD}/${mysubdir}/${myreldir} 2>/dev/null || true
          done
       fi
-   done
-done
-
-#Make sure all SRC_USR dir are mirrored
-myecho 1 "++ Make sure all SRC_USR dir are mirrored"
-cd ${ROOT}/${SRC_USR}
-for _item in $(cd $ROOT/$SRC_USR ; find -L . -type d) ; do
-   if [[ x$item != x. ]] ;then
-      for _mydir in $BUILD_SUB_DIR_LIST ; do
-         if [[ ! -d $STORAGE_BIN/$_mydir/${_item} ]] ; then
-            if [[ x$_mydir != xbin && x$_mydir != xlib && x$_mydir != xmod ]] ; then
-               mkdir -p  $STORAGE_BIN/$_mydir/${_item} 2>/dev/null || true
-            else
-               mkdir -p  $STORAGE_BIN/$_mydir 2>/dev/null || true
-            fi
-         fi
-      done
    fi
 done
 
-#Force remove specially marked source files
-myecho 1 "++ Force remove '.rm.*' files"
-cd ${ROOT}/${SRC_USR}
-myfilelist="$(find . -type f -name '.rm.*')"
-for item0 in ${myfilelist} ; do
-    itempath=${item0%/*}
-    itemname=${item0##*/}
-    item=${itempath}/${itemname#.rm.}
-	 myrm_obj $item
-	 myrm_pre $item
-	 myrm_mod $item
-	 /bin/rm -f ${ROOT}/${BUILD_SRC}/${item} > /dev/null || true
+myecho 1 "++ Make sure all SRC_USR dir are mirrored"
+for myreldir in ${srcusrdirlist} ; do
+   for myreldir2 in ${BUILD_SUB_DIR_LIST0} ; do
+      mkdir -p ${ROOT}/${BUILD}/${myreldir2}/${myreldir} > /dev/null || true
+   done
 done
 
-#re-make links to source files
+myecho 1 "++ Force remove '.rm.*' files"
+for myreldir in ${srcusrdirlist} ; do
+   for myname in $(cd ${myreldir} ; ls -1 .rm.*) ; do
+      myrelpath=${myreldir}/${myname#.rm.}
+	   myrm_obj ${myrelpath}
+	   myrm_pre ${myrelpath}
+	   myrm_mod ${myrelpath}
+	   /bin/rm -f ${ROOT}/${BUILD_SRC}/${myrelpath} > /dev/null || true
+   done
+done
+
 myecho 1 "++ Make links to user modified source files"
-cd ${ROOT}/${SRC_USR}
-myfilelist="$(find . -type f)"
-for item in ${myfilelist} ; do
-    itemname=${item##*/}
-    if [[ x$(echo $itemname | cut -c1) != x. ]] ; then
-	    /bin/rm -f ${ROOT}/${BUILD_SRC}/${item} > /dev/null || true
-       for mydir in ${BUILD_SUB_DIR_LIST} ; do
-          if [[ ! -d ${ROOT}/${BUILD}/${mydir}/${item%/*} ]] ; then
-             if [[ x$mydir != xbin && x$mydir != xlib && x$mydir != xmod ]] ; then
-                mkdir -p ${ROOT}/${BUILD}/${mydir}/${item%/*} > /dev/null || true
-             else
-                mkdir -p ${ROOT}/${BUILD}/${mydir} > /dev/null || true
-             fi
-          fi
-       done
-	    ln -sf ${ROOT}/${SRC_USR}/${item} ${ROOT}/${BUILD_SRC}/${item}
-    fi
+for myreldir in ${srcusrdirlist} ; do
+   for myname in $(cd ${myreldir} ; ls -1) ; do
+      myrelpath=${myreldir}/${myname}
+      if [[ -f ${myrelpath} ]] ; then
+         /bin/rm -f ${ROOT}/${BUILD_SRC}/${myrelpath} > /dev/null || true
+         ln -sf ${ROOT}/${SRC_USR}/${myrelpath} ${ROOT}/${BUILD_SRC}/${myrelpath}
+      fi
+   done
 done
 
 if [[ -f .pf.flatsrc ]] ; then
