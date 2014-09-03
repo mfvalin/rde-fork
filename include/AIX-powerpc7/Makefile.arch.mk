@@ -2,10 +2,6 @@
 ## File: LOCALBUILD/include/Makefile.base_arch.mk (AIX-powerpc7)
 ##
 
-#MAKE_ARCH = $(MAKE) $(MAKEFLAGS)
-#Since we force gmake we can use:
-MAKE_ARCH = $(MAKE) $(MFLAGS) --no-print-directory
-
 DEFINE = -DAIX_POWERPC7
 
 LLAPI  = 

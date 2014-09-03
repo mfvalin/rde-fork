@@ -91,8 +91,8 @@ function oncompile {
 		echo  "${compilateur_et_options} $options_supp $lecode ${MPILIB}" | sed 's/\s\s*/ \\\n\t/g' || true
       echo "==== BEGIN $mycompilateur $lecode"
 		${compilateur_et_options} $options_supp $lecode ${MPILIB}
-      echo "==== END $lecode"
 		STATUT=$?
+      echo "==== END $lecode"
 	else
 		echo 
 		echo  Commande effectuee

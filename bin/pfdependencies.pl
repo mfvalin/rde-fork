@@ -408,7 +408,7 @@ sub process_file {
         if ($_ =~ /^[@]*[\s]*#[\s]*include[\s]*[<'"\s]([\w.\/\.]+)[>"'\s][\s]*/) {
             next if (process_file_for_include($file,$1));
         }
-        next if ($file->{EXTENSION} =~ /(c|cc|CC)$/);
+        next if ($file->{EXTENSION} =~ /^(c|cc|CC)$/);
         
         # FORTRAN include statement : include "..."    include ',,,"
         if ($_ =~ /^[@]*[\s]*include[\s]*[<'"\s]([\w.\/\.]+)[>"'\s][\s]*/i) {

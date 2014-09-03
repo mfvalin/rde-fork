@@ -15,6 +15,7 @@ BUILDPRE := $(ROOT)/$(shell pfmodel_link build/pre)
 BUILDSRC := $(ROOT)/$(shell pfmodel_link build/src)
 VPATH := $(BUILDSRC)
 VERBOSE := -v
+NOPRINTDIR = --no-print-directory
 #DEP_DUP_OK = --dup_ok
 #DEP_FLAT = --flat
 #PERLPROF = perl -d:DProf $(purplefrog)/bin/
@@ -58,12 +59,12 @@ MAKE_LINKS  := .pfupdate_build_links.ksh ; $(BUILDOBJ)/Makefile
 .DEFAULT:
 	.pfupdate_build_links.ksh ;\
 	cd $(BUILDOBJ) ;\
-	$(MAKE_ARCH) $@ ROOT=$(ROOT) VPATH=$(VPATH)
+	$(MAKE) $(NOPRINTDIR) $@ ROOT=$(ROOT) VPATH=$(VPATH)
 
 all:
 	.pfupdate_build_links.ksh ;\
 	cd $(BUILDOBJ) ;\
-	$(MAKE_ARCH) $@ ROOT=$(ROOT) VPATH=$(VPATH)
+	$(MAKE) $(NOPRINTDIR) $@ ROOT=$(ROOT) VPATH=$(VPATH)
 
 obj_touch:
 	@find $(SRC_USR) -type f -exec touch {} \;
@@ -116,7 +117,7 @@ versionfiles:
 
 clean: sanity
 	cd $(BUILDOBJ) ;\
-	$(MAKE_ARCH) $@ ROOT=$(ROOT) VPATH=$(VPATH)
+	$(MAKE) $(NOPRINTDIR) $@ ROOT=$(ROOT) VPATH=$(VPATH)
 distclean:
 	for mydir in $(shell pfmodel_link -l build) ; do \
 		if [[ $${mydir} != src ]] ; then \

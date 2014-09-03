@@ -62,7 +62,7 @@ get_present_modules() {
 ##
 myrm_mod() {
 	 _filename=$1
-    if [[ x"$(echo "${EXT4MODLIST} " | grep '\.${_filename##*.}\ ')" == x ]] ; then
+    if [[ x"$(echo ${EXT4MODLIST} | grep '\.${_filename##*.}\ ')" == x ]] ; then
        return
     fi
 	 _modlist=$(get_present_modules ${_filename})
@@ -171,10 +171,11 @@ done
 myrm_bidon
 myrm_empty
 
-if [[ $resync -eq 1 ]] ; then
+if [[ $resync == 1 ]]
+then
    myecho 1 "++ reSync BUILD_SRC with src_ref"
    #TODO: remove exiting ${BUILD_SRC}?
-   srcrefdirlist="$(cd $ROOT/$SRC_REF ; find -L . -type d | sort | sed 's!\(.\|./\)!!)"
+   srcrefdirlist="$(cd $ROOT/$SRC_REF ; find -L . -type d | sort | sed 's!\(.\|./\)!!')"
    for _mydir in $BUILD_SUB_DIR_LIST ; do
       mkdir -p  $STORAGE_BIN/$_mydir 2>/dev/null || true
    done
@@ -189,22 +190,26 @@ if [[ $resync -eq 1 ]] ; then
          cp -R $item $ROOT/$BUILD_SRC 2>/dev/null || true
       fi
    done
-fi #end if resync
+fi
+#end if resync
 
 cd ${ROOT}/${SRC_USR}
-srcusrdirlist="$(find -L . -type d | sort | sed 's!\(.\|./\)!!)"
+srcusrdirlist="$(find -L . -type d | sort | sed 's!\(.\|./\)!!')"
 
 myecho 1 "++ Force remove restricted dirs"
 for myreldir in ${srcusrdirlist} ; do
    restricfile=''
-   if [[ -f ${SRC_USR}/${myreldir}/.restricted ]] ; then
-      restricfile=${SRC_USR}/${myreldir}/.restricted
-   elif [[ -f ${SRC_REF}/${myreldir}/.restricted ]] ; then
-      restricfile=${SRC_REF}/${myreldir}/.restricted
+   if [[ -f ${ROOT}/${SRC_USR}/${myreldir}/.restricted ]] ; then
+      restricfile=${ROOT}/${SRC_USR}/${myreldir}/.restricted
+   elif [[ -f ${ROOT}/${SRC_REF}/${myreldir}/.restricted ]] ; then
+      restricfile=${ROOT}/${SRC_REF}/${myreldir}/.restricted
+   # else
+   #    echo Not restricted: ${myreldir} $(ls ${SRC_USR}/${myreldir}/.restricted ${SRC_REF}/${myreldir}/.restricted)
    fi
    if [[ x${restricfile} != x ]] ; then
       if [[ x"$(cat ${restricfile} | grep ${BASE_ARCH}:)" == x && \
             x"$(cat ${restricfile} | grep ${EC_ARCH}:)" == x ]] ; then
+         myecho 1 "++ Force remove ${BUILD}/*/${myreldir}"
          for mysubdir in ${BUILD_SUB_DIR_LIST} ; do
             rm -rf ${ROOT}/${BUILD}/${mysubdir}/${myreldir} 2>/dev/null || true
          done
@@ -215,27 +220,27 @@ done
 myecho 1 "++ Make sure all SRC_USR dir are mirrored"
 for myreldir in ${srcusrdirlist} ; do
    for myreldir2 in ${BUILD_SUB_DIR_LIST0} ; do
-      mkdir -p ${ROOT}/${BUILD}/${myreldir2}/${myreldir} > /dev/null || true
+      mkdir -p ${ROOT}/${BUILD}/${myreldir2}/${myreldir} 2> /dev/null || true
    done
 done
 
 myecho 1 "++ Force remove '.rm.*' files"
 for myreldir in ${srcusrdirlist} ; do
-   for myname in $(cd ${myreldir} ; ls -1 .rm.*) ; do
+   for myname in $(cd ${myreldir} ; ls -1 .rm.* 2> /dev/null) ; do
       myrelpath=${myreldir}/${myname#.rm.}
 	   myrm_obj ${myrelpath}
 	   myrm_pre ${myrelpath}
 	   myrm_mod ${myrelpath}
-	   /bin/rm -f ${ROOT}/${BUILD_SRC}/${myrelpath} > /dev/null || true
+	   /bin/rm -f ${ROOT}/${BUILD_SRC}/${myrelpath} 2> /dev/null || true
    done
 done
 
 myecho 1 "++ Make links to user modified source files"
 for myreldir in ${srcusrdirlist} ; do
-   for myname in $(cd ${myreldir} ; ls -1) ; do
+   for myname in $(cd ${myreldir} ; ls -1 2> /dev/null) ; do
       myrelpath=${myreldir}/${myname}
       if [[ -f ${myrelpath} ]] ; then
-         /bin/rm -f ${ROOT}/${BUILD_SRC}/${myrelpath} > /dev/null || true
+         /bin/rm -f ${ROOT}/${BUILD_SRC}/${myrelpath} 2> /dev/null || true
          ln -sf ${ROOT}/${SRC_USR}/${myrelpath} ${ROOT}/${BUILD_SRC}/${myrelpath}
       fi
    done
