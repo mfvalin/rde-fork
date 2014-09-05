@@ -29,6 +29,7 @@ my $export_list = undef;
 my @current_dependencies_list = ();
 my @outside_tree_list = ();
 my %module_missing = ();
+my %module_list = ();
 my %module_missing_ignored = ();
 my %include_missing_ignored = ();
 my %LISTOBJECT = ( ); # Hash of SRCFile object with filename, path and extension as the key
@@ -447,6 +448,7 @@ sub process_file {
 
             # Ajouter le module dans la liste des modules associer au fichier.
             push @{$file->{ MODULE_LIST }}, $modname;
+				$module_list{$modname} = $filename;
 
             # Recherche tous les fichiers analyser precedemment qui avait besoin de ce module la
             while(my $key = search_unsolved_module($modname)) {
@@ -652,12 +654,56 @@ sub print_object_list {
         print STDOUT "\t".'rm -f $@; ar r $@_$$$$ $(OBJECTS_'.$_.'); mv $@_$$$$ $@'."\n";
         print STDOUT "lib".$_.".a: \$(LIBDIR)/lib".$_.".a\n";
     }
-
+    print STDOUT "\n";
 	 print_header("ALL_LIBS=","");
 	 for (keys %listdir) {
 		  print_item("\$(LIBDIR)/lib".$_.".a");
 	 }
-	 print STDOUT "\n";
+	 print STDOUT "\n\n";
+}
+
+#------------------------------------------------------------------------
+# @print_module_list
+#------------------------------------------------------------------------
+sub print_module_list {
+    print STDERR "Listing FORTRAN_MODULES\n" if ($msg >= 5);
+    print_header("FORTRAN_MODULES","=","");
+    for (sort keys %module_list) {
+		  print_item("$_");
+	 }
+    print STDOUT "\n\n";
+    for (sort keys %module_list) {
+		  #TODO: if we know the module name we should make a dependency
+		  print STDOUT "FMOD_FILE_$_ = $module_list{$_}\n";
+	 }
+    print STDOUT "\n";
+    for (sort keys %LISTOBJECT) {
+        my $file = $LISTOBJECT{$_};
+		  my @list_of_modules = ();
+        for (@{$file->{MODULE_LIST}}) {
+            push @list_of_modules, $_ if $_ ne "";
+        }
+		  if ($#list_of_modules >= 0) {
+				print_header("FMOD_LIST_$file->{NAMEyEXT}","=","");
+				for (@list_of_modules) {
+					 print_item("$_");
+				}
+				print STDOUT "\n";
+		  }
+	 }
+    print STDOUT "\n";
+}
+
+#------------------------------------------------------------------------
+# @print_targets
+#------------------------------------------------------------------------
+sub print_targets {
+    print STDERR "Add custom targets\n" if ($msg >= 5);
+    print STDOUT "\n";
+    print STDOUT '$(eval MYVAR2 = $$($(MYVAR)))'."\n";
+    print STDOUT "echo_mydepvar:\n";
+    print STDOUT "\t".'echo $(MYVAR2)'."\n";
+    print STDOUT "\n";
 }
 
 #------------------------------------------------------------------------
@@ -873,6 +919,8 @@ check_circular_dep();
 
 print_files_list();
 print_object_list();
+print_module_list();
+print_targets();
 print_dep_rules();
 
 print_missing();

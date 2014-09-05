@@ -4,8 +4,10 @@
 # @Date:   March 2014
 . .pfbase.inc.dot
 
+#EXT4MODLIST=".cdk .hf .fh .itf90 .inc .f .ftn .ptn .f90 .ftn90 .ptn90 .cdk90 .tmpl90 .F .FOR .F90"
+
 #TODO: look for alternatives for links (file with file origine/rm) to avoid find operations
-#TODO: myrm dep, bidon, empty, mod...
+#TODO: bidon, empty
 
 ## Help
 DESC='Update files, dirs and links in Build tree for locally modified source'
@@ -27,83 +29,48 @@ Options:
 EOF
 }
 
-##
+## myrm_obj filename.ftn90
 myrm_obj() {
-	 _filename=$1
-	 _name=${_filename%.*}
-	 /bin/rm -f ${ROOT}/${BUILD_OBJ}/${_name}.o > /dev/null || true
+	 /bin/rm -f ${ROOT}/${BUILD_OBJ}/${1%.*}.o > /dev/null || true
 }
 
-##
+## myrm_pre filename.ftn90
 myrm_pre() {
-	 _filename=$1
-	 _name=${_filename%.*}
-	 _ext=${_filename##*.}
+	 _name=${1%.*}
+	 _ext=${1##*.}
 	 if [[ x${_ext} == xftn ]] ; then
-		  _name2=${_name}.f
-        /bin/rm -f ${ROOT}/${BUILD_PRE}/${_name2} > /dev/null || true
-	 elif [[ x${_ext} == xftn90 ||  x${_ext} == xcdk90 ]] ; then
-		  _name2=${_name}.f90
-        /bin/rm -f ${ROOT}/${BUILD_PRE}/${_name2} > /dev/null || true
+        /bin/rm -f ${ROOT}/${BUILD_PRE}/${_name}.f > /dev/null || true
+	 elif [[ x${_ext} == xftn90 || x${_ext} == xcdk90 ]] ; then
+        /bin/rm -f ${ROOT}/${BUILD_PRE}/${_name}.f90 > /dev/null || true
 	 fi
 }
 
-##
-get_present_modules() {
-	 _filename=$1
-	 _mylist=""
-	 for item in $modnamelist ; do
-		  item2=$(grep -i $item ${_filename} 2>/dev/null | grep -i module | grep -v '^\s*!' | grep -v '^[c*]')
-		  _mylist="${_mylist} $_item2}"
-	 done
-	 echo ${_mylist}
+## get_modules_in_file filename.ftn90
+get_modules_in_file() {
+	 # _mylist=""
+	 # for item in $modnamelist ; do
+	 #     item2=$(grep -i $item ${1} 2>/dev/null | grep -i module | grep -v '^\s*!' | grep -v '^[c*]')
+	 #     _mylist="${_mylist} ${_item2}"
+	 # done
+	 # echo ${_mylist}
+   make -s -f ${ROOT}/${BUILD_OBJ}/Makefile.dep.mk echo_mydepvar MYVAR=FMOD_LIST_${1##*/}
 }
 
-##
+## myrm_mod filename.ftn90
 myrm_mod() {
 	 _filename=$1
     if [[ x"$(echo ${EXT4MODLIST} | grep '\.${_filename##*.}\ ')" == x ]] ; then
        return
     fi
-	 _modlist=$(get_present_modules ${_filename})
-	 for _item in ${_modlist} ; do
-		  for _item2 in ${modlist} ; do
-				_item2i=$(echo ${_item2} |tr 'A-Z' 'a-z')
-				if [[ x${_item2i} == x${_item} ]] ; then
-					 /bin/rm -f ${_item2}
-				fi
-		  done
-	 done
-}
-
-##
-get_dep_list() {
-   #TOTO: update
-	 _filename=$1
-	 _deplist=""
-	 # if [[ -r make_cdk ]] ; then
-	 #     _name=${_filename%.*}
-	 #     _ext=${_filename##*.}
-	 #     _filename2=${_name}.a${_ext}
-	 #     _here=$(pwd)
-	 #     cd /
-	 #     _deplist=$(make -f ${_here}/make_cdk -n ${_filename2} | cut -d" " -f2)
-	 #     cd ${_here}
-	 # fi
-	 echo ${_deplist}
-}
-
-
-##
-myrm_dep() {
-	 _filename=$1
-	 _deplist=$(get_dep_list ${_filename})
-	 for _item in ${_deplist} ; do
-		  myrm_obj ${_item}
-		  myrm_pre ${_item}
-		  myrm_mod ${_item}
-		  /bin/rm -f ${_item}
-	 done
+	 _modlist="$(get_modules_in_file ${_filename})"
+    for _mymod in ${_modlist} ; do
+       for _myfile in $(ls -1 ${ROOT}/${BUILD_MOD}/) ; do
+          _myname=$(echo ${_myfile##*/} |tr 'A-Z' 'a-z')
+          if [[ x${_myname%.*} == x${_mymod} ]] ; then
+             /bin/rm -f ${_myfile}
+          fi
+       done
+    done
 }
 
 ##
@@ -139,18 +106,7 @@ while [[ $# -gt 0 ]] ; do
     shift
 done
 
-EXT4MODLIST=".cdk .hf .fh .itf90 .inc .f .ftn .ptn .f90 .ftn90 .ptn90 .cdk90 .tmpl90 .F .FOR .F90"
-
 pf_exit_if_not_pftopdir
-
-for item in ${BUILD_SRC} ${SRC_USR} ${SRC_REF} ; do
-   if [[ ! -d ${item} || ! -w ${item} ]] ; then
-	   echo "ERROR: dir does not exist or not writable ${item}"
-	   echo "       Try running pfinit"
-	   echo "---- Abort ----"
-	   exit 1
-   fi
-done
 
 #==============================================================================
 
