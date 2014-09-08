@@ -56,6 +56,52 @@ fi
 
 pf_exit_if_not_pftopdir
 
+# find_src_file MYDIR MYFILE
+find_src_file() {
+   _myfile=$2
+   _here=$(pwd)
+   cd ${ROOT}/${1}
+   if [[ -f ${_myfile} ]] ; then
+      echo ${_myfile}
+   else
+      _mypath="$(find -L . -name ${_myfile} -type f 2>/dev/null)"
+      echo ${_mypath#./}
+   fi
+   cd ${_here}
+}
+
+# find_src_file_list MYDIR MYFILE
+find_src_file_list() {
+   _myfile=$2
+   _here=$(pwd)
+   cd ${ROOT}/${1}
+   if [[ -f ${_myfile} ]] ; then
+      echo ${_myfile}
+   elif [[ -d ${_myfile} ]] ; then
+      _mypath="$(find -L ${_myfile} -type f 2>/dev/null)"
+      for _myfile2 in $_mypath ; do
+         echo ${_myfile2#./}
+      done
+   else
+      _mypath="$(find -L . -name ${_myfile} -type f 2>/dev/null)"
+      echo ${_mypath#./}
+   fi
+   cd ${_here}
+}
+
+is_src_local_deleted() {
+   _myfile=$1
+   _itempath=${_myfile%/*}
+   _itemname=${_myfile##*/}
+   _itemname2=${_itemname#.rm.}
+   if [[ -f ${ROOT}/${SRC_REF}/${_itempath}/${_itemname2}  && \
+         -f ${ROOT}/${SRC_USR}/${_itempath}/.rm.${_itemname2} \
+         ]] ; then
+      echo ${_itempath}/${_itemname2}
+   fi
+   echo ""
+}
+
 isrestricted() {
    #set -x
    _myfile=$1

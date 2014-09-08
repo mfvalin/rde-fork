@@ -105,71 +105,6 @@ mystderr() {
    fi
 }
 
-
-
-##
-#
-##
-find_src_local_file() {
-   find_src_file ${SRC_USR} $@
-}
-find_src_ref_file() {
-   find_src_file ${SRC_REF} $@
-}
-find_src_build_file() {
-   find_src_file ${BUILD_SRC} $@
-}
-find_src_pre_file() {
-   find_src_file ${BUILD_PRE} $@
-}
-
-find_src_file() {
-   _mydir=$1
-   _myfile=$2
-   _here=$(pwd)
-   cd ${ROOT}/${_mydir}
-   if [[ -f ${_myfile} ]] ; then
-      echo ${_myfile}
-   else
-      _mypath="$(find -L . -name ${_myfile} -type f 2>/dev/null)"
-      echo ${_mypath#./}
-   fi
-   cd ${_here}
-}
-
-find_src() {
-   _mydir=$1
-   _myfile=$2
-   _here=$(pwd)
-   cd ${ROOT}/${_mydir}
-   if [[ -r ${_myfile} ]] ; then
-      echo ${_myfile}
-   else
-      _mypath="$(find -L . -name ${_myfile} 2>/dev/null)"
-      echo ${_mypath#./}
-   fi
-   cd ${_here}
-}
-
-find_src_file_list() {
-   _mydir=$1
-   _myfile=$2
-   _here=$(pwd)
-   cd ${ROOT}/${_mydir}
-   if [[ -f ${_myfile} ]] ; then
-      echo ${_myfile}
-   elif [[ -d ${_myfile} ]] ; then
-      _mypath="$(find -L ${_myfile} -type f 2>/dev/null)"
-      for _myfile2 in $_mypath ; do
-         echo ${_myfile2#./}
-      done
-   else
-      _mypath="$(find -L . -name ${_myfile} -type f 2>/dev/null)"
-      echo ${_mypath#./}
-   fi
-   cd ${_here}
-}
-
 ##
 #
 ##
@@ -187,19 +122,6 @@ echo_undeleted_tag() {
    _itemname=${_myfile##*/}
    _itemname2=${_itemname#.rm.}
    echo ${_itempath}/${_itemname2}
-}
-
-is_src_local_deleted() {
-   _myfile=$1
-   _itempath=${_myfile%/*}
-   _itemname=${_myfile##*/}
-   _itemname2=${_itemname#.rm.}
-   if [[ -f ${ROOT}/${SRC_REF}/${_itempath}/${_itemname2}  && \
-         -f ${ROOT}/${SRC_USR}/${_itempath}/.rm.${_itemname2} \
-         ]] ; then
-      echo ${_itempath}/${_itemname2}
-   fi
-   echo ""
 }
 
 ##

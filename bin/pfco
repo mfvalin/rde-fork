@@ -41,19 +41,43 @@ PATHLIST="$PATHLIST $@"
 
 pf_exit_if_not_pftopdir
 
-for myfile in $PATHLIST ; do
-   mypathlist="$(find_src ${SRC_REF} $myfile)"
-   if [[ x${mypathlist} == x ]] ; then
-      cat <<EOF
-    ERROR: File $myfile is not found in ${SRC_REF}/
-EOF
-      mystatus=0
+# find_src MYDIR MYFILE
+find_src() {
+   _myfile=$2
+   _here=$(pwd)
+   cd ${ROOT}/${1}
+   if [[ -r ${_myfile} ]] ; then
+      echo ${_myfile}
    else
+      _mypath="$(find -L . -name ${_myfile} 2>/dev/null)"
+      echo ${_mypath#./}
+   fi
+   cd ${_here}
+}
+
+for myfile in $PATHLIST ; do
+   mypathlist1="$(find_src ${SRC_REF} $myfile 2>/dev/null)"
+   mypathlist2="$(find_src ${BINREF} $myfile 2>/dev/null)"
+   if [[ x${mypathlist1} == x && x${mypathlist2} == x ]] ; then
+      cat <<EOF
+    ERROR: File $myfile is not found in ${SRC_REF}/, ${BINREF}/
+EOF
+      mystatus=1
+   else
+      if [[ x${mypathlist} != x ]] ; then
+         mypathlist="${mypathlist1}"
+         FROMPATH=${SRC_REF}
+         TOPATH=${SRC_USR}
+      else
+         mypathlist="${mypathlist2}"
+         FROMPATH=${BINREF}
+         TOPATH=${BINDIR}
+      fi
       for mypath in ${mypathlist} ; do
          isdir=0
          replaced=""
          #mypath=${mypath#*/}
-         if [[ -e ${ROOT}/${SRC_USR}/$mypath ]] ; then
+         if [[ -e ${ROOT}/${TOPATH}/$mypath ]] ; then
             if [[ $myforce == 0 ]] ; then
             cat 1>&2 <<EOF
     WARNING: File $mypath already exists, overwrite with: 
@@ -61,27 +85,27 @@ EOF
 EOF
                mypath=""
             else
-               if [[ -d ${ROOT}/${SRC_USR}/$mypath ]] ; then
+               if [[ -d ${ROOT}/${TOPATH}/$mypath ]] ; then
                   isdir=1
-                  rm -rf ${ROOT}/${SRC_USR}/$mypath
+                  rm -rf ${ROOT}/${TOPATH}/$mypath
                   replaced="(overwritting existing dir)"
               else
-                  rm -f ${ROOT}/${SRC_USR}/$mypath
+                  rm -f ${ROOT}/${TOPATH}/$mypath
                   replaced="(overwritting existing file)"
                fi
             fi
          fi
 
          if [[ x$mypath != x ]] ; then
-            rm -f ${ROOT}/${SRC_USR}/$(echo_deleted_tag ${mypath}) 2> /dev/null || true
+            rm -f ${ROOT}/${TOPATH}/$(echo_deleted_tag ${mypath}) 2> /dev/null || true
             if [[ $isdir == 1 ]] ; then
-               rsync -a ${ROOT}/${SRC_REF}/$mypath/ ${ROOT}/${SRC_USR}/$mypath
+               rsync -a ${ROOT}/${FROMPATH}/$mypath/ ${ROOT}/${TOPATH}/$mypath
             else
-               rsync -a ${ROOT}/${SRC_REF}/$mypath ${ROOT}/${SRC_USR}/$mypath
+               rsync -a ${ROOT}/${FROMPATH}/$mypath ${ROOT}/${TOPATH}/$mypath
             fi
-            chmod -R u+w ${ROOT}/${SRC_USR}/$mypath
+            chmod -R u+w ${ROOT}/${TOPATH}/$mypath
             if [[ x${replaced} != x ]] ; then
-               touch ${ROOT}/${SRC_USR}/$mypath
+               touch ${ROOT}/${TOPATH}/$mypath
             fi
             cat <<EOF
     Checking out ${mypath} ${replaced}

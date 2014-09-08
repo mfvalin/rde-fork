@@ -66,6 +66,10 @@ all:
 	cd $(BUILDOBJ) ;\
 	$(MAKE) $(NOPRINTDIR) $@ ROOT=$(ROOT) VPATH=$(VPATH)
 
+$(eval MYVAR2 = $$($(MYVAR)))
+echo_myvar:
+	echo $(MYVAR2)
+
 obj_touch:
 	@find $(SRC_USR) -type f -exec touch {} \;
 obj_forced: obj_touch obj

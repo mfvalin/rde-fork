@@ -1,6 +1,4 @@
 /ssm/net/hpcs/201402/01-test/base 
 /ssm/net/hpcs/201402/01-test/intel13sp1u2
-/ssm/net/hpcs/exp/aspgjdm/perftools
 /ssm/net/rpn/utils/4.0
 /ssm/net/rpn/libs/4.0
-ENV/d/rpn_comm/4.5.10

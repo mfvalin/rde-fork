@@ -1,12 +1,14 @@
 TODO:
-*.updatebuild: get_dep_list, myrm_dep, myrm_bidon, myrm_empty
 * clone
-* sticky compiler... should prepend to .pf.comp.BASE_ARCH.dot (not append) 
 * xfl13
-* pfimport should not load component twice
 * Use s.f90, s.f77 instead of s.compile
-** allow Compiler_rules override in topdir, src_ref and src
+* Potential dependency problem w/ module in file with no code (no .o produced)
+*.updatebuild: myrm_bidon, myrm_empty
 
+* component init script?
+* iPython Compat?
+* pfimport should not load component twice
+** allow Compiler_rules override in topdir, src_ref and src
 
 * make all w/o make lib should work
 * test if file recompiled when back to ref version
@@ -20,7 +22,7 @@ TODO:
 * mv Makefile.user.mk my_bin into Makefile.build.mk
 * pfdependencies add option to produec lib targets (not default)
 * pfdependencies should also take list of file from stdin
-* pfimport should also import etc?,shared? (on top of src,bin) in ref/ (maybe src_ref should become ref/src)
+* pfimport should also import etc?,shared? (on top of src,bin) in ref/
 
 Done:
 * pfinit/import
@@ -45,6 +47,9 @@ Done:
 *.updatebuild: .restricted; make sure src_usr/*/.restricted have precedence over src_ref
 * test if src_usr is added
 * pfimport should also import bin (on top of src) in bin_ref
+* src_ref now ref/src
+* sticky compiler... should prepend to .pf.comp.BASE_ARCH.dot (not append) 
+*.updatebuild: myrm_mod
 
 Special files:
 * .restricted: whitelist of "$BASE_ARCH:" or "$EC_ARCH:" for dir access; located in src_ref, src dir to restrict; NOT recursive
