@@ -49,30 +49,28 @@ find_src() {
    if [[ -r ${_myfile} ]] ; then
       echo ${_myfile}
    else
-      _mypath="$(find -L . -name ${_myfile} 2>/dev/null)"
+      _mypath="$(find $3 . -name ${_myfile} 2>/dev/null)"
       echo ${_mypath#./}
    fi
    cd ${_here}
 }
 
 for myfile in $PATHLIST ; do
-   mypathlist1="$(find_src ${SRC_REF} $myfile 2>/dev/null)"
-   mypathlist2="$(find_src ${BINREF} $myfile 2>/dev/null)"
-   if [[ x${mypathlist1} == x && x${mypathlist2} == x ]] ; then
+   mypathlist="$(find_src ${SRC_REF} $myfile -L 2>/dev/null)"
+   if [[ x${mypathlist} == x ]] ; then
+      mypathlist="$(find_src ${BINREF} $myfile 2>/dev/null)"
+      FROMPATH=${BINREF}
+      TOPATH=${BINDIR}
+   else
+      FROMPATH=${SRC_REF}
+      TOPATH=${SRC_USR}
+   fi
+   if [[ x${mypathlist} == x ]] ; then
       cat <<EOF
     ERROR: File $myfile is not found in ${SRC_REF}/, ${BINREF}/
 EOF
       mystatus=1
    else
-      if [[ x${mypathlist} != x ]] ; then
-         mypathlist="${mypathlist1}"
-         FROMPATH=${SRC_REF}
-         TOPATH=${SRC_USR}
-      else
-         mypathlist="${mypathlist2}"
-         FROMPATH=${BINREF}
-         TOPATH=${BINDIR}
-      fi
       for mypath in ${mypathlist} ; do
          isdir=0
          replaced=""
