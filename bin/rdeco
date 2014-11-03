@@ -70,7 +70,7 @@ for myfile in $PATHLIST ; do
    if [[ x${mypathlist} == x ]] ; then
       mysimfile="$(.rdesimilnames $myfile)"
       mynbsim="$(echo $(echo $mysimfile | wc -w))"
-      if [[ x$mynbsim == x1 ]] ; then
+      if [[ x$mynbsim == x1 && ${mysimfile%.*} ==  $myfile ]] ; then
          mypathlist="$(find_src $mysimfile -L 2>/dev/null)"
       fi
    fi
