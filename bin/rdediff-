@@ -1,8 +1,8 @@
 #!/bin/ksh
-. .pfbase.inc.dot
+. .rdebase.inc.dot
 DESC='Diff locally modified src compared to library version'
 USAGE="USAGE: ${MYSELF} [-h] [-v] [-l|--list|--status] [-d|--dirmode] [--diff=DIFF_TOOL] [DIFFARGS] [FILES]"
-BUILDDIFF=$(pfmodel_link build)/tmp-diff-$$
+BUILDDIFF=$(rdevar build)/tmp-diff-$$
 
 usage_long() {
 	 toto=$(echo -e $USAGE)
@@ -54,7 +54,7 @@ if [[ x"$PATHLIST" == x"" ]] ; then
    PATHLIST=.
 fi
 
-pf_exit_if_not_pftopdir
+rde_exit_if_not_rdetopdir
 
 # find_src_file MYDIR MYFILE
 find_src_file() {

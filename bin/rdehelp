@@ -44,7 +44,7 @@ cat <<EOF
 RPN Code Development Environment
 
 Basic setup  :
-   rde ouv_exp
+   rde addsrc /PATH/TO/SRC
    rde mklink
    rde mkdep
 
