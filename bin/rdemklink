@@ -1,0 +1,65 @@
+#!/bin/ksh
+#
+. .rdebase.inc.dot
+
+DESC='Create dir and links for RPN Code Dev Env'
+USAGE="USAGE: ${MYSELF} [-v] [-f]"
+
+usage_long() {
+	 toto=$(echo -e $USAGE)
+	 more <<EOF
+$DESC
+
+$toto
+
+Options:
+    -h, --help         : print this help
+    -v, --verbose      : verbose mode
+    -f, --force        : force update links
+
+EOF
+}
+
+myforce=0
+while [[ $# -gt 0 ]] ; do
+   case $1 in
+      (-h|--help) usage_long; exit 0;;
+      (-v|--verbose) ((verbose=verbose+1));;
+      (-f|--force) myforce=1;;
+      (*) myerror "Option Not recognized: $1";;
+    esac
+    shift
+done
+
+if [[ $verbose -gt 0 ]] ; then
+   set -x
+fi
+
+mkdir -p $STORAGE_BIN 
+if [[ $myforce == 1 ]] ; then 
+   rm -rf ${BUILD%/*}
+fi
+if [[ ! -e ${BUILD%/*} ]] ; then
+   ln -s ${STORAGE_BIN%/*} ${BUILD%/*}
+fi
+mkdir -p $BUILD
+
+for item in $RDE_BASE_MAKEFILES ; do
+   if [[ -f $item && $myforce == 1 ]] ; then
+      rm -f $item
+   fi
+   if [[ ! -f $item ]] ; then
+      ln -sf $RDE_INCLUDE/$item $item
+   fi
+   if [[ -f mes_recettes ]] ; then
+      if [[ ! -f  Makefile.user.mk || $myforce == 1 ]] ; then
+         mv Makefile.user.mk Makefile.user.mk-bk-$$
+         ln -sf mes_recettes Makefile.user.mk
+      fi
+   fi
+   touch Makefile.user.mk
+done
+
+#TODO: create/update .setenv.dot to reload rde/model?
+
+

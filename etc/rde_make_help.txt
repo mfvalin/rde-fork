@@ -3,35 +3,18 @@
  
  dep            : Update dependencies
  obj            : Compile all out of date objects
- lib            : Build libs after compiling all out of date objects
- all            : Build bins after compiling all out of date objects, libs
- bin_check      : Check if all bin/abs have been built
- 
  obj_forced     : Force compile all locally modified source files
                   and all source files depending on them
- lib_forced     : Force build all libs
- bin_forced     : Force build all bin/abs
- all_forced     : make obj_forced lib_forced bin_forced
+ objloc         : Alias for obj_forced
  
  FILENAME.o     : Build a single .o if not up to date
                   To force a build of a .o you need to 'touch' its source file
- libMYNAME.a    : Build libMYNAME.a and it's dependencies
- MYPROG.Abs     : Build MYPROG.Abs and it's dependencies
  
  clean          : rm *.o *.mod src and pre from build tree (keep lib and bin)
  distclean      : rm all files in known build tree sub dir
  
- sanity         : Build Makefiles including dep if need be
- sanity_forced  : Force update of Makefiles (without dep unless needed)
- links          : Update links in build tree then make sanity
- links_forced   : Update links in build tree then make sanity_forced
- 
- check_inc_dup  : Check if there are any include file duplicate name
- 
- versionfiles   : Create/force_update versionfiles in src
- 
  --------------------------------------------------------------
- User overrides files: Makefile.user.mk, Makefile.user.${COMP_ARCH}.mk
+ User overrides file: mes_recettes
  
  Example of content:
  
@@ -46,7 +29,7 @@
  ## Sample dummy target
  
  .PHONY: mydummyall
- mydummyall: dep objects libs allbin
+ mydummy: dep obj
  
  ## Sample abs/binary target
  
@@ -70,6 +53,6 @@
  
  --------------------------------------------------------------
  For a list and details of tools use:
-   pfhelp [--long]
+   rdehelp [--long]
  ==============================================================
  

@@ -1,7 +1,7 @@
 #!/bin/ksh
 
-. .pfbase.inc.dot
-DESC='Purple Frog help'
+. .rdebase.inc.dot
+DESC='RPN Code Development Environment help'
 USAGE="USAGE: ${MYSELF} [-h] [-l] [TOOL]"
 
 usage_long() {
@@ -41,10 +41,12 @@ fi
 
 cat <<EOF
 ========================================
-Purple Frog: code development environment
+RPN Code Development Environment
 
 Basic setup  :
-   pfinit -v   #in working dir
+   rde ouv_exp
+   rde mklink
+   rde mkdep
 
 Makefile help (after basic setup):
    make help
@@ -56,10 +58,10 @@ EOF
 
 if [[ $long == 0 ]] ; then
    echo ========================================
-   echo "List of tools: (for details: pfhelp -l)"
+   echo "List of tools: (for details: rdehelp -l)"
    echo
-   for item in ${purplefrog}/bin/pf*; do 
-      if [[ x"${item##*/}" != x"pfcompile" ]] ; then
+   for item in ${rde}/bin/rde*; do 
+      if [[ x"${item##*/}" != x"rdecompile" ]] ; then
          echo "   ${item##*/}\n       $(head -1 $item | grep ksh > /dev/null && grep DESC= $item | cut -d= -f2 | grep -v \$item)"
       fi
    done
@@ -67,8 +69,8 @@ if [[ $long == 0 ]] ; then
    exit 0
 fi
 
-for item in ${purplefrog}/bin/pf*; do
-   if [[ x"${item##*/}" != x"pfcompile" ]] ; then
+for item in ${rde}/bin/rde*; do
+   if [[ x"${item##*/}" != x"rdecompile" ]] ; then
       head -1 $item | grep ksh > /dev/null && echo ======================================== && echo ${item##*/} && $item --help
    fi
 done

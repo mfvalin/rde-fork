@@ -1,0 +1,106 @@
+#!/bin/ksh
+# @Object: Basic definitions and functions
+# @Author: S.Chamberland
+# @Date:   March 2014
+# @USAGE: . .rdebase.inc.dot
+
+if [[ x"${0##*/}" == x".rdebase.inc.dot" ]] ; then
+   cat<<EOF 1>&1
+=======================================
+ERROR: This script should be sourced
+       . $0
+=======================================
+EOF
+   exit 1
+fi
+
+verbose=${verbose:-0}
+MYSELF=${0##*/}
+COMP_ARCH=${COMP_ARCH:-${EC_ARCH#*/}}
+ROOT=$(pwd)
+STORAGE_BIN=$(model_path storage)/${COMP_ARCH}
+BUILD=malib${EC_ARCH}
+
+RDE_INCLUDE=$(rdevar rdeinc)
+
+SRC_PATH_FILE=$(rdevar srcpathfile)
+RDE_BASE_MAKEFILES="Makefile Makefile.build.mk"
+
+RDE_BASE_DIR0=""
+RDE_BASE_DIR="\$BUILD $RDE_BASE_DIR0"
+RDE_BASE_FILE="$RDE_BASE_MAKEFILES $SRC_PATH_FILE"
+
+INCSUFFIXES="$(rdevar rdesuffix/inc)"
+SRCSUFFIXES="$(rdevar rdesuffix/src)"
+VALIDEXT="$INCSUFFIXES $SRCSUFFIXES"
+
+##
+# Check if PWD is a RDE dir
+##
+rde_check_dir() {
+   for _mydir in $RDE_BASE_DIR0 ; do
+      if [[ ! -d $_mydir || ! -w $_mydir || ! -r $_mydir ]] ;then
+         mystderr 0 "RDE Dir not found or with wrong permissions: $_mydir"
+         return 1
+      fi
+   done
+   for _myfile in $RDE_BASE_FILE ; do
+      if [[ ! -f $_myfile || ! -r $_myfile ]] ;then
+         mystderr 0 "RDE File not found or not readable: $_myfile"
+         return 1
+      fi
+   done
+   return 0
+}
+
+rde_exit_if_not_rdetopdir() {
+   rde_check_dir
+   if [[ $? -ne 0 ]] ; then
+      cat<<EOF 1>&2
+=======================================
+ERROR: $MYSELF should be run in a RDE top development dir
+       Maybe you forgot to run "rde ouv_exp ; rde mklink"?
+=======================================
+EOF
+      exit 1
+   fi
+}
+
+##
+#
+##
+myerror() {
+	more <<EOF
+
+ERROR: $1
+
+EOF
+   usage_long
+   exit 1
+}
+
+##
+#
+##
+myecho() {
+   if [[ $verbose -ge $1 ]] ; then
+      shift
+      echo $@ 2>&1
+   fi
+}
+mystdout() {
+   myecho $@
+}
+mystderr() {
+   if [[ $verbose -ge $1 ]] ; then
+      shift
+      echo $@ 1>&2
+   fi
+}
+
+##
+#
+##
+mysrcpath() {
+   echo $(rdevar srcpath)
+}

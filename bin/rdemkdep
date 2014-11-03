@@ -1,0 +1,63 @@
+#!/bin/ksh
+# @Object: Build depedecies list
+# @Author: S.Chamberland
+# @Date:   Oct 2014
+. .rdebase.inc.dot
+
+DESC='Build depedecies list'
+USAGE="USAGE: ${MYSELF} [-h] [-v] "
+
+usage_long() {
+	 toto=$(echo -e $USAGE)
+	 more <<EOF
+$DESC
+
+$toto
+
+Options:
+    -h, --help         : print this help
+    -v, --verbose      : verbose mode
+    -f, --force        : 
+    FILES              : space separated list of src files or dir
+
+EOF
+}
+
+rde_exit_if_not_rdetopdir
+
+mystatus=0
+myforce=0
+VERBOSE=''
+while [[ $# -gt 0 ]] ; do
+   case $1 in
+      (-h|--help) usage_long; exit 0;;
+      (-v|--verbose) ((verbose=verbose+1)) ; VERBOSE="${VERBOSE} -v";;
+      (*) myerror "Option Not recognized: $1";;
+    esac
+    shift
+done
+
+rde_exit_if_not_rdetopdir
+
+DEP_SUPP_FILE=$rde/etc/rdedep.supp
+DEP_FLAT=--flat
+#DEP_FLAT=--short
+#DEP_DUP_OK=--dup_ok
+#PERLPROF = perl -d:DProf $(rde)/bin/
+
+SRCPATH="$(mysrcpath)"
+
+${MYTIME} ${PERLPROF}rdedep.pl ${VERBOSE} ${DEP_DUP_OK} ${DEP_FLAT} \
+   --deep-include \
+   --any_inc \
+   --soft-restriction \
+   --supp=$DEP_SUPP_FILE \
+   --libext=.a.fl \
+   --out=Makefile.dep.mk \
+   --override_dir=$ROOT \
+   $SRCPATH
+
+#TODO: remove --any when code is clean from cross dir includes
+#TODO:   --inc="$(echo $SRCPATH | sed 's| |/include:|g')
+
+exit $mystatus

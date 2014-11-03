@@ -1,0 +1,97 @@
+#!/bin/ksh
+#
+. .rdebase.inc.dot
+
+DESC='Add a path to SRCPATH for RPN Code Dev Env'
+USAGE="USAGE: ${MYSELF} [-v] [-f] [--reset] DIRLIST"
+
+usage_long() {
+	 toto=$(echo -e $USAGE)
+	 more <<EOF
+$DESC
+
+$toto
+
+Options:
+    -h, --help         : print this help
+    -v, --verbose      : verbose mode
+    -f, --force        : force add path even if not existing
+    -R  --recurse      : recursively include dirs
+        --reset        : replace existing SRCPATH if any
+
+    DIRLIST: space separated
+EOF
+}
+
+myforce=0
+myreset=0
+myrecurse=0
+while [[ $# -gt 0 ]] ; do
+   case $1 in
+      (-h|--help) usage_long; exit 0;;
+      (-v|--verbose) ((verbose=verbose+1));;
+      (-f|--force) myforce=1;;
+      (-R|--recurse) myrecurse=1;;
+      (--reset) myreset=1;;
+      (--) shift ; break;;
+      (-*) myerror "Option Not recognized: $1";;
+    esac
+    shift
+done
+DIRLIST="$@"
+if [[ x"$DIRLIST" == x"" ]] ; then
+   myerror "You need to provide at least one dir"
+fi
+
+SRCPATH="$(mysrcpath)"
+if [[ x$myreset == x0 ]] ; then
+   mystderr 1 "Previous SRCPATH=$SRCPATH"
+else
+   mystderr 1 "Ignoring/Replacing Previous SRCPATH=$SRCPATH"
+   SRCPATH=""
+fi
+
+if [[ x$myrecurse == x1 ]] ; then
+   #DIRLIST="$(find -L $DIRLIST -type d -name '[a-zA-Z0-9]*')"
+   DIRLIST1=""
+   for mydir in $DIRLIST; do
+      mystderr 1 "Recursively Looking into: $mydir"
+      DIRLIST1="$DIRLIST1 $mydir"
+      for item in include/$EC_ARCH include/$COMP_ARCH include/$BASE_ARCH include; do
+         if [[ -d $mydir/$item ]] ; then
+            DIRLIST1="$DIRLIST1 $mydir/$item"
+         fi
+      done
+      for item in $(find $mydir -type d -name '[a-zA-Z0-9]*'; do
+         item2=$(echo $item | sed "s|${mydir}/||")
+         if [[ x${item2%%/*} != xinclude && $item != $mydir ]] ; then
+            DIRLIST1="$DIRLIST1 $item"
+         fi
+      done
+   done
+   if [[ x"$DIRLIST1" != x"" ]] ; then
+      DIRLIST="$DIRLIST1"
+   fi
+fi
+
+SRCPATH1=""
+for mydir in $DIRLIST; do
+   if [[ ! -d $mydir ]] ; then
+      if [[ x$myforce == x0 ]] ; then
+         mystderr 0 "WARNING: Dir does not exist or unreadable, ignored: "
+         mystderr 0 "$mydir"
+         mystderr 0 "To force include use: ${MYSELF} -f $mydir"
+         continue
+      else
+         mystderr 1 "WARNING: Dir does not exist or unreadable, forced include: "
+         mystderr 1 "$mydir"
+      fi
+   fi
+   SRCPATH1="$SRCPATH1 $mydir"
+done
+
+mystderr 1 "Setting SRCPATH=$SRCPATH $SRCPATH1"
+cat <<EOF >> $SRC_PATH_FILE
+SRCPATH="$SRCPATH $SRCPATH1" 
+EOF
+

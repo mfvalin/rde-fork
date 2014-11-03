@@ -1,36 +1,48 @@
 ## ====================================================================
-## File: LOCALBUILD/include/Makefile.build.mk
+## File: $(shell rdevar rdeinc)/Makefile.build.mk
 ##
 
 SHELL = /bin/bash
 
+## ==== Basic definitions
+
+RDE_INCLUDE = $(shell rdevar rdeinc)
+
+#ROOT     := $(PWD)
+BUILD    := $(ROOT)/$(shell rdevar build)
+#BUILDSRC = $(ROOT)/$(shell rdevar build/src)
+#BUILDBIN := $(ROOT)/$(shell rdevar build/bin)
+#BUILDLIB := $(ROOT)/$(shell rdevar build/lib)
+BUILDMOD := $(ROOT)/$(shell rdevar build/mod)
+#BUILDPRE := $(ROOT)/$(shell rdevar build/pre)
+#BINDIR   := $(BUILDBIN)
+VPATH     = $(ROOT)/$(shell rdevar build/src)
+SRCPATH   = $(shell rdevar srcpath)
+
+ifeq (,$(rde))
+   $(error FATAL ERROR: rde is not defined)
+endif
 ifeq (,$(ROOT))
    $(error FATAL ERROR: ROOT is not defined)
 endif
-ifeq (,$(VPATH))
-   $(error FATAL ERROR: VPATH is not defined)
+ifeq ($(ROOT),$(BUILD))
+   $(error FATAL ERROR: BUILD == ROOT)
 endif
+# ifeq (,$(VPATH))
+#    $(error FATAL ERROR: VPATH is not defined)
+# endif
 
-## Basic definitions
 OPTIL  = 2
 OMP    = -openmp
 MPI    = -mpi
 
-LFLAGS = $(OMP) $(MKL)
-
-BUILD = $(ROOT)/$(shell pfmodel_link build)
-BUILDBIN = $(ROOT)/$(shell pfmodel_link build/bin)
-BUILDLIB = $(ROOT)/$(shell pfmodel_link build/lib)
-BUILDMOD = $(ROOT)/$(shell pfmodel_link build/mod)
-BUILDPRE = $(ROOT)/$(shell pfmodel_link build/pre)
-BINDIR   = $(BUILDBIN)
-VPATH    = $(ROOT)/$(shell pfmodel_link build/src)
+LFLAGS = $(OMP) $(EC_MKL)
 
 #BLAS     = blas
 FORCE_RMN_VERSION_RC = 
 RMN_VERSION = rmn_015$(FORCE_RMN_VERSION_RC)
 
-INCLUDES = $(shell .pfdir_with_files -n $(VPATH))
+#INCLUDES = $(shell .pfdir_with_files -n $(VPATH))
 #INCLUDES = $(shell find $(VPATH) -type d |tr '\n' ' ')
 #INCLUDES = $(shell find $(VPATH) -type d |tr '\n' ' ' | grep '/include')
 #TODO: INCLUDE only /include when code is clean from cross dir includes
@@ -47,74 +59,96 @@ LIBPATH = $(PWD) $(LIBPATH_PRE) $(BUILDLIB) $(LIBPATHEXTRA) $(LIBSYSPATHEXTRA) $
 LIBAPPL = $(LIBS_PRE) $(LIBOTHERS) $(LIBEXTRA) $(LIBS_POST)
 LIBSYS  = $(LIBSYS_PRE) $(LIBSYSOTHERS) $(LIBSYSEXTRA) $(LIBSYS_POST)
 
-SUBDIRLIST  = $(foreach mydir,$(wildcard $(VPATH)/*),$(notdir $(mydir)))
-SUBDIRLIST2 = $(foreach mydir,$(SUBDIRLIST),$(shell if [[ -f $(VPATH)/$(mydir)/include/Makefile.local.mk ]] ; then echo $(mydir) ; fi))
-ALL_BINS = $(foreach mydir,$(SUBDIRLIST2),allbin_$(mydir))
-ALL_BINS_CHECK = $(foreach mydir,$(SUBDIRLIST2),allbincheck_$(mydir))
+## ==== Arch specific and Local/user definitions, targets and overrides
 
-## Arch specific and Local/user definitons, targets and overrides
-ifneq (,$(wildcard Makefile.dep.mk))
-	include Makefile.dep.mk
+ifneq (,$(wildcard $(RDE_INCLUDE)/Makefile.rules.mk))
+$(info include $(RDE_INCLUDE)/Makefile.rules.mk)
+include $(RDE_INCLUDE)/Makefile.rules.mk
 endif
-ifneq (,$(wildcard Makefile.rules.mk))
-	include Makefile.rules.mk
+
+ifneq (,$(wildcard $(RDE_INCLUDE)/$(BASE_ARCH)/Makefile.base_arch.mk))
+$(info include $(RDE_INCLUDE)/$(BASE_ARCH)/Makefile.base_arch.mk)
+include $(RDE_INCLUDE)/$(BASE_ARCH)/Makefile.base_arch.mk
 endif
-ifneq (,$(wildcard Makefile.base_arch.mk))
-	include Makefile.base_arch.mk
+ifneq (,$(wildcard $(RDE_INCLUDE)/$(EC_ARCH)/Makefile.ec_arch.mk))
+$(info include $(RDE_INCLUDE)/$(EC_ARCH)/Makefile.ec_arch.mk)
+include $(RDE_INCLUDE)/$(EC_ARCH)/Makefile.ec_arch.mk
 endif
-ifneq (,$(wildcard Makefile.ec_arch.mk))
-	include Makefile.ec_arch.mk
+
+#LOCALMAKEFILES := $(foreach mydir,$(SRCPATH),$(shell if [[ -f $(mydir)/Makefile.local.mk ]] ; then echo $(mydir)/Makefile.local.mk ; fi))
+LOCALMAKEFILES0 := $(foreach mydir,$(SRCPATH),$(mydir)/Makefile.local.mk)
+LOCALMAKEFILES  := $(wildcard $(LOCALMAKEFILES0))
+ifneq (,$(LOCALMAKEFILES))
+$(info include $(LOCALMAKEFILES))
+$(foreach myfile,$(LOCALMAKEFILES),include $(myfile))
 endif
-ifneq (,$(wildcard Makefile.local.mk))
-	include Makefile.local.mk
+
+ifneq (,$(wildcard $(ROOT)/Makefile.dep.mk))
+$(info include $(ROOT)/Makefile.dep.mk)
+include $(ROOT)/Makefile.dep.mk
 endif
+
 ifneq (,$(wildcard $(ROOT)/Makefile.user.mk))
-	include $(ROOT)/Makefile.user.mk
+$(info include $(ROOT)/Makefile.user.mk)
+include $(ROOT)/Makefile.user.mk
 endif
 ifneq (,$(wildcard $(ROOT)/Makefile.user.$(COMP_ARCH).mk))
-	include $(ROOT)/Makefile.user.$(COMP_ARCH).mk
+$(info include $(ROOT)/Makefile.user.$(COMP_ARCH).mk )
+include $(ROOT)/Makefile.user.$(COMP_ARCH).mk
 endif
 
 #.SILENT:
 
-## Basic Targets
+## ==== Targets
 
-.DEFAULT: all
+.DEFAULT: 
+	rdeco -q $@ || true
 
-.PHONY: all allbin allbincheck lib obj objloc clean0 clean check_inc_dup
+.PHONY: #TODO
 
-obj: Makefile.dep.mk $(OBJECTS)
-objloc: obj
+#Produire les objets de tous les fichiers de l'experience qu'ils soient checkout ou non
+objexp: objects
+objects: $(OBJECTS)
 
-lib: Makefile.dep.mk $(OBJECTS) $(ALL_LIBS)
+# genlib: $(OBJECTS)
+# #Creer une programmatheque ayant pour nom $MALIB et incluant TOUS les fichiers objets
+# majlib: objloc
+# #Mise a jour de la programmatheque $MALIB a partir de tous les fichers .o affectes par les dernieres modifications
+# qmajlib: qobj
+# #Mise a jour de la programmatheque $MALIB a partir de tous les fichers .o presents dans le repertoire courant
+# libexp: sortirtout objexp
+# #Mettre tous les objets de l experience en cours dans la programmatheque $MALIB
+# extractall:
 
-all: Makefile.dep.mk $(OBJECTS) $(ALL_LIBS) $(ALL_BINS)
-bin: all
-bin_check: $(ALL_BINS_CHECK)
+# lib: Makefile.dep.mk $(OBJECTS) $(ALL_LIBS)
 
-clean0:
-	chmod -R u+w . 2> /dev/null || true  ;\
-	for mydir in `find . -type d` ; do \
-		for ext in $(INCSUFFIXES) $(SRCSUFFIXES) .o .[mM][oO][dD]; do \
-			rm -f $${mydir}/*$${ext} 2>/dev/null ;\
-		done ;\
-	done ;\
-	for mydir in $(BUILDMOD) $(BUILDPRE) ; do \
-		cd $${mydir} ;\
-		chmod -R u+w . 2> /dev/null || true ;\
-		`find . -type f -exec rm -f {} \; ` ;\
-	done
+# all: Makefile.dep.mk $(OBJECTS) $(ALL_LIBS) $(ALL_BINS)
+# bin: all
+# bin_check: $(ALL_BINS_CHECK)
 
-#TODO: get .o .mod from lib again after make clean?
-#TODO: should we keep .mod after make clean?
+# clean0:
+# 	chmod -R u+w . 2> /dev/null || true  ;\
+# 	for mydir in `find . -type d` ; do \
+# 		for ext in $(INCSUFFIXES) $(SRCSUFFIXES) .o .[mM][oO][dD]; do \
+# 			rm -f $${mydir}/*$${ext} 2>/dev/null ;\
+# 		done ;\
+# 	done ;\
+# 	for mydir in $(BUILDMOD) $(BUILDPRE) ; do \
+# 		cd $${mydir} ;\
+# 		chmod -R u+w . 2> /dev/null || true ;\
+# 		`find . -type f -exec rm -f {} \; ` ;\
+# 	done
 
-clean:
-	chmod -R u+w . $(BUILDMOD) $(BUILDPRE) 2> /dev/null || true ;\
-	rm -f $(foreach mydir,. * */* */*/* */*/*/* */*/*/*/*,$(foreach exte,$(INCSUFFIXES) $(SRCSUFFIXES) .o .[mM][oO][dD],$(mydir)/*$(exte))) 2>/dev/null || true  ;\
-	rm -f $(foreach mydir,. * */* */*/* */*/*/* */*/*/*/*,$(foreach mydir0,$(BUILDMOD) $(BUILDPRE),$(mydir0)/$(mydir)/*)) 2>/dev/null || true
+# #TODO: get .o .mod from lib again after make clean?
+# #TODO: should we keep .mod after make clean?
 
-check_inc_dup: links
-	echo "Checking for duplicated include files" ;\
-	pfcheck_dup -r --src=$(VPATH) --ext="$(INCSUFFIXES)" . $(INCLUDES) $(EC_INCLUDE_PATH) #$(shell s.generate_ec_path --include)
+# clean:
+# 	chmod -R u+w . $(BUILDMOD) $(BUILDPRE) 2> /dev/null || true ;\
+# 	rm -f $(foreach mydir,. * */* */*/* */*/*/* */*/*/*/*,$(foreach exte,$(INCSUFFIXES) $(SRCSUFFIXES) .o .[mM][oO][dD],$(mydir)/*$(exte))) 2>/dev/null || true  ;\
+# 	rm -f $(foreach mydir,. * */* */*/* */*/*/* */*/*/*/*,$(foreach mydir0,$(BUILDMOD) $(BUILDPRE),$(mydir0)/$(mydir)/*)) 2>/dev/null || true
+
+# check_inc_dup: links
+# 	echo "Checking for duplicated include files" ;\
+# 	pfcheck_dup -r --src=$(VPATH) --ext="$(INCSUFFIXES)" . $(INCLUDES) $(EC_INCLUDE_PATH) #$(shell s.generate_ec_path --include)
 
 ## ====================================================================

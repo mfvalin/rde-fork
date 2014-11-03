@@ -1,0 +1,101 @@
+#!/bin/ksh
+# @Object: Echo specific RDE var or path
+# @Author: S.Chamberland
+# @Date:   March 2014
+
+# Display help in xterm if user clicked on the file 
+#if [[ -z $@ && $DISPLAY ]] && ! tty -s; then 
+#    xterm -hold -e "$(dirname "$0")/$(basename "$0")" -h; exit 
+#fi 
+
+DESC=' Echo specific RDE var or path'
+USAGE="Usage: ${0##*/} [build,src,ref,local,bin,...]"
+
+if [[ x$1 == x-h || x$1 == x--help ]] ; then
+	 more <<EOF
+$DESC
+
+$USAGE
+
+EOF
+    exit 0
+fi
+
+# Check for required argument (becomes "mytype")
+if [[ -z "$1" ]] ; then
+   printf "$USAGE\n"
+   exit 1
+fi
+mytype=$1
+
+buildsubdirslean="src pre obj"
+buildsubdirs="${buildsubdirslean} mod lib bin"
+COMP_ARCH0=${EC_ARCH##*/}
+
+INCSUFFIXES=".cdk .h .hf .fh .itf90 .inc"
+SRCSUFFIXES=".c .cpp .f .ftn .ptn .f90 .f95 .f03 .ftn90 .ptn90 .cdk90 .tmpl90 .F .FOR .F90 .F95 .F03"
+
+SRC_PATH_FILE=.exper_cour
+mysrcpath0() {
+   if [[ -r $SRC_PATH_FILE ]] ; then
+      . $SRC_PATH_FILE
+   fi
+   echo $SRCPATH
+}
+
+flat=1
+if [[ x$flat == x1 ]] ; then
+
+   mylist="\
+:local/src=.;\
+:local/bin=bin;\
+:ref/src=ref/src;\
+:ref/bin=ref/bin;\
+:build=malib${EC_ARCH};\
+:build-=${buildsubdirslean};\
+:srcpathfile=${SRC_PATH_FILE};\
+:srcpath=$(mysrcpath0);\
+:rdesuffix/inc=$INCSUFFIXES;\
+:rdesuffix/src=$SRCSUFFIXES;\
+:rdesuffix=$INCSUFFIXES $SRCSUFFIXES;\
+:rdeinc=$rde/include/$RDE_COMPILER_VERSION\
+"
+   for item in ${buildsubdirs} ; do
+      mylist="${mylist};:build/${item}=malib${EC_ARCH}"
+   done
+
+else
+
+   hostarch=-${TRUE_HOST}-${COMP_ARCH:-${COMP_ARCH0:-unknown}}
+
+   mylist="\
+:local/src=src;\
+:local/bin=bin;\
+:ref/src=ref/src;\
+:ref/bin=ref/bin;\
+:build=build${hostarch};\
+:build-=${buildsubdirslean};\
+:rdesuffix/inc=$INCSUFFIXES;\
+:rdesuffix/src=$SRCSUFFIXES;\
+:rdesuffix=$INCSUFFIXES $SRCSUFFIXES;\
+:rdeinc=$rde/include/$RDE_COMPILER_VERSION\
+"
+   for item in ${buildsubdirs} ; do
+      mylist="${mylist};:build/${item}=build${hostarch}/${item}"
+   done
+
+fi
+
+if [[ x${mytype} == x-l ]] ; then
+   if [[ x$2 == xbuild ]] ; then
+      echo ${buildsubdirs}
+   elif [[ x$2 == xbuild- ]] ; then
+      echo ${buildsubdirslean}
+   else
+      echo ${mylist} | tr ';:' '\n ' | cut -d= -f2
+   fi
+elif [[ x${mytype} == x-h ]] ; then
+   echo ${mylist} | tr ';:' '\n ' | cut -d= -f1
+else
+   echo ${mylist} | tr ';' '\n' | grep :${mytype}= | cut -d= -f2
+fi

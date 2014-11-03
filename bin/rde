@@ -1,5 +1,5 @@
 #!/bin/ksh
-DESC='Purple Frog main program'
+DESC='RPN Code Development Environment dispatcher'
 USAGE="USAGE: ${MYSELF} TOOL [OPTIONS]"
 
 prefix=${0##*/}

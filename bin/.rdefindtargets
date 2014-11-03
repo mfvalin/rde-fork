@@ -1,5 +1,5 @@
 #!/bin/ksh
-. .pfbase.inc.dot
+. .rdebase.inc.dot
 
 DESC='Find the list of targets in Makefiles'
 USAGE="USAGE: ${MYSELF}"
@@ -19,9 +19,9 @@ fi
 
 findtargetfn() {
    for item in Makefile* ; do
-      .pffindtargetsinfile --nodep --norules $item
+      .rdefindtargetsinfile --nodep --norules $item
    done
-   find -L $BUILD/ -name 'Makefile*' -exec .pffindtargetsinfile --nodep --norules {} \;
+   #find -L $BUILD/ -name 'Makefile*' -exec .rdefindtargetsinfile --nodep --norules {} \;
 }
 
 findtargetfn | sort -u
