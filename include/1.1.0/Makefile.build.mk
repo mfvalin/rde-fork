@@ -10,12 +10,7 @@ RDE_INCLUDE = $(shell rdevar rdeinc)
 
 #ROOT     := $(PWD)
 BUILD    := $(ROOT)/$(shell rdevar build)
-#BUILDSRC = $(ROOT)/$(shell rdevar build/src)
-#BUILDBIN := $(ROOT)/$(shell rdevar build/bin)
-#BUILDLIB := $(ROOT)/$(shell rdevar build/lib)
 BUILDMOD := $(ROOT)/$(shell rdevar build/mod)
-#BUILDPRE := $(ROOT)/$(shell rdevar build/pre)
-#BINDIR   := $(BUILDBIN)
 VPATH     = $(ROOT)/$(shell rdevar build/src)
 SRCPATH   = $(shell rdevar srcpath)
 
@@ -47,11 +42,11 @@ RMN_VERSION = rmn_015$(FORCE_RMN_VERSION_RC)
 #INCLUDES = $(shell find $(VPATH) -type d |tr '\n' ' ' | grep '/include')
 #TODO: INCLUDE only /include when code is clean from cross dir includes
 
-INCLUDE_PATH=". $(INCLUDES)"
-INCLUDE_MOD="$(BUILDMOD)"
+INCLUDE_PATH = ". $(INCLUDES)"
+INCLUDE_MOD  = "$(BUILDMOD)"
 
 LIBDIR = $(BUILDLIB)
-BINDIR = $(BUILDBIN)
+#BINDIR = $(BUILDBIN)
 LIBDEP_ALL =  Makefile.dep.mk
 
 LIBPATH = $(PWD) $(LIBPATH_PRE) $(BUILDLIB) $(LIBPATHEXTRA) $(LIBSYSPATHEXTRA) $(LIBPATHOTHER) $(LIBPATH_POST)

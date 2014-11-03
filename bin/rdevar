@@ -61,7 +61,11 @@ if [[ x$flat == x1 ]] ; then
 :rdeinc=$rde/include/$RDE_COMPILER_VERSION\
 "
    for item in ${buildsubdirs} ; do
-      mylist="${mylist};:build/${item}=malib${EC_ARCH}"
+      if [[ $item != bin ]] ; then
+         mylist="${mylist};:build/${item}=malib${EC_ARCH}"
+      else
+         mylist="${mylist};:build/${item}=$(model_path storage)"
+      fi
    done
 
 else

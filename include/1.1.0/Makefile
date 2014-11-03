@@ -12,11 +12,11 @@ ROOT     := $(PWD)
 BUILD    := $(ROOT)/$(shell rdevar build)
 #BUILDSRC = $(ROOT)/$(shell rdevar build/src)
 BUILDOBJ := $(ROOT)/$(shell rdevar build/obj)
-#BUILDBIN := $(ROOT)/$(shell rdevar build/bin)
+BUILDBIN := $(shell rdevar build/bin)
 #BUILDLIB := $(ROOT)/$(shell rdevar build/lib)
 #BUILDMOD := $(ROOT)/$(shell rdevar build/mod)
 #BUILDPRE := $(ROOT)/$(shell rdevar build/pre)
-#BINDIR   := $(BUILDBIN)
+BINDIR   := $(BUILDBIN)
 VPATH    = $(ROOT)/$(shell rdevar build/src)
 SRCPATH   = $(shell srcpath)
 
@@ -52,7 +52,7 @@ MAKE_LINKS := $(MYTIME) .rdeupdate_build_links.ksh
 	$(MAKE) Makefile.dep.mk ;\
 	$(MAKE_LINKS) ;\
 	cd $(BUILDOBJ) ;\
-	$(MAKE) $(NOPRINTDIR) $@ ROOT=$(ROOT)
+	$(MAKE) $(NOPRINTDIR) $@ ROOT=$(ROOT) BINDIR=$(BINDIR)
 
 help:
 	@more $(rde)/etc/rde_make_help.txt
@@ -79,12 +79,12 @@ obj:  Makefile.dep.mk
 	cd $(BUILDOBJ) ;\
 	for myfile in $(foreach exte,$(SRCSUFFIXES),$(wildcard *$(exte))) ; do \
 		if [[ -L $${myfile} ]] ; then \
-			$(MAKE) $(NOPRINTDIR) $${myfile%.*}.o ROOT=$(ROOT) ;\
+			$(MAKE) $(NOPRINTDIR) $${myfile%.*}.o ROOT=$(ROOT) BINDIR=$(BINDIR);\
 		fi ;\
 	done ;\
 	for myfile in $(foreach exte,$(INCSUFFIXES) $(SRCSUFFIXES),$(wildcard *$(exte))) ; do \
 		if [[ -L $${myfile} ]] ; then \
-			$(MAKE) $(NOPRINTDIR) $${myfile}.invdep ROOT=$(ROOT) ;\
+			$(MAKE) $(NOPRINTDIR) $${myfile}.invdep ROOT=$(ROOT) BINDIR=$(BINDIR);\
 		fi ;\
 	done
 
@@ -94,10 +94,14 @@ obj_touch:
 	touch $(wildcard *.f* *.c* *.h* *.F* *.t*) 2>/dev/null || true
 
 qclean: clean
-clean: distclean
+clean:
+	chmod -R u+w $(BUILD)/* $(BUILD)/.[a-zA-Z0-9_-]* 2>/dev/null || true ;\
+	rm -rf $(BUILD)/* $(BUILD)/.[a-zA-Z0-9_-]* 2>/dev/null || true
 	$(MAKE_LINKS) >/dev/null 2>/dev/null || true
 distclean: 
 	chmod -R u+w $(BUILD)/* $(BUILD)/.[a-zA-Z0-9_-]* 2>/dev/null || true ;\
-	rm -rf $(BUILD)/* $(BUILD)/.[a-zA-Z0-9_-]* 2>/dev/null || true
+	rm -rf $(BUILD)/* $(BUILD)/.[a-zA-Z0-9_-]* 2>/dev/null || true ;\
+	chmod u+w $(BINDIR)/* 2>/dev/null || true ;\
+	rm  -f $(BINDIR)/* 2>/dev/null || true
 
 ## ====================================================================
