@@ -15,13 +15,16 @@
 # src_ref/...
 # src/...
 
+export PF_COMPILER_VERSION=${PF_COMPILER_VERSION:-1.1.0}
+purplefroginc=${purplefrog}/include/${PF_COMPILER_VERSION}
+
 ##
 # Help
 ##
 DESC='Initial setup of a PF workdir'
 USAGE="USAGE: . pfinit [-h] [-v] [-f] [--comp=COMPILER] [--import=COMPONENTS] [--clone=PATH] [--flat] NAME VERSION"
 usage_long() {
-   . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
+   #. ${purplefroginc}/${BASE_ARCH}/default.comp.dot
    . .pfbase.inc.dot
 
 	 toto=$(echo -e $USAGE)
@@ -36,9 +39,9 @@ Options:
     -f, --force     : force, overwrite present installation 
                       [Not fully implemented yet]
     --comp=COMP     : use compiler COMP instead of the default one
-                      [Default: \${COMP_ARCH:-$(. ${purplefrog}/include/${BASE_ARCH}/default.comp.dot; echo $COMP_ARCH)}]
+                      [Default: \${COMP_ARCH}]
     --srcpath=PATH  : List of dir where to look for src COMPONENT/VERSION
-                      [Default: $(pf_src_path)]
+                      [Default: \$(pf_src_path)]
     --import=COMPONENTS: List of component/version to import,
                          or components list file
     --clone=PATH    : Path to PF dir to clone
@@ -62,7 +65,7 @@ pf_clone_dir() {
    if [[ -f ${_clonedir}/.pf.comp.${BASE_ARCH}.dot ]] ; then
       . ${_clonedir}/.pf.comp.${BASE_ARCH}.dot
    fi
-   . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
+   . ${purplefroginc}/${BASE_ARCH}/default.comp.dot
    . .pfbase.inc.dot
    _here=$(pwd)
    cd $_clonedir
@@ -161,8 +164,8 @@ pf_basic_dirs() {
 pf_basic_makefiles() {
    mystderr 1 "++ Add/Update Purplefrog build system: Makefiles"
    if [[ x$myforce == x-f || ! -f ${ROOT}/Makefile ]] ; then
-      cp ${purplefrog}/include/Makefile.root.mk  ${ROOT}/Makefile
-      cp ${purplefrog}/include/Makefile.build.mk ${BUILD_OBJ}
+      cp ${purplefroginc}/Makefile.root.mk  ${ROOT}/Makefile
+      cp ${purplefroginc}/Makefile.build.mk ${BUILD_OBJ}
    else
       mystderr 1 "WARNING: Purplefrog Makefiles already exists"
       needforce=1
@@ -174,19 +177,20 @@ pf_basic_makefiles() {
 ##
 pf_basic_env() {
    mystderr 1 "++ Setting Basic Env.Var."
-   if [[ x$myforce == x-f || ! -f ${ROOT}/.setenv.dot || ! -f  ${ROOT}/.pf.ssm.bndl ]] ; then
+   if [[ x$myforce == x-f || ! -f ${ROOT}/.setenv.dot || ! -f  ${ROOT}/.pf.init.dot ]] ; then
       cp ${purplefrog}/etc/setenv.basic.dot ${ROOT}/.setenv.dot
-      echo ${purplefrog_bndl} > ${ROOT}/.pf.ssm.bndl
+      echo ". s.ssmuse.dot ${purplefrog_bndl}" > ${ROOT}/.pf.init.dot
    else
       mystderr 1 "WARNING: Purplefrog Env.Var. Setup files already exists"
       needforce=1
    fi
+   touch user.setenv.dot
    if [[ -f .pf.comp.${BASE_ARCH}.dot ]] ; then
       rm -f $TMPDIR/.pf.comp.${BASE_ARCH}.dot$$
       mv .pf.comp.${BASE_ARCH}.dot $TMPDIR/.pf.comp.${BASE_ARCH}.dot$$
    fi
    cat <<EOF >> ${ROOT}/.pf.comp.${BASE_ARCH}.dot
-export PF_COMPILER_VERSION=\${PF_COMPILER_VERSION:-${PF_COMPILER_VERSION:-1.0.0}}
+export PF_COMPILER_VERSION=\${PF_COMPILER_VERSION:-${PF_COMPILER_VERSION:-1.1.0}}
 export COMP_ARCH=\${COMP_ARCH:-${COMP_ARCH}}
 EOF
    if [[ -f  $TMPDIR/.pf.comp.${BASE_ARCH}.dot$$ ]] ; then
@@ -220,7 +224,7 @@ pf_init_fn() {
    while [[ $# -gt 0 ]] ; do
       case $1 in
          (-h|--help) return 1;;
-         (-v|--verbose) ((verbose++));myverbose='-v';;
+         (-v|--verbose) ((verbose=verbose+1));myverbose='-v';;
          (-f|--force) myforce=-f;;
          (--comp=*) export COMP_ARCH=${1#*=};;
          (--srcpath=*) srcpath=$(echo ${1#*=}|tr ' ,;\t' '::::');;
@@ -235,7 +239,7 @@ pf_init_fn() {
    done
 
    needforce=0
-   . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
+   . ${purplefroginc}/${BASE_ARCH}/default.comp.dot
    . .pfbase.inc.dot
 
    if [[ x"$clone" != x ]] ; then

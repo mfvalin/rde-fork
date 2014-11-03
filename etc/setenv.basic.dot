@@ -16,8 +16,8 @@ fi
 if [[ x${BASE_ARCH} == xAIX || x${BASE_ARCH} == xAIX-powerpc7 ]] ; then
    s.use gmake as make
 fi
-if [[ -r .pf.ssm.bndl ]] ; then
-   . s.ssmuse.dot $(cat .pf.ssm.bndl)
+if [[ -r .pf.init.dot ]] ; then
+   . .pf.init.dot
 fi
 
 if [[ x$purplefrog == x ]] ; then
@@ -29,12 +29,6 @@ EOF
    return 1
 fi
 
-if [[ -r .pf.project.dot ]] ; then
-   . .pf.project.dot
-fi
-export ATM_MODEL_NAME=${ATM_MODEL_NAME:-noname}
-export ATM_MODEL_VERSION=${ATM_MODEL_VERSION:-1.0.0}
-
 
 ##
 # Compiler
@@ -42,37 +36,38 @@ export ATM_MODEL_VERSION=${ATM_MODEL_VERSION:-1.0.0}
 if [[ -r  .pf.comp.${BASE_ARCH}.dot ]] ; then
    . .pf.comp.${BASE_ARCH}.dot
 fi
-export PF_COMPILER_VERSION=${PF_COMPILER_VERSION:-1.0.0}
+export PF_COMPILER_VERSION=${PF_COMPILER_VERSION:-1.1.0}
 export COMP_ARCH=${1:-$COMP_ARCH}
-if [[ -r  ${purplefrog}/include/${BASE_ARCH}/default.comp.dot ]] ; then
-   . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
+purplefroginc=${purplefrog}/include/${PF_COMPILER_VERSION}
+if [[ -r  ${purplefroginc}/${BASE_ARCH}/default.comp.dot ]] ; then
+   . ${purplefroginc}/${BASE_ARCH}/default.comp.dot
 fi
 export EC_ARCH=${BASE_ARCH}/${COMP_ARCH}
 
-if [[ ! -r ${purplefrog}/include/${EC_ARCH}/ssmusedep_${PF_COMPILER_VERSION}.bndl ]] ; then
+if [[ ! -f ${purplefroginc}/${EC_ARCH}/setenv.dot ]] ; then
    cat<<EOF
 ====================================================================
 ERROR: Compiler not supported by purplefrog: "${COMP_ARCH}" [${PF_COMPILER_VERSION}]
 
 Supported compilers for this ARCH:
-$(cd ${purplefrog}/include/${BASE_ARCH} ; itemlist="$(find . -name ssmusedep_${PF_COMPILER_VERSION}.bndl)" ; for item in $itemlist ; do item=${item%/*} ; echo "   ${item#*/}"; done)
+$(cd ${purplefroginc}/${BASE_ARCH} ; itemlist="$(find . -name setenv.dot)" ; for item in $itemlist ; do item=${item%/*} ; echo "   ${item#*/}"; done)
 ====================================================================
 EOF
    return 1
 fi
 
-. s.ssmuse.dot Prepend ovbin \
-   $(cat ${purplefrog}/include/${EC_ARCH}/ssmusedep_${PF_COMPILER_VERSION}.bndl)
+for item in \
+   ${purplefroginc}/${EC_ARCH}/setenv.dot \
+   .pf.project.dot \
+   .pf.project.setenv.dot \
+   user.setenv.dot ; do
+   if [[ -r $item ]] ; then
+      . $item
+   fi
+done
 
-if [[ -f .setenv.user.dot ]] ; then
-   . .setenv.user.dot
-fi
-if [[ -f .setenv.user.${BASE_ARCH}.dot ]] ; then
-   . .setenv.user.${BASE_ARCH}.dot
-fi
-if [[ -f .setenv.user.${COMP_ARCH}.dot ]] ; then
-   . .setenv.user.${COMP_ARCH}.dot
-fi
+export ATM_MODEL_NAME=${ATM_MODEL_NAME:-noname}
+export ATM_MODEL_VERSION=${ATM_MODEL_VERSION:-1.0.0}
 
 ##
 # Cleanup empty include dir

@@ -83,7 +83,7 @@ function oncompile {
 	compilateur_et_options=$1
 	lecode=$2
 	options_supp=$3
-   mycompilateur=${compilateur_et_options%% *}
+   #mycompilateur=${compilateur_et_options%% *}
 
 	if [[ -z ${varlog} ]]; then
 		echo 
@@ -182,6 +182,8 @@ eval `cclargs_lite -D '' $0 "[Compiler des sources .f, .f90, .c, etc...]"\
  -python "" "python" "[Avec python]" \
  -compdir "" "" "[Specifie le repertoire ou l'on s'installe pour faire la compilation"\
  -strict "No" "Yes" "[abort dans le cas d'un objet manquant]"\
+ -basedir "/" "/" "[Root dir from where to look for Compiler_rules]"\
+ -reldir  " " " " "[Rel dirs from basedir to look for Compiler_rules]"\
  ++ "$@"`
 
 set +e
@@ -221,6 +223,16 @@ FULL_ABI=${EC_ARCH}
 # Obtention des compiler rules, ajouter $ARMNLIB/include et co. s'il sont presents
 #######
 . s.get_compiler_rules.dot ""
+for mydir in . $(echo $reldir | tr '/' ' ') ; do
+   basedir="${basedir}/$mydir"
+   for item in .dot _${BASE_ARCH}.dot _${BASE_ARCH}_${COMP_ARCH}.dot ; do
+      myfile=$basedir/Compiler_rules${item}
+      if [[ -f $myfile ]] ; then
+         echo Loading $myfile
+         . $myfile
+      fi
+   done
+done
 [[ -z $shared ]] && FC_options="$FC_options $FC_STATIC"
 [[ -d $ARMNLIB/include ]] && includes="$includes ${ARMNLIB}/include"
 [[ -d $ARMNLIB/include/${EC_ARCH} ]] && includes="$includes ${ARMNLIB}/include/${EC_ARCH}"

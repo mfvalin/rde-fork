@@ -40,8 +40,10 @@ myrm_pre() {
 	 _ext=${1##*.}
 	 if [[ x${_ext} == xftn ]] ; then
         /bin/rm -f ${ROOT}/${BUILD_PRE}/${_name}.f > /dev/null || true
+         myecho 2 "++ rm pre/${_name}.f"
 	 elif [[ x${_ext} == xftn90 || x${_ext} == xcdk90 ]] ; then
         /bin/rm -f ${ROOT}/${BUILD_PRE}/${_name}.f90 > /dev/null || true
+         myecho 2 "++ rm pre/${_name}.f90"
 	 fi
 }
 
@@ -59,6 +61,7 @@ get_modules_in_file() {
 ## myrm_mod filename.ftn90
 myrm_mod() {
 	 _filename=$1
+    #TODO: EXT4MODLIST no defined
     if [[ x"$(echo ${EXT4MODLIST} | grep '\.${_filename##*.}\ ')" == x ]] ; then
        return
     fi
@@ -68,6 +71,7 @@ myrm_mod() {
           _myname=$(echo ${_myfile##*/} |tr 'A-Z' 'a-z')
           if [[ x${_myname%.*} == x${_mymod} ]] ; then
              /bin/rm -f ${_myfile}
+             myecho 2 "++ rm mod/${_myfile}"
           fi
        done
     done
@@ -97,7 +101,7 @@ myforce=""
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
-      (-v|--verbose) ((verbose++));;
+      (-v|--verbose) ((verbose=verbose+1));;
       (-f|--force) myforce=-f;;
       (--resync) resync=1;;
       (--) shift ;;
@@ -109,8 +113,19 @@ done
 pf_exit_if_not_pftopdir
 
 #==============================================================================
+myecho 1 "++ Checking changes status"
+find ${SRC_USR} 2>/dev/null | sort > $TMPDIR/.pfsrcusrls
+diff $TMPDIR/.pfsrcusrls ${BUILD}/.pfsrcusrls > /dev/null 2>&1
+if [[ x$? == x0 && x$resync == x0 ]] ; then
+   myecho 2 "++ Nothing changed since last pfupdate"
+   exit 0
+fi
+if [[ $verbose -ge 2 ]] ; then
+   diff $TMPDIR/.pfsrcusrls ${BUILD}/.pfsrcusrls
+fi
+myecho 2 "++ Updating build links"
 
-myecho 1 "++ Remove links and obsolete files from BUILD_SRC"
+myecho 1 "++ Remove dangling links and obsolete files from BUILD_SRC"
 cd ${ROOT}/${BUILD_SRC}
 for myrelpath in $(find . -type l) ; do
    if [[ ! -f ${ROOT}/${SRC_USR}/${myrelpath} ]] ; then
@@ -118,9 +133,11 @@ for myrelpath in $(find . -type l) ; do
 		myrm_pre $myrelpath
 		myrm_mod $myrelpath
       /bin/rm -f $myrelpath > /dev/null || true
+      myecho 2 "++ rm $myrelpath"
       if [[ -f ${ROOT}/${SRC_REF}/${myrelpath} ]] ; then
 	      cp ${ROOT}/${SRC_REF}/${myrelpath} ${myrelpath}
          touch ${myrelpath}
+         myecho 1 "++ cp REF $myrelpath"
       fi
    fi
 done
@@ -133,17 +150,25 @@ then
    #TODO: remove exiting ${BUILD_SRC}?
    srcrefdirlist="$(cd $ROOT/$SRC_REF ; find -L . -type d | sort | sed 's!\(.\|./\)!!')"
    for _mydir in $BUILD_SUB_DIR_LIST ; do
-      mkdir -p  $STORAGE_BIN/$_mydir 2>/dev/null || true
+      if [[ ! -d $STORAGE_BIN/$_mydir ]] ; then
+         mkdir -p  $STORAGE_BIN/$_mydir 2>/dev/null || true
+         myecho 2 "++ mkdir $_mydir"
+      fi
    done
    for _item in ${srcrefdirlist} ; do
       for _mydir in $BUILD_SUB_DIR_LIST0 ; do
-         mkdir -p  $STORAGE_BIN/$_mydir/${_item} 2>/dev/null || true
+         if [[ ! -d $STORAGE_BIN/$_mydir/${_item} ]] ; then
+            mkdir -p  $STORAGE_BIN/$_mydir/${_item} 2>/dev/null || true
+            myecho 2 "++ mkdir $_mydir/${_item}"
+         fi
       done
    done
    cd ${ROOT}/${SRC_REF}
    for item in $(ls); do
       if [[ -d $item/ ]] ; then
          cp -R $item $ROOT/$BUILD_SRC 2>/dev/null || true
+         touch $ROOT/$BUILD_SRC/$item
+         myecho 1 "++ cp REF $item"
       fi
    done
 fi
@@ -168,6 +193,7 @@ for myreldir in ${srcusrdirlist} ; do
          myecho 1 "++ Force remove ${BUILD}/*/${myreldir}"
          for mysubdir in ${BUILD_SUB_DIR_LIST} ; do
             rm -rf ${ROOT}/${BUILD}/${mysubdir}/${myreldir} 2>/dev/null || true
+            myecho 2 "++ rm ${mysubdir}/${myreldir}"
          done
       fi
    fi
@@ -176,7 +202,10 @@ done
 myecho 1 "++ Make sure all SRC_USR dir are mirrored"
 for myreldir in ${srcusrdirlist} ; do
    for myreldir2 in ${BUILD_SUB_DIR_LIST0} ; do
-      mkdir -p ${ROOT}/${BUILD}/${myreldir2}/${myreldir} 2> /dev/null || true
+      if [[ ! -d ${ROOT}/${BUILD}/${myreldir2}/${myreldir} ]] ; then
+         mkdir -p ${ROOT}/${BUILD}/${myreldir2}/${myreldir} 2> /dev/null || true
+         myecho 2 "++ mkdir ${myreldir2}/${myreldir}"
+      fi
    done
 done
 
@@ -188,6 +217,7 @@ for myreldir in ${srcusrdirlist} ; do
 	   myrm_pre ${myrelpath}
 	   myrm_mod ${myrelpath}
 	   /bin/rm -f ${ROOT}/${BUILD_SRC}/${myrelpath} 2> /dev/null || true
+      myecho 2 "++ rm ${myrelpath}"
    done
 done
 
@@ -196,8 +226,11 @@ for myreldir in ${srcusrdirlist} ; do
    for myname in $(cd ${myreldir} ; ls -1 2> /dev/null) ; do
       myrelpath=${myreldir}/${myname}
       if [[ -f ${myrelpath} ]] ; then
-         /bin/rm -f ${ROOT}/${BUILD_SRC}/${myrelpath} 2> /dev/null || true
-         ln -sf ${ROOT}/${SRC_USR}/${myrelpath} ${ROOT}/${BUILD_SRC}/${myrelpath}
+         if [[ x"$(true_path ${ROOT}/${SRC_USR}/${myrelpath} 2>/dev/null)" != x"$(true_path ${ROOT}/${BUILD_SRC}/${myrelpath} 2>/dev/null)" ]] ; then
+            /bin/rm -f ${ROOT}/${BUILD_SRC}/${myrelpath} 2> /dev/null || true
+            ln -s ${ROOT}/${SRC_USR}/${myrelpath} ${ROOT}/${BUILD_SRC}/${myrelpath}
+            myecho 1 "++ ln USR $myrelpath"
+         fi
       fi
    done
 done
@@ -205,3 +238,5 @@ done
 if [[ -f .pf.flatsrc ]] ; then
    pflinkflat
 fi
+
+mv $TMPDIR/.pfsrcusrls ${ROOT}/${BUILD}/.pfsrcusrls 2>/dev/null

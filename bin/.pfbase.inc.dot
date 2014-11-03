@@ -2,9 +2,9 @@
 # @Object: Basic definitions and functions
 # @Author: S.Chamberland
 # @Date:   March 2014
-# @USAGE: . pfbase.inc.dot
+# @USAGE: . .pfbase.inc.dot
 
-if [[ x"${0##*/}" == x"pfbase.inc.dot" ]] ; then
+if [[ x"${0##*/}" == x".pfbase.inc.dot" ]] ; then
    cat<<EOF 1>&1
 =======================================
 ERROR: This script should be sourced
@@ -38,7 +38,7 @@ SRC_PATH_DEFAULT=/users/dor/armn/sch/SsmBundles/data/purplefrog-src
 
 PF_BASE_DIR0="$BINDIR $BINREF $SRC_REF $SRC_USR"
 PF_BASE_DIR="\$BUILD $PF_BASE_DIR0"
-PF_BASE_FILE=".setenv.dot .pf.ssm.bndl .pf.project.dot .pf.comp.${BASE_ARCH}.dot .pf.srcpath .pf.components Makefile"
+PF_BASE_FILE=".setenv.dot .pf.init.dot .pf.project.dot .pf.comp.${BASE_ARCH}.dot .pf.srcpath .pf.components Makefile"
 
 ##
 # Check if PWD is a PF dir

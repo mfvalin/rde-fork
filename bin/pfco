@@ -28,7 +28,7 @@ myforce=0
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
-      (-v|--verbose) ((verbose++));;
+      (-v|--verbose) ((verbose=verbose+1));;
       (-f|--force) myforce=1;;
       (--) shift ; break;;
       (-*) myerror "Option Not recognized: $1";;
@@ -66,9 +66,8 @@ for myfile in $PATHLIST ; do
       TOPATH=${SRC_USR}
    fi
    if [[ x${mypathlist} == x ]] ; then
-      cat <<EOF
-    ERROR: File $myfile is not found in ${SRC_REF}/, ${BINREF}/
-EOF
+      mystderr 0 "ERROR: File $myfile is not found in ${SRC_REF}/, ${BINREF}/"
+      mystderr 0 "$(.pfsimilnames -v -r $myfile)"
       mystatus=1
    else
       for mypath in ${mypathlist} ; do

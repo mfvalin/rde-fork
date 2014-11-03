@@ -5,7 +5,7 @@
 . .pfbase.inc.dot
 
 DESC='Rename a src file, Checkout library version of a source file if need be'
-USAGE="USAGE: ${MYSELF} [-h] [-v] [-f] OLDNAME NEWNAME"
+USAGE="USAGE: ${MYSELF} [-h] [-v] [-l] [-f] OLDNAME NEWNAME"
 
 usage_long() {
 	 toto=$(echo -e $USAGE)
@@ -17,6 +17,7 @@ $toto
 Options:
     -h, --help         : print this help
     -v, --verbose      : verbose mode
+    -l, --local        : move only locally modified file, keep ref file if any
     -f, --force        : 
     OLDNAME NEWNAME    : old and new name of the file
 
@@ -24,11 +25,13 @@ EOF
 }
 
 mystatus=0
+mylocal=''
 myforce=0
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
-      (-v|--verbose) ((verbose++));;
+      (-v|--verbose) ((verbose=verbose+1));;
+      (-l|--local) mylocal='-l';;
       (-f|--force) myforce=1;;
       (--) shift ; break;;
       (-*) myerror "Option Not recognized: $1";;
@@ -75,7 +78,8 @@ else
    myecho 0 "++ Moved $OLDNAME2 to ${SRC_USR}/$NEWNAME"
    cp $OLDNAME2 ${SRC_USR}/$NEWNAME
 fi
-pfrm  $OLDNAME >/dev/null 2>&1
+pfrm  $mylocal $OLDNAME >/dev/null 2>&1
+echo "mv $OLDNAME2 ${SRC_USR}/$NEWNAME" > $(echo_deleted_tag $OLDNAME2)
 myecho 0 "++ WARNING: You need to do 'make dep' before recompiling"
 
 if [[ -f .pf.flatsrc ]] ; then

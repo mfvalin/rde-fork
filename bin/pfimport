@@ -233,7 +233,7 @@ nowarn_if_exists=0
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
-      (-v|--verbose) ((verbose++));;
+      (-v|--verbose) ((verbose=verbose+1));;
       (-f|--force) myforce=-f;;
       (--force=*) myforce=${1#*=};;
       (--srcpath=*) srcpath0=$(echo ${1#*=}|tr ' ,;\t' '::::');;

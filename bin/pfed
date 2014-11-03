@@ -87,9 +87,11 @@ for item in $files ; do
       item2=$(locate_for_vi ${item1})
    fi
    if [[ x"$item2" == x"__DELETED__" ]] ; then
-      myecho 0 "WARNING: file $item was marked as deleted, before editing do,\n\tpfco $item"      
+      mystderr 0 "WARNING: file $item was marked as deleted, before editing do,\n\tpfco $item"      
    elif [[ x"$item2" == x"__NOTFOUND__" ]] ; then
-      myecho 0 "WARNING: file $item was not found in $mydir"      
+      mystderr 0 "WARNING: file $item was not found in $mydir"   
+      mystderr 0 "$(.pfsimilnames -v $mydiropt $item)"
+      mystderr 0 "Or try ${MYSELF} with --local or --build or --ref"
    else
       files2="$files2 $item2"
    fi

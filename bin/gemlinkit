@@ -4,7 +4,34 @@
 pf_exit_if_not_pftopdir
 
 DESC='Create dir and links to run GEM interactively'
-USAGE="USAGE: ${MYSELF}"
+USAGE="USAGE: ${MYSELF} [-v]"
+
+usage_long() {
+	 toto=$(echo -e $USAGE)
+	 more <<EOF
+$DESC
+
+$toto
+
+Options:
+    -h, --help         : print this help
+    -v, --verbose      : verbose mode
+
+EOF
+}
+
+while [[ $# -gt 0 ]] ; do
+   case $1 in
+      (-h|--help) usage_long; exit 0;;
+      (-v|--verbose) ((verbose=verbose+1));;
+      (*) myerror "Option Not recognized: $1";;
+    esac
+    shift
+done
+
+if [[ $verbose -gt 0 ]] ; then
+   set -x
+fi
 
 BUILD_RUN=${BUILD}/run
 mkdir ${BUILD_BIN} 2> /dev/null

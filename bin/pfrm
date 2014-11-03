@@ -30,7 +30,7 @@ PATHLIST=""
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
-      (-v|--verbose) ((verbose++));;
+      (-v|--verbose) ((verbose=verbose+1));;
       (-l|--local_only) localonly=1;;
       (-*) myerror "Option Not recognized: $1";;
         *) PATHLIST="$PATHLIST $1" ;;
@@ -50,10 +50,12 @@ for myfile in $PATHLIST ; do
    myfile0=$myfile
    if [[ ! -f ${SRC_USR}/$myfile && ! -f ${SRC_REF}/$myfile ]] ; then
       myfile="$(pflocate $myfile0 2>/dev/null | grep -v "Missing file"| tr "\n" " " | cut -d" " -f1)"
+      myfile=${myfile#*/}
       if [[ ! -n $myfile ]] ; then
          myfile="$(pflocate -r $myfile0 2>/dev/null | grep -v "Missing file"| tr "\n" " " | cut -d" " -f1)"
+         myfile=${myfile#*/}
+         myfile=${myfile#*/}
       fi
-      myfile=${myfile#*/}
    fi
    if [[ ! -n $myfile ]] ; then
       myfile=$myfile0

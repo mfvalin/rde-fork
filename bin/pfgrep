@@ -12,7 +12,7 @@ $toto
 
 Options:
     -h, --help  : print this help
-    --local     : search into locally modified src only
+    -l, --local : search into locally modified src only
 EOF
 }
 

@@ -1,14 +1,13 @@
+
 TODO:
 * clone
-* xfl13
 * Use s.f90, s.f77 instead of s.compile
-* Potential dependency problem w/ module in file with no code (no .o produced)
 *.updatebuild: myrm_bidon, myrm_empty
+* double ssmuse in .setenv.user.dot?
 
 * component init script?
 * iPython Compat?
 * pfimport should not load component twice
-** allow Compiler_rules override in topdir, src_ref and src
 
 * make all w/o make lib should work
 * test if file recompiled when back to ref version
@@ -17,10 +16,10 @@ TODO:
 * option to use BASE_ARCH instead of TRUE_HOST for build dir name
 * Running env (gemdev)
 * gfortran... pending librmn
-*.updatebuild: look for alternatives for links (file with file origine/rm) to avoid find operations
+*.updatebuild: look for alternatives for links (file with file origine/rm) to avoid find operations 
 * Makefile: replace for loops and recurse make by automatic targets as in Makefile.user.mk
 * mv Makefile.user.mk my_bin into Makefile.build.mk
-* pfdependencies add option to produec lib targets (not default)
+* pfdependencies add option to produce lib targets (not default)
 * pfdependencies should also take list of file from stdin
 * pfimport should also import etc?,shared? (on top of src,bin) in ref/
 
@@ -50,14 +49,39 @@ Done:
 * src_ref now ref/src
 * sticky compiler... should prepend to .pf.comp.BASE_ARCH.dot (not append) 
 *.updatebuild: myrm_mod
+* pfmv --local
+* find.py as an alternative to find
+* Potential dependency problem w/ module in file with no code (no .o produced)
+** .cdk90 with no code... produces no .o so it's always made!
+* allow Compiler_rules override in topdir, src_ref and src
+* pfsimilnames
+* aix pfinit -v: pfinit[11]: verbose++: more tokens expected
+
+* new: pfmerge
+* new: find.py alternative
+* new: pfco suggest similar names
+* new: dir specific Compiler rules
+* Versioned Makefiles
+* Hides bin not inteded for end user
+* cached update of build src tree
+* new boot setup
+* ksh fixes for AIX
+* More verbosity (optional)
+* intel diag-disable 7713
+* xfl13 w/o legacy
+* librmn_015
+
 
 Special files:
 * .restricted: whitelist of "$BASE_ARCH:" or "$EC_ARCH:" for dir access; located in src_ref, src dir to restrict; NOT recursive
 * .version_file: whitelist of version files to produce; located in main src_ref, src dir of a component, version files are created in the component's include dir
 * .rm.NAME: removed file (do not use src_ref version); location same src dir as where fiel was; NOT working for dir
 * .setenv.dot
-* .pf.ssm.bndl
+* user.setenv.dot
+* .pf.init.dot
+* .pfinit.log
 * .pf.project.dot
+* .pf.project.setenv.dot
 * .pf.comp.BASE_ARCH.dot
 * .pf.srcpath
 * .pf.components
@@ -65,7 +89,7 @@ Special files:
 * Makefile
 * Makefile.user.mk
 * Makefile.user.COMP_ARCH.mk
-* .compiler_rules.dot
+* src/*/Compiler_rules.dot
 
 
 Why not to use Makefile target as mylib(mysub.o):

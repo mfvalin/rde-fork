@@ -38,7 +38,7 @@ compverlist=""
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
-      (-v|--verbose) ((verbose++));;
+      (-v|--verbose) ((verbose=verbose+1));;
       (--) shift ; break ;;
       -*) myerror "Option Not recognized: $1";;
       *) break ;;

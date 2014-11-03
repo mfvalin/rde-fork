@@ -1,0 +1,6 @@
+. s.ssmuse.dot \
+   Xlf13.110 \
+   legacy \
+   rmnlib-dev \
+   devtools \
+   /ssm/net/rpn/libs/4.0

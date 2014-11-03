@@ -39,7 +39,7 @@ fi
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
-      (-v|--verbose) ((verbose++));;
+      (-v|--verbose) ((verbose=verbose+1));;
       (-l|--list|--status) listmode=1;;
       (-d|--dirmode) dirmode=1;;
       (--diff=*) ECDIFF=${1#*=};;
@@ -135,7 +135,7 @@ echo_file_status() {
    elif [[ -f ${ROOT}/${SRC_USR}/${_myfile} ]] ; then
       if [[ -f ${ROOT}/${SRC_REF}/${_myfile} ]] ; then
          _isdiff=1
-         diff -q ${ROOT}/${SRC_REF}/${_myfile} ${ROOT}/${SRC_USR}/${_myfile} >/dev/null && _isdiff=0
+         diff ${ROOT}/${SRC_REF}/${_myfile} ${ROOT}/${SRC_USR}/${_myfile} >/dev/null 2>&1 && _isdiff=0
          if [[ ${_isdiff} == 1 ]] ; then
             echo MOD ${_myfile} ${_isrestricted}
          else

@@ -3,13 +3,16 @@
 # @Author: S.Chamberlands
 # @Date:   June 2014
 
+export PF_COMPILER_VERSION=${PF_COMPILER_VERSION:-1.1.0}
+purplefroginc=${purplefrog}/include/${PF_COMPILER_VERSION}
+
 ##
 # Help
 ##
 DESC='Initial setup of a GEM PF workdir'
 USAGE="USAGE: . geminit [-h] [-v] [--comp=COMPILER] [--clone] [--flat] [VERSION]"
 usage_long() {
-   . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
+   #. ${purplefroginc}/${BASE_ARCH}/default.comp.dot
    . .pfbase.inc.dot
 
 	 toto=$(echo -e $USAGE)
@@ -24,7 +27,7 @@ Options:
     -f, --force     : force, overwrite present installation 
                       [Not fully implemented yet]
     --comp=COMP     : use compiler COMP instead of the default one
-                      [Default: \${COMP_ARCH:-$(. ${purplefrog}/include/${BASE_ARCH}/default.comp.dot; echo $COMP_ARCH)}]
+                      [Default: \${COMP_ARCH}]
     --clone         : use clone file for GEM version if found
     --flat          : mirror modified source in a flat layout in the topdir
 
@@ -48,7 +51,7 @@ gempf_init_fn() {
    while [[ $# -gt 0 ]] ; do
       case $1 in
          (-h|--help) usage_long ; return 1;;
-         (-v|--verbose) ((verbose++));myverbose='-v';;
+         (-v|--verbose) ((verbose=verbose+1));myverbose='-v';;
          (-f|--force) myforce=-f;;
          (--comp=*) export COMP_ARCH=${1#*=};;
          (--clone) myclone=1;;
@@ -61,7 +64,7 @@ gempf_init_fn() {
    done
 
    needforce=0
-   . ${purplefrog}/include/${BASE_ARCH}/default.comp.dot
+   . ${purplefroginc}/${BASE_ARCH}/default.comp.dot
    . .pfbase.inc.dot
 
    if [[ x$myforce == x-f ]] ; then
@@ -95,16 +98,11 @@ gempf_init_fn() {
       return 1
    fi
 
-   if [[ -f $purplefrog/etc/models/gem/${ATM_MODEL_VERSION}/ssmusedep.bndl ]] ; then
-      touch .setenv.user.dot
-      echo ". s.ssmuse.dot $(cat $purplefrog/etc/models/gem/${ATM_MODEL_VERSION}/ssmusedep.bndl | tr '\n' ' ')" >> .setenv.user.dot
-   fi
-
    if [[ -f $purplefrog/etc/models/gem/${ATM_MODEL_VERSION}/setenv.dot ]] ; then
-      touch .setenv.user.dot
-      cat $purplefrog/etc/models/gem/${ATM_MODEL_VERSION}/setenv.dot >> .setenv.user.dot
+      rm -f .pf.project.setenv.dot
+      cp $purplefrog/etc/models/gem/${ATM_MODEL_VERSION}/setenv.dot \
+         .pf.project.setenv.dot
    fi
-
 
    myclone=0
    clonefile=$purplefrog/share/clone/gem/$ATM_MODEL_VERSION/gem_${ATM_MODEL_VERSION}_${BASE_ARCH}_${COMP_ARCH}.tar.gz
