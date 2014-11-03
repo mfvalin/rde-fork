@@ -57,8 +57,8 @@ for item in $RDE_BASE_MAKEFILES ; do
          ln -sf mes_recettes Makefile.user.mk
       fi
    fi
-   touch Makefile.user.mk
 done
+touch Makefile.user.mk
 
 #TODO: create/update .setenv.dot to reload rde/model?
 

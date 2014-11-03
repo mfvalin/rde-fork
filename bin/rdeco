@@ -67,13 +67,11 @@ find_src() {
 
 for myfile in $PATHLIST ; do
    mypathlist="$(find_src $myfile -L 2>/dev/null)"
-   myverbose=1
    if [[ x${mypathlist} == x ]] ; then
       mysimfile="$(.rdesimilnames $myfile)"
       mynbsim="$(echo $(echo $mysimfile | wc -w))"
       if [[ x$mynbsim == x1 ]] ; then
-         mypathlist="$mysimfile"
-         myverbose=0
+         mypathlist="$(find_src $mysimfile -L 2>/dev/null)"
       fi
    fi
    if [[ x${mypathlist} == x ]] ; then

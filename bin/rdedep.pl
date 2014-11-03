@@ -895,8 +895,8 @@ sub print_dep_rules_inv2 {
 	 }
     for my $depname (sort keys %invdeplist) {
 		  if ($#{$invdeplist{$depname}} >= 0) {
-				print STDOUT ".PHONY: ".$depname.".acdk\n";
-				print_header($depname.".acdk",":","");
+				print STDOUT ".PHONY: ".$depname.".invdep\n";
+				print_header($depname.".invdep",":","");
 				for $fileyext (@{$invdeplist{$depname}}) {
 					 if ($fileyext ~~  /(.*\/)*(.*)[.]([^.]*$)/) {
 						  my $filn = ($2 ? $2 : "");

@@ -62,39 +62,39 @@ LIBSYS  = $(LIBSYS_PRE) $(LIBSYSOTHERS) $(LIBSYSEXTRA) $(LIBSYS_POST)
 ## ==== Arch specific and Local/user definitions, targets and overrides
 
 ifneq (,$(wildcard $(RDE_INCLUDE)/Makefile.rules.mk))
-$(info include $(RDE_INCLUDE)/Makefile.rules.mk)
-include $(RDE_INCLUDE)/Makefile.rules.mk
+   $(info include $(RDE_INCLUDE)/Makefile.rules.mk)
+   include $(RDE_INCLUDE)/Makefile.rules.mk
 endif
 
 ifneq (,$(wildcard $(RDE_INCLUDE)/$(BASE_ARCH)/Makefile.base_arch.mk))
-$(info include $(RDE_INCLUDE)/$(BASE_ARCH)/Makefile.base_arch.mk)
-include $(RDE_INCLUDE)/$(BASE_ARCH)/Makefile.base_arch.mk
+   $(info include $(RDE_INCLUDE)/$(BASE_ARCH)/Makefile.base_arch.mk)
+   include $(RDE_INCLUDE)/$(BASE_ARCH)/Makefile.base_arch.mk
 endif
 ifneq (,$(wildcard $(RDE_INCLUDE)/$(EC_ARCH)/Makefile.ec_arch.mk))
-$(info include $(RDE_INCLUDE)/$(EC_ARCH)/Makefile.ec_arch.mk)
-include $(RDE_INCLUDE)/$(EC_ARCH)/Makefile.ec_arch.mk
+   $(info include $(RDE_INCLUDE)/$(EC_ARCH)/Makefile.ec_arch.mk)
+   include $(RDE_INCLUDE)/$(EC_ARCH)/Makefile.ec_arch.mk
 endif
 
 #LOCALMAKEFILES := $(foreach mydir,$(SRCPATH),$(shell if [[ -f $(mydir)/Makefile.local.mk ]] ; then echo $(mydir)/Makefile.local.mk ; fi))
 LOCALMAKEFILES0 := $(foreach mydir,$(SRCPATH),$(mydir)/Makefile.local.mk)
 LOCALMAKEFILES  := $(wildcard $(LOCALMAKEFILES0))
 ifneq (,$(LOCALMAKEFILES))
-$(info include $(LOCALMAKEFILES))
-$(foreach myfile,$(LOCALMAKEFILES),include $(myfile))
+   $(info include $(LOCALMAKEFILES))
+   include $(LOCALMAKEFILES)
 endif
 
 ifneq (,$(wildcard $(ROOT)/Makefile.dep.mk))
-$(info include $(ROOT)/Makefile.dep.mk)
-include $(ROOT)/Makefile.dep.mk
+   $(info include $(ROOT)/Makefile.dep.mk)
+   include $(ROOT)/Makefile.dep.mk
 endif
 
 ifneq (,$(wildcard $(ROOT)/Makefile.user.mk))
-$(info include $(ROOT)/Makefile.user.mk)
-include $(ROOT)/Makefile.user.mk
+   $(info include $(ROOT)/Makefile.user.mk)
+   include $(ROOT)/Makefile.user.mk
 endif
 ifneq (,$(wildcard $(ROOT)/Makefile.user.$(COMP_ARCH).mk))
-$(info include $(ROOT)/Makefile.user.$(COMP_ARCH).mk )
-include $(ROOT)/Makefile.user.$(COMP_ARCH).mk
+   $(info include $(ROOT)/Makefile.user.$(COMP_ARCH).mk )
+   include $(ROOT)/Makefile.user.$(COMP_ARCH).mk
 endif
 
 #.SILENT:

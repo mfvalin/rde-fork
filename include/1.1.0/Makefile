@@ -42,7 +42,7 @@ NOPRINTDIR := --no-print-directory
 #.SILENT:
 #endif
 
-MAKE_LINKS := $(MYTIME) .rdeupdate_build_links.ksh -v
+MAKE_LINKS := $(MYTIME) .rdeupdate_build_links.ksh
 
 ## ==== Targets
 
@@ -80,20 +80,18 @@ obj:  Makefile.dep.mk
 	for myfile in $(foreach exte,$(SRCSUFFIXES),$(wildcard *$(exte))) ; do \
 		if [[ -L $${myfile} ]] ; then \
 			$(MAKE) $(NOPRINTDIR) $${myfile%.*}.o ROOT=$(ROOT) ;\
-		else pwd ; ls -l $${myfile} ;\
 		fi ;\
 	done ;\
 	for myfile in $(foreach exte,$(INCSUFFIXES) $(SRCSUFFIXES),$(wildcard *$(exte))) ; do \
 		if [[ -L $${myfile} ]] ; then \
-			$(MAKE) $(NOPRINTDIR) $${myfile}.acdk ROOT=$(ROOT) ;\
-		else pwd ; ls -l $${myfile} ;\
+			$(MAKE) $(NOPRINTDIR) $${myfile}.invdep ROOT=$(ROOT) ;\
 		fi ;\
 	done
 
 objloc: obj_forced
 obj_forced: obj_touch obj
 obj_touch:
-	touch *.f* *.c* *.h* *.F* *.t* 2>/dev/null || true
+	touch $(wildcard *.f* *.c* *.h* *.F* *.t*) 2>/dev/null || true
 
 qclean: clean
 clean: distclean
