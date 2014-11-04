@@ -1,0 +1,93 @@
+#!/bin/ksh
+# @Object: Locate files in build or src directories
+# @Author: S.Chamberland
+# @Date:   March 2014
+. .rdebase.inc.dot
+
+DESC='Locate files in build or src directory'
+USAGE="USAGE: ${MYSELF} [-h] [-b|-r|-l|-a] FILENAME [FILENAME2 ...]"
+
+usage_long() {
+	 toto=$(echo -e $USAGE)
+	 more 2>&1 <<EOF
+$DESC
+
+$toto
+
+Options:
+    -h, --help  : print this help
+    -l, --local : locate in locally modified src only
+    -r, --ref   : locate in src ref dirs only
+    -b, --build : locate in build dir only
+EOF
+}
+
+files=""
+localonly=0
+refonly=0
+buildonly=0
+while [[ $# -gt 0 ]] ; do
+   case $1 in
+      (-h|--help)  usage_long; exit 0;;
+      (-l|--local) localonly=1;;
+      (-r|--ref)   refonly=1;;
+      (-b|--build) buildonly=1;;
+      (--) shift ; break;;
+      (-*) myerror "Option Not recognized: $1";;
+        *) files="$files $1"
+    esac
+	 previous=$1
+    shift
+done
+files="$files $@"
+
+if [[ x"$files" == x" " ]] ; then
+   myerror "Must provide at least one filename"
+fi
+
+rde_exit_if_not_rdetopdir
+
+#followlinks='-L'
+followlinks=''
+
+find_file() {
+   _myfile=$1
+   _mydir=$2
+   if [[ -f ${_mydir}/${_myfile} ]] ; then
+      myecho 0 ${_mydir}/${_myfile}
+   else
+      _mypath="$(find ${followlinks} ${_mydir} -name ${_myfile})"
+      myecho 0 ${_mypath}
+   fi
+}
+
+mydirlist=". $(rdevar build) $(rdevar srcpath)"
+if [[ $localonly == 1 ]] ; then
+  mydirlist="." 
+fi
+if [[ $refonly == 1 ]] ; then
+  mydirlist="$(rdevar srcpath)" 
+fi
+if [[ $buildonly == 1 ]] ; then
+  mydirlist="$(rdevar build)" 
+fi
+
+for myfile in $files ; do
+   found=0
+   mypathlist2=""
+   for mydir in $mydirlist ; do
+      mypathlist="$(find_file $myfile $mydir)"
+      if [[ x"${mypathlist}" != x"" ]] ; then
+         mypathlist2="${mypathlist2} ${mypathlist}"
+         found=1
+            #echo 1:${mypathlist}:$myfile  $found  $mydir
+      fi
+         #echo 2:${mypathlist}:$myfile  $found
+   done
+      #echo 3:${mypathlist}:$myfile  $found
+   if [[ x$found == x1 ]] ; then
+      myecho 0 ${mypathlist2} | tr ' ' '\n'
+   else
+      mystderr 0 "Missing file: $myfile"
+   fi
+done

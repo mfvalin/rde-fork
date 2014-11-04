@@ -1,0 +1,80 @@
+#!/bin/ksh
+. .rdebase.inc.dot
+
+DESC='Grep (print lines matching a pattern) in src'
+USAGE="USAGE: ${MYSELF} [-l] [GREP_OPTIONS] SEARCH_STRING [PATH]"
+usage_long() {
+	 toto=$(echo -e $USAGE)
+	 more <<EOF
+$DESC
+
+$toto
+
+Options:
+    -h, --help    : print this help
+    -v, --verbose : verbose mode
+    -l, --local   : grep into locally modified code only
+    -R            : search recursively down the dir tree
+EOF
+}
+
+localonly=0
+recurse=''
+GREP_OPTIONS=""
+while [[ $# -gt 0 ]] ; do
+   case $1 in
+      (-h|--help)  usage_long; exit 0;;
+      (-v|--verbose) ((verbose=verbose+1));;
+      (-l|--local) localonly=1;;
+      (-R) recurse=recursively;;
+      -*) GREP_OPTIONS="$GREP_OPTIONS $1";;
+      *) break;;
+    esac
+    shift
+done
+
+if [[ $# -lt 1 ]] ; then
+   myerror "Need to provide a search string"
+fi
+
+SEARCH_STRING="$1"
+shift
+SEARCH_PATH=""
+if [[ $# -gt 0 ]] ; then
+   SEARCH_PATH="$1"
+fi
+
+rde_exit_if_not_rdetopdir
+
+SEARCH_PATH_BASE=". $(rdevar srcpath)"
+if [[ $localonly == 1 ]] ; then
+   SEARCH_PATH_BASE="."
+fi
+
+if [[ ! -n ${SEARCH_PATH} ]] ; then
+   SEARCH_PATH='.'
+fi
+
+for PATH_BASE in $SEARCH_PATH_BASE ; do
+   cd ${PATH_BASE}
+   for MYPATH in ${SEARCH_PATH} ; do
+      #TODO: if $recurse -r condition is too restrictive
+      if [[ -r ${MYPATH} ]] ; then
+         myecho 1 "Searching $recurse in ${PATH_BASE}/${MYPATH}"
+         if [[ -d ${MYPATH} ]] ; then
+            if [[ x$recurse == x ]] ; then
+               myfiles="$(ls -d ${MYPATH}/* ${MYPATH}/.[a-zA-Z0-9_-]* 2>/dev/null)"
+               if [[ x"${myfiles}" != x"" ]] ; then
+                  grep -H ${GREP_OPTIONS} "${SEARCH_STRING}" ${myfiles}
+               fi
+            else
+               find -L ${MYPATH} -type f -exec grep -H ${GREP_OPTIONS} "${SEARCH_STRING}" {} \;
+            fi
+         else
+            grep -H ${GREP_OPTIONS} "${SEARCH_STRING}" ${MYPATH}
+         fi
+      else
+         mystderr 1 "Searching $recurse in ${PATH_BASE}, No such file/Dir: ${MYPATH}"
+      fi
+   done
+done
