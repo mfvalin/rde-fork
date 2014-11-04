@@ -17,7 +17,7 @@ BUILDBIN := $(shell rdevar build/bin)
 #BUILDMOD := $(ROOT)/$(shell rdevar build/mod)
 #BUILDPRE := $(ROOT)/$(shell rdevar build/pre)
 BINDIR   := $(BUILDBIN)
-VPATH    = $(ROOT)/$(shell rdevar build/src)
+#VPATH    = $(ROOT)/$(shell rdevar build/src)
 SRCPATH   = $(shell srcpath)
 
 INCSUFFIXES = $(shell rdevar rdesuffix/inc)
@@ -34,25 +34,30 @@ ifeq ($(ROOT),$(BUILD))
 endif
 
 VERBOSE    := -v
+ifneq (,$(findstring s,$(MAKEFLAGS)))
+VERBOSE    := 
+endif
+ifeq (,$(VERBOSE))
+.SILENT:
+endif
 NOPRINTDIR := --no-print-directory
 
 #MYTIME = time
 
-#ifeq (,$(VERBOSE))
-#.SILENT:
-#endif
-
 MAKE_LINKS := $(MYTIME) .rdeupdate_build_links.ksh
+MYMAKE_VARS = ROOT=$(ROOT) BINDIR=$(BINDIR)
 
 ## ==== Targets
 
-.PHONY: help dep rm_makefiles_dep objloc obj_forced obj_touch qclean clean distclean
+.SUFFIXES:
 
-.DEFAULT:
-	$(MAKE) Makefile.dep.mk ;\
+.DEFAULT: 
+	$(MAKE) Makefile.dep.mk
 	$(MAKE_LINKS) ;\
 	cd $(BUILDOBJ) ;\
-	$(MAKE) $(NOPRINTDIR) $@ ROOT=$(ROOT) BINDIR=$(BINDIR)
+	$(MAKE) $(NOPRINTDIR) $@ $(MYMAKE_VARS)
+
+.PHONY: help dep rm_makefiles_dep objloc obj_forced obj_touch qclean clean distclean
 
 help:
 	@more $(rde)/etc/rde_make_help.txt
@@ -61,7 +66,9 @@ help:
 	@.rdefindtargets
 	@echo "=============================================================="
 
-dep: rm_makefiles_dep Makefile.dep.mk
+dep: 
+	rm -f Makefile.dep.mk 2>/dev/null || true
+	rdemkdep -v
 
 rm_makefiles_dep:
 	rm -f Makefile.dep.mk
@@ -79,12 +86,14 @@ obj:  Makefile.dep.mk
 	cd $(BUILDOBJ) ;\
 	for myfile in $(foreach exte,$(SRCSUFFIXES),$(wildcard *$(exte))) ; do \
 		if [[ -L $${myfile} ]] ; then \
-			$(MAKE) $(NOPRINTDIR) $${myfile%.*}.o ROOT=$(ROOT) BINDIR=$(BINDIR);\
+			$(MAKE) $(NOPRINTDIR) $${myfile%.*}.o $(MYMAKE_VARS) ;\
+			if [[ $${?} != 0 ]] ; then exit 1 ; fi ;\
 		fi ;\
 	done ;\
 	for myfile in $(foreach exte,$(INCSUFFIXES) $(SRCSUFFIXES),$(wildcard *$(exte))) ; do \
 		if [[ -L $${myfile} ]] ; then \
-			$(MAKE) $(NOPRINTDIR) $${myfile}.invdep ROOT=$(ROOT) BINDIR=$(BINDIR);\
+			$(MAKE) $(NOPRINTDIR) $${myfile}.invdep $(MYMAKE_VARS) ;\
+			if [[ $${?} != 0 ]] ; then exit 1 ; fi ;\
 		fi ;\
 	done
 

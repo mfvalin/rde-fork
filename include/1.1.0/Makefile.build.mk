@@ -54,19 +54,33 @@ LIBPATH = $(PWD) $(LIBPATH_PRE) $(BUILDLIB) $(LIBPATHEXTRA) $(LIBSYSPATHEXTRA) $
 LIBAPPL = $(LIBS_PRE) $(LIBOTHERS) $(LIBEXTRA) $(LIBS_POST)
 LIBSYS  = $(LIBSYS_PRE) $(LIBSYSOTHERS) $(LIBSYSEXTRA) $(LIBSYS_POST)
 
+VERBOSE    := -v
+ifneq (,$(findstring s,$(MAKEFLAGS)))
+VERBOSE    := 
+endif
+ifeq (,$(VERBOSE))
+.SILENT:
+endif
+
 ## ==== Arch specific and Local/user definitions, targets and overrides
 
-ifneq (,$(wildcard $(RDE_INCLUDE)/Makefile.rules.mk))
-   $(info include $(RDE_INCLUDE)/Makefile.rules.mk)
-   include $(RDE_INCLUDE)/Makefile.rules.mk
+ifneq (,$(wildcard $(ROOT)/Makefile.rules.mk))
+   ifneq (,$(VERBOSE))
+      $(info include $(ROOT)/Makefile.rules.mk)
+   endif
+   include $(ROOT)/Makefile.rules.mk
 endif
 
 ifneq (,$(wildcard $(RDE_INCLUDE)/$(BASE_ARCH)/Makefile.base_arch.mk))
-   $(info include $(RDE_INCLUDE)/$(BASE_ARCH)/Makefile.base_arch.mk)
+   ifneq (,$(VERBOSE))
+      $(info include $(RDE_INCLUDE)/$(BASE_ARCH)/Makefile.base_arch.mk)
+   endif
    include $(RDE_INCLUDE)/$(BASE_ARCH)/Makefile.base_arch.mk
 endif
 ifneq (,$(wildcard $(RDE_INCLUDE)/$(EC_ARCH)/Makefile.ec_arch.mk))
-   $(info include $(RDE_INCLUDE)/$(EC_ARCH)/Makefile.ec_arch.mk)
+   ifneq (,$(VERBOSE))
+      $(info include $(RDE_INCLUDE)/$(EC_ARCH)/Makefile.ec_arch.mk)
+   endif
    include $(RDE_INCLUDE)/$(EC_ARCH)/Makefile.ec_arch.mk
 endif
 
@@ -74,21 +88,29 @@ endif
 LOCALMAKEFILES0 := $(foreach mydir,$(SRCPATH),$(mydir)/Makefile.local.mk)
 LOCALMAKEFILES  := $(wildcard $(LOCALMAKEFILES0))
 ifneq (,$(LOCALMAKEFILES))
-   $(info include $(LOCALMAKEFILES))
+   ifneq (,$(VERBOSE))
+      $(info include $(LOCALMAKEFILES))
+   endif
    include $(LOCALMAKEFILES)
 endif
 
 ifneq (,$(wildcard $(ROOT)/Makefile.dep.mk))
-   $(info include $(ROOT)/Makefile.dep.mk)
+   ifneq (,$(VERBOSE))
+      $(info include $(ROOT)/Makefile.dep.mk)
+   endif
    include $(ROOT)/Makefile.dep.mk
 endif
 
 ifneq (,$(wildcard $(ROOT)/Makefile.user.mk))
-   $(info include $(ROOT)/Makefile.user.mk)
+   ifneq (,$(VERBOSE))
+      $(info include $(ROOT)/Makefile.user.mk)
+   endif
    include $(ROOT)/Makefile.user.mk
 endif
 ifneq (,$(wildcard $(ROOT)/Makefile.user.$(COMP_ARCH).mk))
-   $(info include $(ROOT)/Makefile.user.$(COMP_ARCH).mk )
+   ifneq (,$(VERBOSE))
+      $(info include $(ROOT)/Makefile.user.$(COMP_ARCH).mk )
+   endif
    include $(ROOT)/Makefile.user.$(COMP_ARCH).mk
 endif
 

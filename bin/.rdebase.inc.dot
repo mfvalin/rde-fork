@@ -24,7 +24,7 @@ BUILD=malib${EC_ARCH}
 RDE_INCLUDE=$(rdevar rdeinc)
 
 SRC_PATH_FILE=$(rdevar srcpathfile)
-RDE_BASE_MAKEFILES="Makefile Makefile.build.mk"
+RDE_BASE_MAKEFILES="Makefile Makefile.build.mk Makefile.rules.mk"
 
 RDE_BASE_DIR0=""
 RDE_BASE_DIR="\$BUILD $RDE_BASE_DIR0"

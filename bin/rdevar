@@ -8,7 +8,7 @@
 #    xterm -hold -e "$(dirname "$0")/$(basename "$0")" -h; exit 
 #fi 
 
-DESC=' Echo specific RDE var or path'
+DESC='Echo specific RDE var or path'
 USAGE="Usage: ${0##*/} [build,src,ref,local,bin,...]"
 
 if [[ x$1 == x-h || x$1 == x--help ]] ; then
