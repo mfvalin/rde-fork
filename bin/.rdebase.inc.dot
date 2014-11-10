@@ -18,16 +18,16 @@ verbose=${verbose:-0}
 MYSELF=${0##*/}
 COMP_ARCH=${COMP_ARCH:-${EC_ARCH#*/}}
 ROOT=$(pwd)
-STORAGE_BIN=$(model_path storage)/${COMP_ARCH}
-BUILD=malib${EC_ARCH}
+BUILDOBJ=$(rdevar build/obj)
+BUILDBIN=$(rdevar build/bin)
 
 RDE_INCLUDE=$(rdevar rdeinc)
 
 SRC_PATH_FILE=$(rdevar srcpathfile)
 RDE_BASE_MAKEFILES="Makefile Makefile.build.mk Makefile.rules.mk"
 
-RDE_BASE_DIR0=""
-RDE_BASE_DIR="\$BUILD $RDE_BASE_DIR0"
+RDE_BASE_DIR0="$BUILDOBJ $BUILDBIN"
+RDE_BASE_DIR="$RDE_BASE_DIR0"
 RDE_BASE_FILE="$RDE_BASE_MAKEFILES $SRC_PATH_FILE"
 
 INCSUFFIXES="$(rdevar rdesuffix/inc)"

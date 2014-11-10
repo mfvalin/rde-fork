@@ -94,12 +94,13 @@ myrm_mod() {
 get_dep_list() {
 	 _filename=$1
 	 _deplist=""
-	 if [[ -r make_cdk ]] ; then
-		  _name=${_filename%.*}
-		  _ext=${_filename##*.}
-		  _filename2=${_name}.a${_ext}
-		  _deplist=`make -f ${ROOT}/make_cdk -n ${_filename2} | cut -d" " -f2`
-	 fi
+    #TODO: update
+	 # if [[ -r make_cdk ]] ; then
+	 #     _name=${_filename%.*}
+	 #     _ext=${_filename##*.}
+	 #     _filename2=${_name}.a${_ext}
+	 #     _deplist=`make -f ${ROOT}/make_cdk -n ${_filename2} | cut -d" " -f2`
+	 # fi
 	 echo ${_deplist}
 }
 
@@ -107,7 +108,7 @@ get_dep_list() {
 ## myrm_dep filename.ftn90
 myrm_dep() {
 	 _filename=$1
-    #TOTO: update
+    #TODO: update
 	 # _deplist="$(get_dep_list ${_filename})"
 	 # for _item in ${_deplist} ; do
 	 #     myrm_obj ${_item}
@@ -139,7 +140,8 @@ VALIDEXTWILD="$(echo $VALIDEXT | sed 's/\./*./g')"
 
 mylist="$(ls $SRC_PATH_FILE Makefile.build.mk Makefile.rules.mk Makefile.dep.mk Makefile.user.mk $VALIDEXTWILD 2>/dev/null | sort)"
 
-cd ${BUILD}
+BUILDSRC=$(rdevar build/src)
+cd ${BUILDSRC}
 
 ## Checking changes status
 echo $mylist > $TMPDIR/.rdesrcusrls

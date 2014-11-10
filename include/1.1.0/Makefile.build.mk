@@ -8,11 +8,11 @@ SHELL = /bin/bash
 
 RDE_INCLUDE = $(shell rdevar rdeinc)
 
-#ROOT     := $(PWD)
 BUILD    := $(ROOT)/$(shell rdevar build)
 BUILDMOD := $(ROOT)/$(shell rdevar build/mod)
-VPATH     = $(ROOT)/$(shell rdevar build/src)
-SRCPATH   = $(shell rdevar srcpath)
+BUILDLIB := $(ROOT)/$(shell rdevar build/lib)
+VPATH    := $(ROOT)/$(shell rdevar build/src)
+SRCPATH  := $(shell rdevar srcpath)
 
 ifeq (,$(rde))
    $(error FATAL ERROR: rde is not defined)
@@ -54,10 +54,13 @@ LIBPATH = $(PWD) $(LIBPATH_PRE) $(BUILDLIB) $(LIBPATHEXTRA) $(LIBSYSPATHEXTRA) $
 LIBAPPL = $(LIBS_PRE) $(LIBOTHERS) $(LIBEXTRA) $(LIBS_POST)
 LIBSYS  = $(LIBSYS_PRE) $(LIBSYSOTHERS) $(LIBSYSEXTRA) $(LIBSYS_POST)
 
-VERBOSE    := -v
+VERBOSE = -v
 ifneq (,$(findstring s,$(MAKEFLAGS)))
-VERBOSE    := 
+VERBOSE = 
 endif
+#ifneq (,$(findstring d,$(MAKEFLAGS)))
+#DEBUGMAKE = --debug
+#endif
 ifeq (,$(VERBOSE))
 .SILENT:
 endif
@@ -65,20 +68,20 @@ endif
 ## ==== Arch specific and Local/user definitions, targets and overrides
 
 ifneq (,$(wildcard $(ROOT)/Makefile.rules.mk))
-   ifneq (,$(VERBOSE))
+   ifneq (,$(DEBUGMAKE))
       $(info include $(ROOT)/Makefile.rules.mk)
    endif
    include $(ROOT)/Makefile.rules.mk
 endif
 
 ifneq (,$(wildcard $(RDE_INCLUDE)/$(BASE_ARCH)/Makefile.base_arch.mk))
-   ifneq (,$(VERBOSE))
+   ifneq (,$(DEBUGMAKE))
       $(info include $(RDE_INCLUDE)/$(BASE_ARCH)/Makefile.base_arch.mk)
    endif
    include $(RDE_INCLUDE)/$(BASE_ARCH)/Makefile.base_arch.mk
 endif
 ifneq (,$(wildcard $(RDE_INCLUDE)/$(EC_ARCH)/Makefile.ec_arch.mk))
-   ifneq (,$(VERBOSE))
+   ifneq (,$(DEBUGMAKE))
       $(info include $(RDE_INCLUDE)/$(EC_ARCH)/Makefile.ec_arch.mk)
    endif
    include $(RDE_INCLUDE)/$(EC_ARCH)/Makefile.ec_arch.mk
@@ -88,40 +91,41 @@ endif
 LOCALMAKEFILES0 := $(foreach mydir,$(SRCPATH),$(mydir)/Makefile.local.mk)
 LOCALMAKEFILES  := $(wildcard $(LOCALMAKEFILES0))
 ifneq (,$(LOCALMAKEFILES))
-   ifneq (,$(VERBOSE))
+   ifneq (,$(DEBUGMAKE))
       $(info include $(LOCALMAKEFILES))
    endif
    include $(LOCALMAKEFILES)
 endif
 
+#Override model's components Makefile.local.mk LCLPO=malib$(EC_ARCH)
+LCLPO = .
+
 ifneq (,$(wildcard $(ROOT)/Makefile.dep.mk))
-   ifneq (,$(VERBOSE))
+   ifneq (,$(DEBUGMAKE))
       $(info include $(ROOT)/Makefile.dep.mk)
    endif
    include $(ROOT)/Makefile.dep.mk
 endif
 
 ifneq (,$(wildcard $(ROOT)/Makefile.user.mk))
-   ifneq (,$(VERBOSE))
+   ifneq (,$(DEBUGMAKE))
       $(info include $(ROOT)/Makefile.user.mk)
    endif
    include $(ROOT)/Makefile.user.mk
 endif
 ifneq (,$(wildcard $(ROOT)/Makefile.user.$(COMP_ARCH).mk))
-   ifneq (,$(VERBOSE))
+   ifneq (,$(DEBUGMAKE))
       $(info include $(ROOT)/Makefile.user.$(COMP_ARCH).mk )
    endif
    include $(ROOT)/Makefile.user.$(COMP_ARCH).mk
 endif
-
-#.SILENT:
 
 ## ==== Targets
 
 .DEFAULT: 
 	rdeco -q $@ || true
 
-.PHONY: #TODO
+.PHONY: objexp #TODO
 
 #Produire les objets de tous les fichiers de l'experience qu'ils soient checkout ou non
 objexp: objects

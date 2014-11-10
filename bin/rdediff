@@ -216,7 +216,7 @@ build_diff_tree() {
 
 do_dir_diff() {
    _mydir=$1
-   cd ${BUILDDIFF}
+   cd ${ROOT}/${BUILDDIFF}
    myecho 0 +${ECDIFF} ${ECDIFFARGS} SRC_REF/${_mydir} SRC_USR/${_mydir}
    ${ECDIFF} ${ECDIFFARGS} SRC_REF/${_mydir} SRC_USR/${_mydir}
    # kdifff3patch=""
@@ -255,7 +255,7 @@ for mypath in $PATHLIST ; do
  done
 
 if [[ $dirmode == 1 ]] ; then
-   rm -rf ${BUILDDIFF}
+   rm -rf ${ROOT}/${BUILDDIFF}
 fi
 
 

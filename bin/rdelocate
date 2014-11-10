@@ -61,15 +61,17 @@ find_file() {
    fi
 }
 
-mydirlist=". $(rdevar build) $(rdevar srcpath)"
+#mydirlist=". $(rdevar build/src) $(rdevar build/pre) $(rdevar srcpath)"
+mydirlist=". $(rdevar build/src) $(rdevar srcpath)"
 if [[ $localonly == 1 ]] ; then
-  mydirlist="." 
+   mydirlist="." 
 fi
 if [[ $refonly == 1 ]] ; then
-  mydirlist="$(rdevar srcpath)" 
+   mydirlist="$(rdevar srcpath)" 
 fi
 if [[ $buildonly == 1 ]] ; then
-  mydirlist="$(rdevar build)" 
+   #mydirlist="$(rdevar build/src) $(rdevar build/pre)" 
+   mydirlist="$(rdevar build/src)" 
 fi
 
 for myfile in $files ; do

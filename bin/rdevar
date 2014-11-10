@@ -8,32 +8,44 @@
 #    xterm -hold -e "$(dirname "$0")/$(basename "$0")" -h; exit 
 #fi 
 
+MYSELF=${0##*/}
 DESC='Echo specific RDE var or path'
-USAGE="Usage: ${0##*/} [build,src,ref,local,bin,...]"
+USAGE="Usage: ${MYSELF} [-h] [-l]"
 
-if [[ x$1 == x-h || x$1 == x--help ]] ; then
-	 more <<EOF
+usage_long() {
+	 toto=$(echo -e $USAGE)
+	 more 1>&2 <<EOF
 $DESC
 
-$USAGE
+$toto
+
+Options:
+    -h, --help  : print this help
+    -l, --list  : list know var, with short match if any
 
 EOF
-    exit 0
-fi
+}
 
-# Check for required argument (becomes "mytype")
-if [[ -z "$1" ]] ; then
-   printf "$USAGE\n"
-   exit 1
-fi
-mytype=$1
-
-buildsubdirslean="src pre obj"
-buildsubdirs="${buildsubdirslean} mod lib bin"
-COMP_ARCH0=${EC_ARCH##*/}
+dolist=0
+namelist=""
+while [[ $# -gt 0 ]] ; do
+   case $1 in
+      (-h|--help) usage_long; exit 0;;
+      (-l|--list) dolist=1; shift ; break;;
+      (--) shift ; break;;
+      (-*) echo "ERROR: Option Not recognized: $1" 1>&2 ; exit 1;;
+      *) namelist="$namelist $1";;
+    esac
+    shift
+done
+namelist="$namelist $@"
 
 INCSUFFIXES=".cdk .h .hf .fh .itf90 .inc"
 SRCSUFFIXES=".c .cpp .f .ftn .ptn .f90 .f95 .f03 .ftn90 .ptn90 .cdk90 .tmpl90 .F .FOR .F90 .F95 .F03"
+
+#COMP_ARCH0=${EC_ARCH##*/}
+#hostarch=-${TRUE_HOST}-${COMP_ARCH:-${COMP_ARCH0:-unknown}}
+hostarch=-${BASE_ARCH}
 
 SRC_PATH_FILE=.exper_cour
 mysrcpath0() {
@@ -43,63 +55,41 @@ mysrcpath0() {
    echo $SRCPATH
 }
 
-flat=1
-if [[ x$flat == x1 ]] ; then
-
-   mylist="\
-:local/src=.;\
-:local/bin=bin;\
-:ref/src=ref/src;\
-:ref/bin=ref/bin;\
-:build=malib${EC_ARCH};\
-:build-=${buildsubdirslean};\
-:srcpathfile=${SRC_PATH_FILE};\
-:srcpath=$(mysrcpath0);\
-:rdesuffix/inc=$INCSUFFIXES;\
-:rdesuffix/src=$SRCSUFFIXES;\
-:rdesuffix=$INCSUFFIXES $SRCSUFFIXES;\
-:rdeinc=$rde/include/$RDE_COMPILER_VERSION\
-"
-   for item in ${buildsubdirs} ; do
-      if [[ $item != bin ]] ; then
-         mylist="${mylist};:build/${item}=malib${EC_ARCH}"
-      else
-         mylist="${mylist};:build/${item}=$(model_path storage)"
+if [[ $dolist == 1 ]] ; then
+   knownnames="rdeinc rdesuffix rdesuffix/inc rdesuffix/src build build/src build/pre build/obj build/mod build/lib build/bin local/src local/bin ref/src ref/bin srcpathfile srcpath storage"
+   myname0=$(echo $namelist | cut -d' ' -f1)
+   knownnames1=""
+   for myname in $knownnames ; do
+      myname2=$(echo $myname | sed "s|^$myname0||")
+      if [[ x$myname0 == x || x$myname2 != x$myname ]] ; then
+         knownnames1="$knownnames1 $myname"
       fi
    done
-
-else
-
-   hostarch=-${TRUE_HOST}-${COMP_ARCH:-${COMP_ARCH0:-unknown}}
-
-   mylist="\
-:local/src=src;\
-:local/bin=bin;\
-:ref/src=ref/src;\
-:ref/bin=ref/bin;\
-:build=build${hostarch};\
-:build-=${buildsubdirslean};\
-:rdesuffix/inc=$INCSUFFIXES;\
-:rdesuffix/src=$SRCSUFFIXES;\
-:rdesuffix=$INCSUFFIXES $SRCSUFFIXES;\
-:rdeinc=$rde/include/$RDE_COMPILER_VERSION\
-"
-   for item in ${buildsubdirs} ; do
-      mylist="${mylist};:build/${item}=build${hostarch}/${item}"
-   done
-
+   echo "$knownnames1"
+   exit 0
 fi
 
-if [[ x${mytype} == x-l ]] ; then
-   if [[ x$2 == xbuild ]] ; then
-      echo ${buildsubdirs}
-   elif [[ x$2 == xbuild- ]] ; then
-      echo ${buildsubdirslean}
-   else
-      echo ${mylist} | tr ';:' '\n ' | cut -d= -f2
-   fi
-elif [[ x${mytype} == x-h ]] ; then
-   echo ${mylist} | tr ';:' '\n ' | cut -d= -f1
-else
-   echo ${mylist} | tr ';' '\n' | grep :${mytype}= | cut -d= -f2
-fi
+for item in $namelist ; do
+   case $item in
+      (rdeinc)        echo $rde/include/$RDE_COMPILER_VERSION;;
+      (rdesuffix)     echo $INCSUFFIXES $SRCSUFFIXES;;
+      (rdesuffix/inc) echo $INCSUFFIXES;;
+      (rdesuffix/src) echo $SRCSUFFIXES;;
+      (build)         echo build${hostarch};;
+      (build/src)     echo malib${EC_ARCH};;
+      (build/pre)     echo malib${EC_ARCH};;
+      (build/obj)     echo malib${EC_ARCH};;
+      (build/mod)     echo malib${EC_ARCH};;
+      (build/lib)     echo malib${EC_ARCH};;
+      (build/bin)     echo build${hostarch};;
+      (local/src)     echo .;;
+      (local/bin)     echo bin;;
+      (ref/src)       echo ref/src;;
+      (ref/bin)       echo ref/bin;;
+      (srcpathfile)   echo ${SRC_PATH_FILE};;
+      (srcpath)       echo $(mysrcpath0);;
+      (storage)       echo $(rdemodel_path -l storage);;
+      (*) echo "ERROR: Unknown var name: $item" 1>&2 ; exit 1;;
+    esac
+done
+

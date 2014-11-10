@@ -26,6 +26,7 @@ EOF
 myforce=0
 myreset=0
 myrecurse=0
+DIRLIST=''
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
@@ -35,11 +36,15 @@ while [[ $# -gt 0 ]] ; do
       (--reset) myreset=1;;
       (--) shift ; break;;
       (-*) myerror "Option Not recognized: $1";;
+        *) DIRLIST="$DIRLIST $1";;
     esac
     shift
 done
-DIRLIST="$@"
-if [[ x"$DIRLIST" == x"" ]] ; then
+if [[ "x$*" != x ]] ; then
+   DIRLIST="$DIRLIST $*"
+fi
+if [[ "x$DIRLIST" == x ]] ; then
+   echo DIRLIST=$DIRLIST
    myerror "You need to provide at least one dir"
 fi
 
@@ -62,7 +67,7 @@ if [[ x$myrecurse == x1 ]] ; then
             DIRLIST1="$DIRLIST1 $mydir/$item"
          fi
       done
-      for item in $(find $mydir -type d -name '[a-zA-Z0-9]*'; do
+      for item in $(find $mydir -type d -name '[a-zA-Z0-9]*'); do
          item2=$(echo $item | sed "s|${mydir}/||")
          if [[ x${item2%%/*} != xinclude && $item != $mydir ]] ; then
             DIRLIST1="$DIRLIST1 $item"
@@ -91,7 +96,7 @@ for mydir in $DIRLIST; do
 done
 
 mystderr 1 "Setting SRCPATH=$SRCPATH $SRCPATH1"
-cat <<EOF >> $SRC_PATH_FILE
+cat >> $SRC_PATH_FILE <<EOF
 SRCPATH="$SRCPATH $SRCPATH1" 
 EOF
 

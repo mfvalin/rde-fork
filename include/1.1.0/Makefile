@@ -6,22 +6,19 @@ SHELL = /bin/bash
 
 ## ==== Basic definitions
 
-RDE_INCLUDE = $(shell rdevar rdeinc)
+RDE_INCLUDE := $(shell rdevar rdeinc)
 
 ROOT     := $(PWD)
 BUILD    := $(ROOT)/$(shell rdevar build)
-#BUILDSRC = $(ROOT)/$(shell rdevar build/src)
+BUILDPRE := $(ROOT)/$(shell rdevar build/pre)
 BUILDOBJ := $(ROOT)/$(shell rdevar build/obj)
-BUILDBIN := $(shell rdevar build/bin)
-#BUILDLIB := $(ROOT)/$(shell rdevar build/lib)
-#BUILDMOD := $(ROOT)/$(shell rdevar build/mod)
-#BUILDPRE := $(ROOT)/$(shell rdevar build/pre)
+BUILDMOD := $(ROOT)/$(shell rdevar build/mod)
+BUILDLIB := $(ROOT)/$(shell rdevar build/lib)
+BUILDBIN := $(ROOT)/$(shell rdevar build/bin)
 BINDIR   := $(BUILDBIN)
-#VPATH    = $(ROOT)/$(shell rdevar build/src)
-SRCPATH   = $(shell srcpath)
 
-INCSUFFIXES = $(shell rdevar rdesuffix/inc)
-SRCSUFFIXES = $(shell rdevar rdesuffix/src)
+INCSUFFIXES := $(shell rdevar rdesuffix/inc)
+SRCSUFFIXES := $(shell rdevar rdesuffix/src)
 
 ifeq (,$(rde))
    $(error FATAL ERROR: rde is not defined)
@@ -33,9 +30,9 @@ ifeq ($(ROOT),$(BUILD))
    $(error FATAL ERROR: BUILD == ROOT)
 endif
 
-VERBOSE    := -v
+VERBOSE = -v
 ifneq (,$(findstring s,$(MAKEFLAGS)))
-VERBOSE    := 
+VERBOSE = 
 endif
 ifeq (,$(VERBOSE))
 .SILENT:
@@ -47,17 +44,26 @@ NOPRINTDIR := --no-print-directory
 MAKE_LINKS := $(MYTIME) .rdeupdate_build_links.ksh
 MYMAKE_VARS = ROOT=$(ROOT) BINDIR=$(BINDIR)
 
+ifneq (,$(wildcard $(ROOT)/Makefile.user.root.mk))
+   ifneq (,$(DEBUGMAKE))
+      $(info include $(ROOT)/Makefile.user.root.mk)
+   endif
+   include $(ROOT)/Makefile.user.root.mk
+endif
+
 ## ==== Targets
+
+all: obj
 
 .SUFFIXES:
 
 .DEFAULT: 
-	$(MAKE) Makefile.dep.mk
+	$(MAKE) sanity
 	$(MAKE_LINKS) ;\
 	cd $(BUILDOBJ) ;\
 	$(MAKE) $(NOPRINTDIR) $@ $(MYMAKE_VARS)
 
-.PHONY: help dep rm_makefiles_dep objloc obj_forced obj_touch qclean clean distclean
+.PHONY: help sanity links dep objloc obj_forced obj_touch qclean clean rmpo distclean
 
 help:
 	@more $(rde)/etc/rde_make_help.txt
@@ -70,18 +76,26 @@ dep:
 	rm -f Makefile.dep.mk 2>/dev/null || true
 	rdemkdep -v
 
-rm_makefiles_dep:
-	rm -f Makefile.dep.mk
+sanity: Makefile Makefile.dep.mk Makefile.build.mk Makefile.rules.mk $(BUILD) $(BUILDOBJ)
+links: sanity
+	$(MAKE_LINKS)
 
+Makefile:
+	rdemkdep -v
 Makefile.dep.mk:
 	rdemkdep -v
-
-links: Makefile.dep.mk
-	$(MAKE_LINKS)
+Makefile.build.mk:
+	rdemklink $(VERBOSE)
+Makefile.rules.mk:
+	rdemklink $(VERBOSE)
+$(BUILD):
+	rdemklink $(VERBOSE)
+$(BUILDOBJ):
+	rdemklink $(VERBOSE)
 
 #Compiler uniquement les fichiers  modifies.
 qobj: obj
-obj:  Makefile.dep.mk
+obj:  sanity
 	$(MAKE_LINKS) ;\
 	cd $(BUILDOBJ) ;\
 	for myfile in $(foreach exte,$(SRCSUFFIXES),$(wildcard *$(exte))) ; do \
@@ -97,20 +111,28 @@ obj:  Makefile.dep.mk
 		fi ;\
 	done
 
-objloc: obj_forced
+objloc:
+	@echo
+	@echo "WARNING, objloc is deprecated, use: make obj"
+	@echo
 obj_forced: obj_touch obj
 obj_touch:
 	touch $(wildcard *.f* *.c* *.h* *.F* *.t*) 2>/dev/null || true
 
 qclean: clean
-clean:
-	chmod -R u+w $(BUILD)/* $(BUILD)/.[a-zA-Z0-9_-]* 2>/dev/null || true ;\
-	rm -rf $(BUILD)/* $(BUILD)/.[a-zA-Z0-9_-]* 2>/dev/null || true
-	$(MAKE_LINKS) >/dev/null 2>/dev/null || true
-distclean: 
-	chmod -R u+w $(BUILD)/* $(BUILD)/.[a-zA-Z0-9_-]* 2>/dev/null || true ;\
-	rm -rf $(BUILD)/* $(BUILD)/.[a-zA-Z0-9_-]* 2>/dev/null || true ;\
-	chmod u+w $(BINDIR)/* 2>/dev/null || true ;\
-	rm  -f $(BINDIR)/* 2>/dev/null || true
+clean: sanity
+	@echo
+	@echo "WARNING, To remove *.o *.mod               use: make rmpo"
+	@echo "........ To remove the whole build content use: make distclean"
+	@echo "........ For more details                  use: make help"
+	@echo
+rmpo: sanity
+	chmod -R u+w $(BUILDOBJ)/*.o $(BUILDMOD)/*.[Mm][Oo][Dd] 2>/dev/null || true ;\
+	rm -rf       $(BUILDOBJ)/*.o $(BUILDMOD)/*.[Mm][Oo][Dd] 2>/dev/null || true
+distclean: sanity
+	for mydir in $(BUILDPRE) $(BUILDOBJ) $(BUILDMOD) $(BUILDLIB) $(BUILDBIN) ;do\
+	   chmod u+w $${mydir}/* $${mydir}/.[a-zA-Z0-9_-]* 2>/dev/null || true ;\
+		rm -f     $${mydir}/* $${mydir}/.[a-zA-Z0-9_-]* 2>/dev/null || true ;\
+	done
 
 ## ====================================================================
