@@ -18,10 +18,10 @@ if [[ x$1 == x-h || x$1 == x--help ]] ; then
 fi
 
 findtargetfn() {
-   for item in Makefile* ; do
+   for item in Makefile* $(rdelocate Makefile.local.mk); do
       .rdefindtargetsinfile --nodep --norules $item
    done
    #find -L $BUILD/ -name 'Makefile*' -exec .rdefindtargetsinfile --nodep --norules {} \;
 }
 
-findtargetfn | sort -u
+findtargetfn | sort -u | grep -v .SILENT | grep -v .SUFFIXES 

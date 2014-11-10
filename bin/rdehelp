@@ -41,7 +41,7 @@ fi
 
 cat <<EOF
 ========================================
-RPN Code Development Environment
+RPN Code Development Environment (RDE)
 
 Basic setup  :
    rde addsrc /PATH/TO/SRC

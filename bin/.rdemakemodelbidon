@@ -1,13 +1,12 @@
 #!/bin/ksh
 
-
 DESC='Create a main/program file calling a function/subroutine'
 
 if [[ x$1 == x-h || x$1 == x--help ]] ; then
 	 more <<EOF
 $DESC
 
-USAGE: pfmakemodelbidon [-c] MAIN
+USAGE: .rdemakemodelbidon [-c] MAIN
 
    -c : creat a main in C [Default: main in Fortran]
 
