@@ -894,7 +894,7 @@ sub print_dep_rules_inv2 {
 		  }
 	 }
     for my $depname (sort keys %invdeplist) {
-		  if ($#{$invdeplist{$depname}} >= 0) {
+		  #if ($#{$invdeplist{$depname}} >= 0) {
 				print STDOUT ".PHONY: ".$depname.".invdep\n";
 				print_header($depname.".invdep",":","");
 				for $fileyext (@{$invdeplist{$depname}}) {
@@ -907,7 +907,7 @@ sub print_dep_rules_inv2 {
 					 }
 				}
 				print STDOUT "\n";
-		  }
+		  #}
 	 }
 }
 
@@ -1078,9 +1078,23 @@ preproc_suppfile($suppress_errors_file);
 
 preproc_srcfiles_overrides();
 preproc_srcfiles();
-print STDERR "Process_files " if ($msg>=3);
+my @objkeys = keys %LISTOBJECT;
+my $cntall = 0;
+my $cntprecent = 0;
+my $cntprecent1 = 0;
+my $cntstep = int($#objkeys/100);
+print STDERR "Process_files ", if ($msg>=3);
 while(my $filename = search_undone_file()) {
-	 print STDERR "." if ($msg>=3);
+	 if ($msg>=3) {
+		  $cntall++;
+		  $cntprecent1 = int(100.*$cntall/$#objkeys);
+		  if (int($cntprecent1/10) > int($cntprecent/10)) {
+				$cntprecent = $cntprecent1;
+				print STDERR $cntprecent,"% ";
+		  } elsif ($cntall % $cntstep == 0) {
+				print STDERR ".";
+		  }
+	 }
     process_file($filename);
 }
 print STDERR "\n" if ($msg>=3);
