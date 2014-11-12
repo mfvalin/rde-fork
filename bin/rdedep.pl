@@ -15,7 +15,7 @@ my $item_count = 0;
 my $ext = undef;
 my @listfile;
 my %listdir = ();
-my @includelist;
+my @includelist = ();
 my $use_strict = undef;
 my $deep_include = undef;
 my $soft_restriction = undef; # soft_restriction = disable warning if 2 headers files have the same name
@@ -121,11 +121,15 @@ suppress_errors_file sample:
 
 print STDERR "
 $myname \\
-   -v=$msg --strict=$use_strict --deep-include=$deep_include --soft-restriction=$soft_restriction \\
-   --flat_layout=$flat_layout --short_target_names=$short_target_names \\
-   --exp=$export_list --out=$output_file \\
-   --side_dir_inc=$side_dir_inc --any_inc=$anywhere_inc \\
-   --includes=$include_dirs \\
+    --supp=$suppress_errors_file \\
+    --exp=$export_list \\
+    --out=$output_file \\
+    --includes=$include_dirs \\ 
+    --override_dir=$override_dir \\
+    --side_dir_inc=$side_dir_inc --any_inc=$anywhere_inc  -v=$msg \\\\
+    --strict=$use_stric       --deep-include=$deep_include --soft-restriction=$soft_restriction \\
+    --flat_layout=$flat_layout --short_target_names=$short_target_names \\
+    SRC_LIST
    ...
    \n" if ($msg>=3);
 
@@ -555,6 +559,7 @@ sub process_file_for_include {
         # print STDERR "Bad Extension $file->{NAMEyEXT}: $tmp_dir : $include_path : $exte\n" if ($msg>=4);
         return 1;
     }
+    ## if (!exists $LISTOBJECT{"$path$filn.$exte"}) {
     if (! -f "$path$filn.$exte") {
         if (!("$path$filn.$exte" ~~ @outside_tree_list)) {
             my $path1 = find_inc_file($file,$path,"$filn.$exte");
@@ -571,6 +576,7 @@ sub process_file_for_include {
             return 1;
         }
     }
+    ##}
 
     # Add file in the database if it's not in yet and if the file really exists.
     $LISTOBJECT{"$path$filn.$exte"} = new SRCFile({path => $path, filename => $filn, extension => $exte}) 

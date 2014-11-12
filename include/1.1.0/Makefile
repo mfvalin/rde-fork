@@ -7,6 +7,7 @@ SHELL = /bin/bash
 ## ==== Basic definitions
 
 RDE_INCLUDE := $(shell rdevar rdeinc)
+RDE_DEP_SUPP_FILE := $(rde)/etc/rdedep.supp
 
 ROOT     := $(PWD)
 BUILD    := $(ROOT)/$(shell rdevar build)
@@ -74,16 +75,16 @@ help:
 
 dep: 
 	rm -f Makefile.dep.mk 2>/dev/null || true
-	rdemkdep -v
+	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
 
 sanity: Makefile Makefile.dep.mk Makefile.build.mk Makefile.rules.mk $(BUILD) $(BUILDOBJ)
 links: sanity
 	$(MAKE_LINKS)
 
 Makefile:
-	rdemkdep -v
+	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
 Makefile.dep.mk:
-	rdemkdep -v
+	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
 Makefile.build.mk:
 	rdemklink $(VERBOSE)
 Makefile.rules.mk:
