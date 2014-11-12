@@ -2,14 +2,17 @@
 import os,string,optparse,difflib
 from glob import glob
 
-def listfiles(folder):
+def listfiles(folder,recurse=True):
     for root, folders, files in os.walk(folder,followlinks=True):
-        for filename in files:
-            yield os.path.join(root, filename)
+        if recurse or root==folder:
+            for filename in files:
+                yield os.path.join(root, filename)
 
 if __name__ == "__main__":
-    usage = "usage: \n\t%prog PATH [-type l/d/f] "
+    usage = "usage: \n\t%prog [-R] NAME PATHLIST"
     parser = optparse.OptionParser(usage=usage)
+    parser.add_option("-R","--recurse",dest="recurse",action="store_true",
+                      help="Recursively search down list of PATH sub dirs",metavar="KEY")
     (options,args) = parser.parse_args()
     myname = args[0]
     mydirlist = args[1:]
@@ -17,7 +20,7 @@ if __name__ == "__main__":
     for mydir in mydirlist:
         filelist = []
         mymatches0 = []
-        for myfile in listfiles(mydir):
+        for myfile in listfiles(mydir,options.recurse):
             mybasename = os.path.basename(myfile)
             (myname0, myext) = os.path.splitext(mybasename)
             if mybasename[0:4] != '.rm.' and myext not in ('.o','.mod'):

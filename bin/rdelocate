@@ -19,6 +19,7 @@ Options:
     -l, --local : locate in locally modified src only
     -r, --ref   : locate in src ref dirs only
     -b, --build : locate in build dir only
+    -R  --recurse : recursively look into SRCPATH dirs
 EOF
 }
 
@@ -26,12 +27,15 @@ files=""
 localonly=0
 refonly=0
 buildonly=0
+myrecurse=0
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help)  usage_long; exit 0;;
+      (-v|--verbose) ((verbose=verbose+1));;
       (-l|--local) localonly=1;;
       (-r|--ref)   refonly=1;;
       (-b|--build) buildonly=1;;
+      (-R|--recurse) myrecurse=1;;
       (--) shift ; break;;
       (-*) myerror "Option Not recognized: $1";;
         *) files="$files $1"
@@ -55,7 +59,7 @@ find_file() {
    _mydir=$2
    if [[ -f ${_mydir}/${_myfile} ]] ; then
       myecho 0 ${_mydir}/${_myfile}
-   else
+   elif [[ $myrecurse == 1 ]] ; then
       _mypath="$(find ${followlinks} ${_mydir} -name ${_myfile})"
       myecho 0 ${_mypath}
    fi

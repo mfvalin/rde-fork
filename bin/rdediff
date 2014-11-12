@@ -3,7 +3,7 @@
 
 DESC='Diff locally modified src compared to library version'
 USAGE="USAGE: ${MYSELF} [-h] [-v] [-l|--list|--status] [-d|--dirmode] [--diff=DIFF_TOOL] [DIFFARGS] [FILES]"
-BUILDDIFF=$(rdevar build)/tmp-diff-$$
+BUILDDIFF=${ROOT}/$(rdevar build)/tmp-diff-$$
 
 usage_long() {
 	 toto=$(echo -e $USAGE)
@@ -18,6 +18,7 @@ Options:
     -l, --list, --status : print list of modified / removed / new files
     -d, --dirmode        : Do a directory diff if possible
                            DEFAULT: file by file diff
+    -R  --recurse        : recursively look into SRCPATH dirs
     --diff=DIFF_TOOL     : diff tool to use 
                            DEFAULT: \${ECDIFF:-diff} (${ECDIFF:-diff})
     DIFFARGS             : arguments to pass to the diff tool
@@ -30,6 +31,7 @@ EOF
 mystatus=0
 listmode=0
 dirmode=0
+myrecurse=0
 ECDIFF=${ECDIFF:-diff}
 ECDIFFARGS=${ECDIFFARGS}
 PATHLIST=""
@@ -43,6 +45,7 @@ while [[ $# -gt 0 ]] ; do
       (-v|--verbose) ((verbose=verbose+1));;
       (-l|--list|--status) listmode=1;;
       (-d|--dirmode) dirmode=1;;
+      (-R|--recurse) myrecurse=1;;
       (--diff=*) ECDIFF=${1#*=};;
       (-*) ECDIFFARGS="${ECDIFFARGS} $1";;
         *) PATHLIST="$PATHLIST $1";;
@@ -68,7 +71,7 @@ find_src_file() {
    cd ${1}
    if [[ -f ${_myfile} ]] ; then
       echo ${_myfile}
-   else
+   elif [[ $myrecurse == 1 ]] ; then
       _mypath="$(find ${followlinks} . -name ${_myfile} -type f 2>/dev/null)"
       echo ${_mypath#./}
    fi
@@ -82,7 +85,7 @@ find_src_file_list() {
    cd ${1}
    if [[ -f ${_myfile} ]] ; then
       echo ${_myfile}
-   elif [[ -d ${_myfile} ]] ; then
+   elif [[ -d ${_myfile} && $myrecurse == 1 ]] ; then
       _mypath="$(find ${followlinks} ${_myfile} -type f 2>/dev/null)"
       for _myfile2 in $_mypath ; do
          mytype="$(echo ${_myfile2##*.} | cut -c1 | tr 'cfhiCFHIt' 'fffffffff')"
@@ -90,7 +93,7 @@ find_src_file_list() {
             echo ${_myfile2#./}
          fi
       done
-   else
+   elif [[ $myrecurse == 1 ]] ; then
       _mypath="$(find ${followlinks} . -name ${_myfile} -type f 2>/dev/null)"
       echo ${_mypath#./}
    fi
@@ -216,14 +219,9 @@ build_diff_tree() {
 
 do_dir_diff() {
    _mydir=$1
-   cd ${ROOT}/${BUILDDIFF}
+   cd ${BUILDDIFF}
    myecho 0 +${ECDIFF} ${ECDIFFARGS} SRC_REF/${_mydir} SRC_USR/${_mydir}
    ${ECDIFF} ${ECDIFFARGS} SRC_REF/${_mydir} SRC_USR/${_mydir}
-   # kdifff3patch=""
-   # if [[ x${ECDIFF} == xkdiff3 ]] ; then
-   #    kdifff3patch="SRC_USR/${_mydir}"
-   # fi
-   # ${ECDIFF} ${ECDIFFARGS} SRC_REF/${_mydir} SRC_USR/${_mydir} $kdifff3patch
    cd ${ROOT}
 }
 
@@ -255,7 +253,7 @@ for mypath in $PATHLIST ; do
  done
 
 if [[ $dirmode == 1 ]] ; then
-   rm -rf ${ROOT}/${BUILDDIFF}
+   rm -rf ${BUILDDIFF}
 fi
 
 

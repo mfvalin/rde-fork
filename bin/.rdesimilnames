@@ -17,6 +17,7 @@ $toto
 Options:
     -h, --help    : print this help
     -v, --verbose : verbose mode
+    -R  --recurse : recursively search SRCPATH sub dirs
     NAME          : SEARCH for files similar to name
 
 EOF
@@ -25,10 +26,12 @@ EOF
 rde_exit_if_not_rdetopdir
 
 mydirlist="$(mysrcpath)"
+myrecurse=''
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
       (-v|--verbose) ((verbose=verbose+1));;
+      (-R|--recurse) myrecurse=-R;;
       (--) shift ; break;;
       (-*) myerror "Option Not recognized: $1";;
         *) break;;
@@ -37,7 +40,7 @@ while [[ $# -gt 0 ]] ; do
     shift
 done
 myfile="$1"
-filelist="$(.rdesimilnames.py $myfile $mydirlist)"
+filelist="$(.rdesimilnames.py $myrecurse $myfile $mydirlist)"
 if [[ -n "$filelist" ]] ; then
    myecho 1 "Maybe you meant:"
    myecho 0 "$filelist"
