@@ -64,36 +64,41 @@ rde_exit_if_not_rdetopdir
 followlinks=''
 SRC_USR=$(pwd)/.
 
-# find_src_file MYDIR MYFILE
-find_src_file() {
-   _myfile=$2
-   _here=$(pwd)
-   cd ${1}
-   if [[ -f ${_myfile} ]] ; then
-      echo ${_myfile}
-   elif [[ $myrecurse == 1 ]] ; then
-      _mypath="$(find ${followlinks} . -name ${_myfile} -type f 2>/dev/null)"
-      echo ${_mypath#./}
-   fi
-   cd ${_here}
-}
+# # find_src_file MYDIR MYFILE
+# find_src_file() {
+#    _myfile=$2
+#    _here=$(pwd)
+#    cd ${1}
+#    if [[ -f ${_myfile} ]] ; then
+#       echo ${_myfile}
+#    elif [[ $myrecurse == 1 ]] ; then
+#       _mypath="$(find ${followlinks} . -name ${_myfile} -type f 2>/dev/null)"
+#       echo ${_mypath#./}
+#    fi
+#    cd ${_here}
+# }
 
 # find_src_file_list MYDIR MYFILE
 find_src_file_list() {
    _myfile=$2
+   _myrecurse=${3:-1}
    _here=$(pwd)
    cd ${1}
    if [[ -f ${_myfile} ]] ; then
       echo ${_myfile}
-   elif [[ -d ${_myfile} && $myrecurse == 1 ]] ; then
-      _mypath="$(find ${followlinks} ${_myfile} -type f 2>/dev/null)"
+   elif [[ -d ${_myfile} ]] ; then
+      if [[ $_myrecurse == 1 ]] ; then
+         _mypath="$(find ${followlinks} ${_myfile} -type f 2>/dev/null)"
+      else
+         _mypath="$(find.py ${followlinks} ${_myfile} --type f --maxdepth 0 2>/dev/null)"
+      fi
       for _myfile2 in $_mypath ; do
          mytype="$(echo ${_myfile2##*.} | cut -c1 | tr 'cfhiCFHIt' 'fffffffff')"
          if [[ x$mytype == xf ]] ; then
             echo ${_myfile2#./}
          fi
       done
-   elif [[ $myrecurse == 1 ]] ; then
+   elif [[ $_myrecurse == 1 ]] ; then
       _mypath="$(find ${followlinks} . -name ${_myfile} -type f 2>/dev/null)"
       echo ${_mypath#./}
    fi
@@ -194,7 +199,7 @@ build_diff_tree() {
       mkdir -p ${BUILDDIFF}/${_item} 2>/dev/null || true
    done
    for mypath in $PATHLIST ; do
-      _myfilelist="$(find_src_file_list ${SRC_USR} $mypath)"   
+      _myfilelist="$(find_src_file_list ${SRC_USR} $mypath $myrecurse)"   
       for _myfile in ${_myfilelist} ; do
          file_usr="$(rdelocate -l ${_myfile} 2>/dev/null)"
          file_ref="$(rdelocate -r ${_myfile} 2>/dev/null)"
@@ -230,7 +235,7 @@ if [[ $dirmode == 1 ]] ; then
 fi
 
 for mypath in $PATHLIST ; do
-   myfilelist="$(find_src_file_list ${SRC_USR} $mypath)"
+   myfilelist="$(find_src_file_list ${SRC_USR} $mypath $myrecurse)"
    if [[ x"${myfilelist}" == x ]] ; then
       myecho 1 "No file for: $mypath"
    else
