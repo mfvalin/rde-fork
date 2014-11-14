@@ -27,14 +27,14 @@ EOF
 
 mystatus=0
 verbose=1
+myquiet=''
 myforce=0
-myquiet=0
 mytouch=0
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
       (-v|--verbose) ((verbose=verbose+1));;
-      (-q|--quiet) ((myquiet=1));;
+      (-q|--quiet) ((quiet=1));;
       (-f|--force) myforce=1;;
       (-t|--touch) mytouch=1;;
       (--) shift ; break;;
@@ -46,8 +46,9 @@ while [[ $# -gt 0 ]] ; do
 done
 PATHLIST="$PATHLIST $@"
 SRCPATH="$(mysrcpath)"
-if [[ $myquiet == 1 ]] ; then
+if [[ $quiet == 1 ]] ; then
    verbose=0
+   myquiet='-q'
 fi
 
 #rde_exit_if_not_rdetopdir
@@ -68,7 +69,7 @@ find_src() {
 for myfile in $PATHLIST ; do
    mypathlist="$(find_src $myfile -L 2>/dev/null)"
    if [[ x${mypathlist} == x ]] ; then
-      mysimfile="$(.rdesimilnames $myfile)"
+      mysimfile="$(.rdesimilnames $myquiet $myfile)"
       mynbsim="$(echo $(echo $mysimfile | wc -w))"
       if [[ x$mynbsim == x1 && ${mysimfile%.*} ==  $myfile ]] ; then
          mypathlist="$(find_src $mysimfile -L 2>/dev/null)"

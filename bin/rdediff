@@ -184,7 +184,7 @@ do_file_diff() {
 }
 
 build_diff_tree() {
-   set -x
+   #set -x
    #cd ${SRC_USR}
    #_myfilelist="$(find . -type f)"
    #_mydirlist="$(find . -type d)"

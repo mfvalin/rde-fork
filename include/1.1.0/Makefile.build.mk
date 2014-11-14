@@ -123,7 +123,7 @@ endif
 ## ==== Targets
 
 .DEFAULT: 
-	rdeco -q $@ || true
+	@rdeco -q $@ || true
 
 .PHONY: objexp #TODO
 
