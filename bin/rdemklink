@@ -1,5 +1,6 @@
 #!/bin/ksh
 #
+
 . .rdebase.inc.dot
 
 DESC='Create dir and links for RPN Code Dev Env'
@@ -31,14 +32,20 @@ while [[ $# -gt 0 ]] ; do
     shift
 done
 
-if [[ $verbose -gt 0 ]] ; then
-   set -x
-fi
-
+set -x
 STORAGE=$(rdevar storage)
 BUILD=$(rdevar build)
 BUILDOBJ=$(rdevar build/obj)
 BUILDBIN=$(rdevar build/bin)
+set +x
+
+if [ -z "${STORAGE}" -o -z "${BUILD}" -o -z "${BUILDOBJ}" -o -z "${BUILDBIN}" ] ; then
+   myerror "Storage var not defined, check your \$storage_model var: $storage_model"
+fi
+
+if [[ $verbose -gt 0 ]] ; then
+   set -x
+fi
 
 mkdir -p $STORAGE
 if [[ $myforce == 1 ]] ; then 
