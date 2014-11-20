@@ -46,6 +46,7 @@ SRCSUFFIXES=".c .cpp .f .ftn .ptn .f90 .f95 .f03 .ftn90 .ptn90 .cdk90 .tmpl90 .F
 #COMP_ARCH0=${EC_ARCH##*/}
 #hostarch=-${TRUE_HOST}-${COMP_ARCH:-${COMP_ARCH0:-unknown}}
 hostarch=-${BASE_ARCH}
+hostarch2=-${EC_ARCH}
 
 SRC_PATH_FILE=.exper_cour
 mysrcpath0() {
@@ -76,12 +77,13 @@ for item in $namelist ; do
       (rdesuffix/inc) echo $INCSUFFIXES;;
       (rdesuffix/src) echo $SRCSUFFIXES;;
       (build)         echo build${hostarch};;
-      (build/src)     echo malib${EC_ARCH};;
-      (build/pre)     echo malib${EC_ARCH};;
-      (build/obj)     echo malib${EC_ARCH};;
-      (build/mod)     echo malib${EC_ARCH};;
-      (build/lib)     echo malib${EC_ARCH};;
+      (build/src)     echo build${hostarch2};;
+      (build/pre)     echo build${hostarch2};;
+      (build/obj)     echo build${hostarch2};;
+      (build/mod)     echo build${hostarch2};;
+      (build/lib)     echo build${hostarch2};;
       (build/bin)     echo build${hostarch};;
+      (build/run)     echo build${hostarch};;
       (local/src)     echo .;;
       (local/bin)     echo bin;;
       (ref/src)       echo ref/src;;
