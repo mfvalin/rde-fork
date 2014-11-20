@@ -789,6 +789,23 @@ sub print_dep_rules {
             #print STDOUT "\n";
             print_header("$file->{FILENAME}.o",":","$file->{PATHyNAME}.o") if ($short_target_names and $file->{FULLPATH_SRC} and !$flat_layout);
             print STDOUT "\n";
+
+				@current_dependencies_list = ();
+				my $ext2 = undef;
+				$ext2 = 'f' if ($file->{EXTENSION} == 'ftn');
+				$ext2 = 'f90' if ($file->{EXTENSION} == 'ftn90');
+				$ext2 = 'f90' if ($file->{EXTENSION} == 'cdk90');
+				if ($ext2) {
+					 if ($flat_layout) {
+						  print_header("$file->{FILENAME}.$ext2",":",$file->{NAMEyEXT});
+					 } else {
+						  print_header("$file->{PATHyNAME}.$ext2",":","$filename");
+					 }
+					 rec_print_dependencies(\%LISTOBJECT, $filename);
+					 #print STDOUT "\n";
+					 print_header("$file->{FILENAME}.$ext2",":","$file->{PATHyNAME}.$ext2") if ($short_target_names and $file->{FULLPATH_SRC} and !$flat_layout);
+					 print STDOUT "\n";
+				}
         }
     }
 }

@@ -90,45 +90,60 @@ RBUILD3NOMPI_C = \
 	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
 
 .ptn.o:
+	#.ptn.o:
 	rm -f $*.f
-	$(FC) $< 
+	$(FC) $< && touch $*.f
 
 .ptn.f:
+	#.ptn.f:
 	rm -f $*.f
 	$(FTNC) $<
 
 .ftn.o:
+	#.ftn.o:
 	rm -f $*.f
-	$(FC) $<
+	$(FC) $< && touch $*.f
 .ftn.f:
+	#.ftn.f:
 	rm -f $*.f
 	$(FTNC) $<
 .f90.o:
+	#.f90.o:
 	$(FC) $<
 .F90.o:
+	#.F90.o:
 	$(FC) $<
 .F95.o:
+	#.F95.o:
 	$(FC) $<
 .F03.o:
+	#.F03.o:
 	$(FC) $<
 .f.o:
+	#.f.o:
 	$(FC) $<
 .ftn90.o:
+	#.ftn90.o:
 	rm -f $*.f90
-	$(FC) $<
+	$(FC) $< && touch $*.f90
 .cdk90.o:
-	$(FC) $<
+	#.cdk90.o:
+	$(FC) $< && touch $*.f90
 .cdk90.f90:
+	#.cdk90.f90:
 	rm -f $*.f90
 	$(FTNC) $<
 .ftn90.f90:
+	#.ftn90.f90:
 	rm -f $*.f90
 	$(FTNC) $<
 
 .c.o:
+	#.c.o:
 	$(CC) $<
 
 .s.o:
+	#.s.o:
 	$(AS) -c $(CPPFLAGS) $(ASFLAGS) $<
 
 
