@@ -4,9 +4,11 @@
 
 DEFINE = -DLINUX_X86_64
 
-LIBMASS  = massv_wrap
 LAPACK   = lapack
 BLAS     = blas
+
+#LIBMASS  = massv_wrap
+LIBMASS = modelutils_massvp4
 
 LIBSYSOTHERS = $(LIBMASS) $(LAPACK) $(BLAS) $(HPCSPERF)
 ## ====================================================================

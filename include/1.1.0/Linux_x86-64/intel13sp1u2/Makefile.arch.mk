@@ -1,9 +1,8 @@
 ## ====================================================================
 ## File: LOCALBUILD/include/Makefile.ec_arch.mk (Linux_x86-64/intel13sp1u2)
 ##
-#MKL         = -mkl
-OPTF_MODULE = -module $(BUILDMOD)
-#OPTIL       = 3
-# -fp-model strict
-FFLAGSYS = -diag-disable 7713
+
+#EC_MKL = -mkl
+#RDE_OPTF_MODULE = -module $(BUILDMOD)
+RDE_FFLAGS = -diag-disable 7713 -fp-model strict -g -traceback
 ## ====================================================================

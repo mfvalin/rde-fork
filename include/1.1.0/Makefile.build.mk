@@ -31,7 +31,7 @@ OPTIL  = 2
 OMP    = -openmp
 MPI    = -mpi
 
-LFLAGS = $(OMP) $(EC_MKL)
+RDE_LFLAGS = $(OMP) $(EC_MKL)
 
 #BLAS     = blas
 FORCE_RMN_VERSION_RC = 

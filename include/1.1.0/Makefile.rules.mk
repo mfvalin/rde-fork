@@ -39,9 +39,9 @@ RBUILD  = s.compile
 FCOMPF = 
 CCOMPF =
 COMPF = 
-FC = $(RCOMPIL) -abi $(ABI)  -defines "=$(DEFINE)" -O $(OPTIL) -optf="$(FFLAGS)" $(COMPF) $(FCOMPF) -src
-CC = $(RCOMPIL) -abi $(ABI)  -defines "=$(DEFINE)" -O $(OPTIL) -optc="$(CFLAGS)" $(COMPF) $(CCOMPF) -src
-FTNC = $(RCOMPIL) -abi $(ABI)  -defines "=$(DEFINE)" -optf="$(FFLAGS) $(CPPFLAGS)" -P $(COMPF) $(FCOMPF) -src
+FC = $(RCOMPIL) -abi $(ABI)  -defines "=$(DEFINE)" -O $(OPTIL) -optf="$(RDE_FFLAGS) $(FFLAGS) $(RDE_OPTF_MODULE)" $(COMPF) $(FCOMPF) -src
+CC = $(RCOMPIL) -abi $(ABI)  -defines "=$(DEFINE)" -O $(OPTIL) -optc="$(RDE_CFLAGS) $(CFLAGS)" $(COMPF) $(CCOMPF) -src
+FTNC = $(RCOMPIL) -abi $(ABI)  -defines "=$(DEFINE)" -optf="$(RDE_FFLAGS) $(FFLAGS) $(CPPFLAGS)" -P $(COMPF) $(FCOMPF) -src
 PTNC = sed 's/^[[:blank:]].*PROGRAM /      SUBROUTINE /' | sed 's/^[[:blank:]].*program /      subroutine /'  > $*.f
 
 RBUILD3MPI = \
@@ -55,7 +55,7 @@ RBUILD3MPI = \
 		-librmn $(RMN_VERSION) \
 		-libsys $(LIBSYS) \
 		-codebeta $(CODEBETA) \
-		-optf "=$(LFLAGS)"  || status=1 ;\
+		-optf "=$(RDE_LFLAGS) $(LFLAGS)"  || status=1 ;\
 	rm -f bidon_$${MAINSUBNAME}.o 2>/dev/null || true ;\
 	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
 
@@ -70,7 +70,7 @@ RBUILD3NOMPI = \
 		-librmn $(RMN_VERSION) \
 		-libsys $${COMM_stubs1} $(LIBSYS) \
 		-codebeta $(CODEBETA) \
-		-optf "=$(LFLAGS)"  || status=1 ;\
+		-optf "=$(RDE_LFLAGS) $(LFLAGS)"  || status=1 ;\
 	rm -f bidon_$${MAINSUBNAME}.o 2>/dev/null || true ;\
 	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
 
@@ -85,7 +85,7 @@ RBUILD3NOMPI_C = \
 		-librmn $(RMN_VERSION) \
 		-libsys $${COMM_stubs1} $(LIBSYS) \
 		-codebeta $(CODEBETA) \
-		-optc "=$(LCLAGS)"  || status=1 ;\
+		-optc "=$(RDE_LCFLAGS) $(LCFLAGS)"  || status=1 ;\
 	rm -f bidon_$${MAINSUBNAME}_c.o 2>/dev/null || true ;\
 	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
 
