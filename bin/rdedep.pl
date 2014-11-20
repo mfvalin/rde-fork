@@ -932,6 +932,21 @@ sub print_dep_rules_inv2 {
 				print STDOUT "\n";
 		  #}
 	 }
+    for my $depname (sort keys %invdeplist) {
+		  #if ($#{$invdeplist{$depname}} >= 0) {
+				print_header("INVDEP_LIST_".$depname,"=","");
+				for $fileyext (@{$invdeplist{$depname}}) {
+					 if ($fileyext ~~  /(.*\/)*(.*)[.]([^.]*$)/) {
+						  my $filn = ($2 ? $2 : "");
+						  my $exte = ($3 ? $3 : "");
+						  if ($SRCFile::TYPE_LIST{lc $exte} == "COMPILABLE") {
+								print_item($filn.".o");
+						  }
+					 }
+				}
+				print STDOUT "\n";
+		  #}
+	 }
 }
 
 sub rec_fill_dirdeplist2 {

@@ -90,24 +90,28 @@ myrm_mod() {
     done
 }
 
-## get_dep_list filename.ftn90
-get_dep_list() {
-	 _filename=$1
-	 _deplist=""
-    #TODO: update
-	 # if [[ -r make_cdk ]] ; then
-	 #     _name=${_filename%.*}
-	 #     _ext=${_filename##*.}
-	 #     _filename2=${_name}.a${_ext}
-	 #     _deplist=`make -f ${ROOT}/make_cdk -n ${_filename2} | cut -d" " -f2`
-	 # fi
-	 echo ${_deplist}
+## get_invdep_list filename.ftn90
+get_invdep_list() {
+   make -s -f ${ROOT}/Makefile.dep.mk echo_mydepvar MYVAR=INVDEP_LIST_${1}
 }
 
 
 ## myrm_dep filename.ftn90
-myrm_dep() {
+myrm_invdep() {
 	 _filename=$1
+	 _invdeplist="$(get_invdep_list ${_filename})"
+    for _myobjfile in ${_invdeplist} ; do
+       #/bin/rm -f ${_myobjfile%.*}.*
+       for _myext in $SRCSUFFIXES ; do
+          if [[ -f ${_myobjfile%.*}${_myext} && ! -L ${_myobjfile%.*}${_myext} ]] ; then
+             myrm_obj ${_myobjfile%.*}${_myext}
+             myrm_pre ${_myobjfile%.*}${_myext}
+             myrm_mod ${_myobjfile%.*}${_myext}
+             /bin/rm -f ${_myobjfile%.*}${_myext}
+             myecho 2 "++ rm ${_myobjfile%.*}${_myext} #for ${_filename}"
+          fi
+       done
+    done
     #TODO: update
 	 # _deplist="$(get_dep_list ${_filename})"
 	 # for _item in ${_deplist} ; do
@@ -143,8 +147,13 @@ mylist="$(ls $SRC_PATH_FILE Makefile.build.mk Makefile.rules.mk Makefile.dep.mk 
 BUILDSRC=$(rdevar build/src)
 cd ${BUILDSRC}
 
+mylist2="$(ls $SRC_PATH_FILE Makefile.build.mk Makefile.rules.mk Makefile.dep.mk Makefile.user.mk $VALIDEXTWILD 2>/dev/null | sort)"
+
 ## Checking changes status
 echo $mylist > $TMPDIR/.rdesrcusrls
+echo $mylist2 > $TMPDIR/.rdesrcusrls2
+diff $TMPDIR/.rdesrcusrls2 .rdesrcusrls > /dev/null 2>&1 \
+&& \
 diff $TMPDIR/.rdesrcusrls .rdesrcusrls > /dev/null 2>&1
 if [[ x$? == x0 && $myforce == 0 ]] ; then
    /bin/rm -f Makefile
@@ -158,10 +167,11 @@ myecho 2 "++ Updating build links"
 for item in * ; do
 	 if [[ -L $item ]] ; then
 		  if [[ ! -f $ROOT/$item ]] ; then
+            myecho 2 "++ removed $item"
 				myrm_obj $item
 				myrm_pre $item
 				myrm_mod $item
-				myrm_dep $item #when $item is .cdk or .cdk90... need to remove .o, .mod of files having it as a dependency, use make_cdk for that
+				myrm_invdep $item #when $item is .cdk or .cdk90... need to remove .o, .mod of files having it as a dependency, use make_cdk for that
 				/bin/rm -f $item
 		  fi
 	 fi
@@ -173,6 +183,7 @@ myrm_empty
 for item in $mylist ; do
 	 /bin/rm -f $item
 	 ln -s ${ROOT}/$item $item
+    myecho 2 "++ ln -s $item"
 done
 
 /bin/rm -f Makefile
