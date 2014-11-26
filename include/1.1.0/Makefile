@@ -107,7 +107,7 @@ obj:  sanity
 	done ;\
 	for myfile in $(foreach exte,$(INCSUFFIXES) $(SRCSUFFIXES),$(wildcard *$(exte))) ; do \
 		if [[ -L $${myfile} ]] ; then \
-			$(MAKE) $(NOPRINTDIR) $${myfile}.invdep $(MYMAKE_VARS) ;\
+			$(MAKE) $(NOPRINTDIR) _INVDEP_.$${myfile} $(MYMAKE_VARS) ;\
 			if [[ $${?} != 0 ]] ; then exit 1 ; fi ;\
 		fi ;\
 	done
