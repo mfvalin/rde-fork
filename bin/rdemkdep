@@ -56,6 +56,9 @@ DEP_FLAT=--flat
 #PERLPROF = perl -d:DProf $(rde)/bin/
 
 SRCPATH="$(mysrcpath)"
+if [[ x"$SRCPATH" == x ]] ; then
+   SRCPATH="$(pwd)"
+fi
 
 ${MYTIME} ${PERLPROF}rdedep.pl ${VERBOSE} ${DEP_DUP_OK} ${DEP_FLAT} \
    --deep-include \

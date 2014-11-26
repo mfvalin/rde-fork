@@ -792,9 +792,8 @@ sub print_dep_rules {
 
 				@current_dependencies_list = ();
 				my $ext2 = undef;
-				$ext2 = 'f' if ($file->{EXTENSION} == 'ftn');
-				$ext2 = 'f90' if ($file->{EXTENSION} == 'ftn90');
-				$ext2 = 'f90' if ($file->{EXTENSION} == 'cdk90');
+				$ext2 = 'f'   if ($file->{EXTENSION} eq 'ftn');
+				$ext2 = 'f90' if ($file->{EXTENSION} eq 'ftn90' or $file->{EXTENSION} eq 'cdk90');
 				if ($ext2) {
 					 if ($flat_layout) {
 						  print_header("$file->{FILENAME}.$ext2",":",$file->{NAMEyEXT});
@@ -924,7 +923,7 @@ sub print_dep_rules_inv2 {
 					 if ($fileyext ~~  /(.*\/)*(.*)[.]([^.]*$)/) {
 						  my $filn = ($2 ? $2 : "");
 						  my $exte = ($3 ? $3 : "");
-						  if ($SRCFile::TYPE_LIST{lc $exte} == "COMPILABLE") {
+						  if ($SRCFile::TYPE_LIST{lc $exte} eq "COMPILABLE") {
 								print_item($filn.".o");
 						  }
 					 }
@@ -939,7 +938,7 @@ sub print_dep_rules_inv2 {
 					 if ($fileyext ~~  /(.*\/)*(.*)[.]([^.]*$)/) {
 						  my $filn = ($2 ? $2 : "");
 						  my $exte = ($3 ? $3 : "");
-						  if ($SRCFile::TYPE_LIST{lc $exte} == "COMPILABLE") {
+						  if ($SRCFile::TYPE_LIST{lc $exte} eq "COMPILABLE") {
 								print_item($filn.".o");
 						  }
 					 }
@@ -1120,12 +1119,12 @@ my @objkeys = keys %LISTOBJECT;
 my $cntall = 0;
 my $cntprecent = 0;
 my $cntprecent1 = 0;
-my $cntstep = int($#objkeys/100);
+my $cntstep = int(($#objkeys+1)/100)+1;
 print STDERR "Process_files ", if ($msg>=3);
 while(my $filename = search_undone_file()) {
 	 if ($msg>=3) {
 		  $cntall++;
-		  $cntprecent1 = int(100.*$cntall/$#objkeys);
+		  $cntprecent1 = int(100.*$cntall/($#objkeys+1));
 		  if (int($cntprecent1/10) > int($cntprecent/10)) {
 				$cntprecent = $cntprecent1;
 				print STDERR $cntprecent,"% ";
