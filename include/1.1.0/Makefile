@@ -59,7 +59,7 @@ all: obj
 .SUFFIXES:
 
 .DEFAULT: 
-	$(MAKE) sanity
+	$(MAKE) $(NOPRINTDIR) sanity
 	$(MAKE_LINKS) ;\
 	cd $(BUILDOBJ) ;\
 	$(MAKE) $(NOPRINTDIR) $@ $(MYMAKE_VARS)
