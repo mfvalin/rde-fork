@@ -13,7 +13,7 @@ my %msgl = ("q", 0 , "e", 1 ,"w", 2 ,"v", 3 ,"vv", 4, "vvv", 5 ) ;
 my $items_per_line = 4 ;   # number of items per Makefile line
 my $item_count = 0;
 my $ext = undef;
-my @listfile;
+my @listfile = ();
 my %listdir = ();
 my @includelist = ();
 my $use_strict = undef;
@@ -71,10 +71,11 @@ GetOptions('help'   => \$help,
     )
     or $help=1;
 
-@listfile = (@ARGV);
+@listfile = @ARGV if ($#ARGV >= 0);
+#print STDERR "listfile: $#listfile",@listfile,"\n";
 if (!$help and !($#listfile+1)) {
     $help=1;
-    print STDERR "ERRROR: you must provide a list of targets\n"
+    print STDERR "\nERRROR: you must provide a list of targets\n"
 }
 if ($help) {
     print STDERR "
@@ -126,11 +127,10 @@ $myname \\
     --out=$output_file \\
     --includes=$include_dirs \\ 
     --override_dir=$override_dir \\
-    --side_dir_inc=$side_dir_inc --any_inc=$anywhere_inc  -v=$msg \\\\
+    --side_dir_inc=$side_dir_inc --any_inc=$anywhere_inc  -v=$msg \\
     --strict=$use_stric       --deep-include=$deep_include --soft-restriction=$soft_restriction \\
     --flat_layout=$flat_layout --short_target_names=$short_target_names \\
-    SRC_LIST
-   ...
+    ",join(" ", @listfile),"
    \n" if ($msg>=3);
 
 #########################################################################
@@ -252,7 +252,7 @@ sub preproc_suppfile {
     if ($suppfile) {
         print STDERR "Processing suppress_errors_file: $suppfile\n" if ($msg >= 3);
         if (!open(INPUT,"<", $suppfile)) {
-            print STDERR "ERROR: Can't open supp file, ignoring: ".$suppfile."\n";
+            print STDERR "\nERROR: Can't open supp file, ignoring: ".$suppfile."\n";
         } else {
             while (<INPUT>) {
                 if ($_ =~ /^[\s]*module_missing[\s]+([^\s]+)/i) {
@@ -281,7 +281,8 @@ sub preproc_srcfiles_overrides {
 		  my $file = "$_" ;
 		  $file =~ s/,v$// ;
 		  $file =~ s/[\s]+// ;
-		  $file = File::Spec->abs2rel(canonpath($file), "./") if ($file =~ /^\//);
+		  #$file = File::Spec->abs2rel(canonpath($file), "./") if ($file =~ /^\//);
+		  $file = canonpath($file);
 		  if ($file =~  /(.*\/)*(.*)[.]([^.]*$)/) {
 				my $filn = ($2 ? $2 : "");
 				my $exte = ($3 ? $3 : "");
@@ -299,16 +300,17 @@ sub preproc_srcfiles_overrides {
 		  print STDERR "\n";
 	 }
 }
-	  
+
 sub preproc_srcfiles {
+	 #print STDERR "\npreproc_srcfiles $#listfile",@listfile,"\n";
     for (@listfile){
         if (-d $_) {
-            print STDERR "Pre-process: '$_' $dup_ok\n" if ($msg >= 3);
+            print STDERR "Pre-processD: '$_' $dup_ok\n" if ($msg >= 3);
             for (glob "$_/*") {
                 pre_process_file($_,$dup_ok,0);
             }
         } else {
-            print STDERR "Pre-process: '$_'\n" if ($msg >= 3);
+            print STDERR "Pre-processF: '$_'\n" if ($msg >= 3);
             for (glob "$_") {
                 pre_process_file($_,$dup_ok,0);
             }
@@ -317,14 +319,14 @@ sub preproc_srcfiles {
 
     $dup_ok = 1;
     if ($local_dir) {
-		  print STDERR "Pre-process: Local dir\n" if ($msg >= 3);
+		  print STDERR "Pre-processL: Local dir\n" if ($msg >= 3);
         for (glob "./*") {
             pre_process_file($_,$dup_ok);
         }
     }
 
 	 for (keys %override_files) {
-		  print STDERR "Pre-process: '$_' ($override_files{$_})\n" if ($msg >= 3);
+		  print STDERR "Pre-processO: '$_' ($override_files{$_})\n" if ($msg >= 3);
 		  pre_process_file($override_files{$_},$dup_ok,1);
 	 }
 }
@@ -343,8 +345,9 @@ sub pre_process_file {
     my $file = "$entry" ;
     $file =~ s/,v$// ;
     $file =~ s/[\s]+// ;
-    $file = File::Spec->abs2rel(canonpath($file), "./") if ($file =~ /^\//);
-    
+    #$file = File::Spec->abs2rel(canonpath($file), "./") if ($file =~ /^\//);
+	 $file = canonpath($file);
+
     return 1 if ($file !~  /(.*\/)*(.*)[.]([^.]*$)/);
     #return 1 if (exists($LISTOBJECT{$file})); 
     
@@ -357,27 +360,31 @@ sub pre_process_file {
 
     my $duplicated_filename1 = find_same_filename2($path, "$filn.$exte");
 
+	 #print STDERR "pre_process_file: $filn.$exte ($path) ($duplicated_filename1)\n";
+
     if ($duplicated_filename1 and ($_dup_ok or $_is_override)) {
+		  #print STDERR "DELETE dup: $duplicated_filename1 (for $path$filn.$exte)\n";
         delete $LISTOBJECT{$duplicated_filename1};
     }
 
+	 #print STDERR "NEW1: $filn.$exte ($path)\n";
     $LISTOBJECT{"$path$filn.$exte"} = new SRCFile({path => $path, filename => $filn, extension => $exte});
 
 	 if (!$_is_override) {
     if ($duplicated_filename1 and $_dup_ok) {
-        print STDERR "WARNING: $duplicated_filename1 was replaced by $path$filn.$exte : ".$LISTOBJECT{"$path$filn.$exte"}->{FILENAME}.$LISTOBJECT{"$path$filn.$exte"}->{STATUS};
+        print STDERR "\nWARNING: $duplicated_filename1 was replaced by $path$filn.$exte : ".$LISTOBJECT{"$path$filn.$exte"}->{FILENAME}.$LISTOBJECT{"$path$filn.$exte"}->{STATUS};
     }
     
     # Error handler
     my $duplicated_filename2 = find_same_output("$path$filn.$exte");
     if ($_dup_ok) {
         if ($msg >= 1) {
-            print STDERR "WARNING: using 2 files with the same name $duplicated_filename1 with $path$filn.$exte\n" if ($duplicated_filename1);
-            print STDERR  "WARNING: using 2 files ($duplicated_filename2 and $path$filn.$exte) that will produce the same object file ($filn.o)\n" if ($duplicated_filename2);
+            print STDERR "\nWARNING: using 2 files with the same name $duplicated_filename1 with $path$filn.$exte\n" if ($duplicated_filename1);
+            print STDERR  "\nWARNING: using 2 files ($duplicated_filename2 and $path$filn.$exte) that will produce the same object file ($filn.o)\n" if ($duplicated_filename2);
         }
     } else {
-        die "ERR: using 2 files with the same name $duplicated_filename1 with $path$filn.$exte" if ($duplicated_filename1);
-        die "ERR: using 2 files ($duplicated_filename2 and $path$filn.$exte) that will produce the same object file ($filn.o)\n" if ($duplicated_filename2);        
+        die "\nERROR1: using 2 files with the same name $duplicated_filename1 with $path$filn.$exte" if ($duplicated_filename1);
+        die "\nERROR2: using 2 files ($duplicated_filename2 and $path$filn.$exte) that will produce the same object file ($filn.o)\n" if ($duplicated_filename2);        
     }
 	 }
     # print STDERR "process: '$entry' dupok=$_dup_ok ; path=$path ; filen=$filn ; exte=$exte ; dup=$duplicated_filename1\n" if ($msg >= 5);
@@ -393,6 +400,12 @@ sub find_same_filename {
     my $cmp_file = $LISTOBJECT{$_[0]};
     return undef if ($soft_restriction and !$cmp_file->{COMPILABLE});
     for (keys %LISTOBJECT) {
+		  if (
+            ($LISTOBJECT{$_}->{NAMEyEXT} eq $cmp_file->{NAMEyEXT}) and
+            ($LISTOBJECT{$_}->{FULLPATH_SRC} ne $cmp_file->{FULLPATH_SRC})) {
+				print STDERR "\n$LISTOBJECT{$_}->{NAMEyEXT}: $LISTOBJECT{$_}->{FULLPATH_SRC} != $cmp_file->{FULLPATH_SRC}\n"; 
+		  }
+		  
         return $_ if (
             ($LISTOBJECT{$_}->{NAMEyEXT} eq $cmp_file->{NAMEyEXT}) and
             ($LISTOBJECT{$_}->{FULLPATH_SRC} ne $cmp_file->{FULLPATH_SRC}));
@@ -454,7 +467,7 @@ sub search_undone_file {
 sub process_file {
     my $filename = $_[0];
     print STDERR "Looking into $filename\n" if ($msg >= 5);
-    open(INPUT,"<", $filename) or print STDERR "ERROR: Can't open file '".$filename."\n"; #  if ($msg >= 1 )
+    open(INPUT,"<", $filename) or print STDERR "\nERROR: Can't open file '".$filename."\n"; #  if ($msg >= 1 )
     my $file = $LISTOBJECT{$filename};
     my $line_number = 0;
 
@@ -538,11 +551,14 @@ sub process_file_for_include {
     my $include_path = "";
 
     if ($tmp_dir =~ /^\.\.\//) {
-        $include_path = File::Spec->abs2rel(canonpath("$file->{FULLPATH_SRC}/$tmp_dir"), "./");
+        #$include_path = File::Spec->abs2rel(canonpath("$file->{FULLPATH_SRC}/$tmp_dir"), "./");
+		  $include_path = canonpath("$file->{FULLPATH_SRC}/$tmp_dir");
     } elsif (-f canonpath("$file->{FULLPATH_SRC}/$tmp_dir")) {
-        $include_path = File::Spec->abs2rel(canonpath("$file->{FULLPATH_SRC}/$tmp_dir"), "./");
+        #$include_path = File::Spec->abs2rel(canonpath("$file->{FULLPATH_SRC}/$tmp_dir"), "./");
+		  $include_path = canonpath("$file->{FULLPATH_SRC}/$tmp_dir");
     } else {
-        $include_path = File::Spec->abs2rel( canonpath($tmp_dir), "./");
+        #$include_path = File::Spec->abs2rel( canonpath($tmp_dir), "./");
+		  $include_path = canonpath("$tmp_dir");
     }
     # print STDERR "Missing $file->{NAMEyEXT}: $tmp_dir\n" if (!$include_path and $msg>=4);
     
@@ -550,6 +566,8 @@ sub process_file_for_include {
         # print STDERR "Outside $file->{NAMEyEXT}: $tmp_dir : $include_path\n" if ($msg>=4);
         return 1;
     }
+
+	 #print STDERR "process_file_for_include: $file->{PATHyNAME} : $tmp_dir : $include_path\n";
 
     my $path = ($1 ? $1 : "");
     my $filn = ($2 ? $2 : "");
@@ -560,7 +578,7 @@ sub process_file_for_include {
         return 1;
     }
     ## if (!exists $LISTOBJECT{"$path$filn.$exte"}) {
-    if (! -f "$path$filn.$exte") {
+    if ((! -f "$path$filn.$exte") or ($anywhere_inc and !exists $LISTOBJECT{"$path$filn.$exte"})) {
         if (!("$path$filn.$exte" ~~ @outside_tree_list)) {
             my $path1 = find_inc_file($file,$path,"$filn.$exte");
             if (!$path1) {
@@ -579,19 +597,21 @@ sub process_file_for_include {
     ##}
 
     # Add file in the database if it's not in yet and if the file really exists.
-    $LISTOBJECT{"$path$filn.$exte"} = new SRCFile({path => $path, filename => $filn, extension => $exte}) 
-        if (!exists $LISTOBJECT{"$path$filn.$exte"});
+	 if (!exists $LISTOBJECT{"$path$filn.$exte"}) {
+		  #print STDERR "NEW2: $filn.$exte ($path)\n";
+		  $LISTOBJECT{"$path$filn.$exte"} = new SRCFile({path => $path, filename => $filn, extension => $exte});
+	 }
 
     # Force the file to not be analysed.
     $LISTOBJECT{"$path$filn.$exte"}->{STATUS} = 1 
          if (!$deep_include);
 
     # Error handler
-    die "ERR: using 2 files with the same name $duplicated_filename with $path$filn.$exte\n" 
+    die "\nERROR3: using 2 files with the same name $duplicated_filename with $path$filn.$exte\n" 
         if ($duplicated_filename = find_same_filename("$path$filn.$exte"));
-    die "ERR: using 2 files ($duplicated_filename and $path$filn.$exte) that will produce the same object file ($filn.o)\n" 
+    die "\nERROR4: using 2 files ($duplicated_filename and $path$filn.$exte) that will produce the same object file ($filn.o)\n" 
         if ($duplicated_filename = find_same_output("$path$filn.$exte"));
-    die "ERR: cannot include compilable file ($tmp_dir) in $tmp_dir while using strict mode\n" 
+    die "\nERROR5: cannot include compilable file ($tmp_dir) in $tmp_dir while using strict mode\n" 
         if ($use_strict and $LISTOBJECT{"$path$filn.$exte"}->{COMPILABLE});
 
     # Add to dependencies, if not already there
@@ -606,10 +626,11 @@ sub process_file_for_include {
 # OUT: 1 if the extension is valid, undef otherwise.
 #------------------------------------------------------------------------
 sub has_legal_extension {
-    my $search_extension = lc $_[0];
-    for (keys(%SRCFile::TYPE_LIST)) {
-        return 1 if $_ eq $search_extension;
-    }
+    # my $search_extension = lc $_[0];
+    # for (keys(%SRCFile::TYPE_LIST)) {
+    #     return 1 if $_ eq $search_extension;
+    # }
+	 return 1 if (exists($SRCFile::TYPE_LIST{lc $_[0]}));
     return undef;
 }
 
@@ -620,7 +641,7 @@ sub check_circular_dep {
     print STDERR "Checking for Circular dependencies\n" if ($msg >= 3);
     for (keys %LISTOBJECT) {
         if ($LISTOBJECT{$_}->find_dependencies($_)) { 
-            print STDERR "ERR: Circular dependencies in $_ FAILED\n";
+            print STDERR "\nERROR: Circular dependencies in $_ FAILED\n";
             exit 1; 
         }
     }
@@ -855,7 +876,7 @@ sub rec_print_dependencies {
 # 				@current_dependencies_list = ();
 # 				rec_fill_dirdeplist($filename, $filename);				
 # 		  } else {
-# 		  		print STDERR "ERROR: Inv Dep for non flat layout is not yet implements\n";
+# 		  		print STDERR "\nERROR: Inv Dep for non flat layout is not yet implements\n";
 # 		  		return 0;
 # 		  }
 # 	 }
@@ -906,7 +927,7 @@ sub print_dep_rules_inv2 {
 				@current_dependencies_list = ();
 				rec_fill_dirdeplist2($filename, $filename);				
 		  } else {
-		  		print STDERR "ERROR: Inv Dep for non flat layout is not yet implements\n";
+		  		print STDERR "\nERROR: Inv Dep for non flat layout is not yet implements\n";
 		  		return 0;
 		  }
 	 }
@@ -1106,7 +1127,7 @@ sub export_obj_list {
 
 if ($output_file) {
     print STDERR "Redirecting STDOUT to $output_file\n" if ($msg>=3);
-    open(STDOUT,">", "$output_file") or die "ERROR: Can't redirect STDOUT\n";
+    open(STDOUT,">", "$output_file") or die "\nERROR: Can't redirect STDOUT\n";
 }
 @includelist = split(':',$include_dirs) if ($include_dirs);
 push @includelist, $override_dir if $override_dir;
@@ -1120,7 +1141,7 @@ my $cntall = 0;
 my $cntprecent = 0;
 my $cntprecent1 = 0;
 my $cntstep = int(($#objkeys+1)/100)+1;
-print STDERR "Process_files ", if ($msg>=3);
+print STDERR "Process_files\n", if ($msg>=3);
 while(my $filename = search_undone_file()) {
 	 if ($msg>=3) {
 		  $cntall++;
@@ -1128,8 +1149,9 @@ while(my $filename = search_undone_file()) {
 		  if (int($cntprecent1/10) > int($cntprecent/10)) {
 				$cntprecent = $cntprecent1;
 				print STDERR $cntprecent,"% ";
+				print STDERR "\n" if ($msg>=5);
 		  } elsif ($cntall % $cntstep == 0) {
-				print STDERR ".";
+				print STDERR "." if ($msg<5);
 		  }
 	 }
     process_file($filename);

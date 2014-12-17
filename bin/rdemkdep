@@ -18,6 +18,7 @@ Options:
     -h, --help         : print this help
     -v, --verbose      : verbose mode
     -f, --force        : 
+        --dup_ok       : No Error on duplicate file names
         --supp         : override default rdedep.pl error suppression file
                          Default: $DEP_SUPP_FILE
     FILES              : space separated list of src files or dir
@@ -25,17 +26,19 @@ Options:
 EOF
 }
 
-rde_exit_if_not_rdetopdir
-
 mystatus=0
 myforce=0
 DEP_SUPP_FILE=$rde/etc/rdedep.supp
 VERBOSE=''
 PERLPROF=''
+DEP_DUP_OK=''
+DEP_FLAT=--flat
+#DEP_FLAT=--short
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
       (-v|--verbose) ((verbose=verbose+1)) ; VERBOSE="${VERBOSE} -v";;
+      (--dup_ok) DEP_DUP_OK=--dup_ok ;;
       (--supp) DEP_SUPP_FILE="/dev/null" ;
          if [[ x$2 != x && x$(echo $2 | cut -c1) != x- ]] ; then
             shift ; DEP_SUPP_FILE=$1
@@ -47,28 +50,34 @@ while [[ $# -gt 0 ]] ; do
     shift
 done
 
-rde_exit_if_not_rdetopdir
-
-
-DEP_FLAT=--flat
-#DEP_FLAT=--short
-#DEP_DUP_OK=--dup_ok
-#PERLPROF = perl -d:DProf $(rde)/bin/
+#rde_exit_if_not_rdetopdir
 
 SRCPATH="$(mysrcpath)"
+OVERRIDEDIR="--override_dir=$ROOT"
 if [[ x"$SRCPATH" == x ]] ; then
    SRCPATH="$(pwd)"
+   OVERRIDEDIR=""
+fi
+if [[ x$OVERRIDEDIR != x ]] ; then
+   OVERRIDEDIR2=$(true_path ${OVERRIDEDIR#*=})
+   for item in $SRCPATH ; do
+      if [[ x$OVERRIDEDIR2 == x$(true_path $item) ]] ; then
+         #TODO: should remove it from srcpath instead
+         OVERRIDEDIR=""
+      fi
+   done
 fi
 
 ${MYTIME} ${PERLPROF}rdedep.pl ${VERBOSE} ${DEP_DUP_OK} ${DEP_FLAT} \
    --deep-include \
    --any_inc \
    --soft-restriction \
-   --supp=$DEP_SUPP_FILE \
+   --supp="$DEP_SUPP_FILE" \
    --libext=.a.fl \
    --out=Makefile.dep.mk \
-   --override_dir=$ROOT \
+   $OVERRIDEDIR \
    $SRCPATH
+mystatus=$?
 
 #TODO: remove --any when code is clean from cross dir includes
 #TODO:   --inc="$(echo $SRCPATH | sed 's| |/include:|g')
