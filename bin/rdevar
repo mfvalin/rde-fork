@@ -51,7 +51,7 @@ hostarch2=-${EC_ARCH}
 SRC_PATH_FILE=.exper_cour
 mysrcpath0() {
    if [[ -r $SRC_PATH_FILE ]] ; then
-      . $SRC_PATH_FILE
+      . ./$SRC_PATH_FILE
    fi
    echo $SRCPATH
 }
