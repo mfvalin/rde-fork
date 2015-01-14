@@ -1,26 +1,67 @@
 #!/usr/bin/env python
-import os,optparse
+import os,optparse,fnmatch,re
 
-def listfiles(folder,ftype,lfollow,maxdepth=-1):
+RESTRICTED_FNAME = '.restricted'
+BASE_ARCH = os.environ['BASE_ARCH']
+EC_ARCH = os.environ['EC_ARCH']
+
+def listfiles(folder,ftype,namepattern,lfollow,lrestrict,lnodotdir,maxdepth=-1):
+    restricteddir = set()
+    folderdepth = len(folder.split('/'))
     for root, folders, files in os.walk(folder,followlinks=lfollow):
+        #print root
         nottoodeep=True
+        isrestricted=False
+        isname=True
         if maxdepth > 0:
-             nottoodeep = (len(root.split('/'))<=maxdepth)
-        if nottoodeep:
+             #nottoodeep = (len(root.split('/'))-folderdepth<=maxdepth)
+             nottoodeep = (len(root.split('/'))-folderdepth<maxdepth)
+        ## renamepattern = ''
+        ## if namepattern:
+        ##     renamepattern = fnmatch.translate(namepattern)
+        ##     #isname = fnmatch.fnmatch(,namepattern):
+        if lrestrict:
+            rfname = os.path.join(root,RESTRICTED_FNAME)
+            if os.path.isfile(rfname):
+                isrestricted = True
+                if os.stat(rfname).st_size != 0:
+                    myfile = open(rfname, "r")
+                    for line in myfile:
+                        ## if re.match(BASE_ARCH, line) or re.match(EC_ARCH, line):
+                        if line.strip() in (BASE_ARCH,EC_ARCH,BASE_ARCH+':',EC_ARCH+':'):
+                            isrestricted = False
+                            break
+                    myfile.close()
+            if isrestricted:
+                restricteddir.add(root)
+        if lnodotdir:
+            name0 = root.split('/')[-1]
+            if not name0:
+                name0 = root.split('/')[-2]
+            isrestricted = (name0[0] == '.')
+            if isrestricted:
+                restricteddir.add(root)
+        if (lrestrict or lnodotdir) and (not isrestricted) :
+            for item in restricteddir:
+                isrestricted = re.match(item,root)
+                if isrestricted:
+                    break
+        if nottoodeep and (not isrestricted) and (isname):
             if ftype == 'f':
                 for filename in files:
                     yield os.path.join(root, filename)
             elif ftype == 'd':
-                for filename in folders:
-                    yield os.path.join(root, filename)
+                yield root
             elif ftype == 'l':
                 for filename in folders + files:
                     mypath = os.path.join(root, filename)
                     if os.path.islink(mypath):
                         yield mypath
             else:
-                for filename in folders + files:
+                for filename in files:
                     yield os.path.join(root, filename)
+                ## for filename in folders + files:
+                ##     yield os.path.join(root, filename)
 
 if __name__ == "__main__":
     usage = "usage: \n\t%prog PATH [-type l/d/f] "
@@ -28,14 +69,29 @@ if __name__ == "__main__":
     parser.add_option("-t","--type",
                       dest="ftype",default="",
                       help="Filter by type [fdl]")
+    parser.add_option("","--name",
+                      dest="namepattern",default="",
+                      help="Filter by pattern")
     parser.add_option("-L","--follow-links",
                       action="store_true",dest="lfollow",default=False,
                       help="Follow links")
+    parser.add_option("","--restricted",
+                      action="store_true",dest="lrestrict",default=False,
+                      help="Skip restricted dirs")
+    parser.add_option("","--nodotdir",
+                      action="store_true",dest="lnodotdir",default=False,
+                      help="Skip hidden dirs")
     parser.add_option("","--maxdepth",
                       dest="maxdepth",default="-1",
                       help="Descend at most levels of directories below the command line arguments")
     (options,args) = parser.parse_args()
     for mydir in args:
-        for myfile in listfiles(mydir,options.ftype,options.lfollow==1,int(options.maxdepth)+1):
-            print(myfile)
+        for myfile in listfiles(mydir,options.ftype,options.namepattern,options.lfollow==1,options.lrestrict,options.lnodotdir,int(options.maxdepth)+1):
+            if options.namepattern:
+                if fnmatch.fnmatch(myfile.split('/')[-1],options.namepattern):
+                    print(myfile)
+            else:
+                print(myfile)
     ## print("p=%s, l=%s, t=%s, o=%s, a=%s" % (args[0], options.lfollow, options.ftype, repr(options),repr(args)))
+
+ 
