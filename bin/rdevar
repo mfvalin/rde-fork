@@ -21,7 +21,7 @@ $toto
 
 Options:
     -h, --help  : print this help
-    -l, --list  : list know var, with short match if any
+    -l, --list  : list known vars, with short match if any
 
 EOF
 }
@@ -55,9 +55,22 @@ mysrcpath0() {
    fi
    echo $SRCPATH
 }
+mysrcpath0_recurse() {
+   if [[ -r $SRC_PATH_FILE ]] ; then
+      . ./$SRC_PATH_FILE
+   fi
+   #echo ${SRCPATH_RECURSE:-0}
+   echo ${SRCPATH_RECURSE}
+}
+mysrcpath0_r() {
+   if [[ -r $SRC_PATH_FILE ]] ; then
+      . ./$SRC_PATH_FILE
+   fi
+   echo ${SRCPATH_R}
+}
 
 if [[ $dolist == 1 ]] ; then
-   knownnames="rdeinc rdesuffix rdesuffix/inc rdesuffix/src build build/src build/pre build/obj build/mod build/lib build/bin local/src local/bin ref/src ref/bin srcpathfile srcpath storage"
+   knownnames="rdeinc rdesuffix rdesuffix/inc rdesuffix/src build build/src build/pre build/obj build/mod build/lib build/bin local/src local/bin ref/src ref/bin srcpathfile srcpath srcpath_recurse srcpath_r storage"
    myname0=$(echo $namelist | cut -d' ' -f1)
    knownnames1=""
    for myname in $knownnames ; do
@@ -90,6 +103,8 @@ for item in $namelist ; do
       (ref/bin)       echo ref/bin;;
       (srcpathfile)   echo ${SRC_PATH_FILE};;
       (srcpath)       echo $(mysrcpath0);;
+      (srcpath_recurse) echo $(mysrcpath0_recurse);;
+      (srcpath_r)     echo $(mysrcpath0_r);;
       (storage)       echo $(rdemodel_path -l storage);;
       (*) echo "ERROR: Unknown var name: $item" 1>&2 ; exit 1;;
     esac
