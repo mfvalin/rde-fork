@@ -166,7 +166,8 @@ myecho 2 "++ Updating build links"
 ## Remove dangling links and obsolete files
 for item in * ; do
 	 if [[ -L $item ]] ; then
-		  if [[ ! -f $ROOT/$item ]] ; then
+		  #if [[ ! -f $ROOT/$item ]] ; then
+		  if [[ ! -f $(readlink $item) ]] ; then
             myecho 2 "++ removed $item"
 				myrm_obj $item
 				myrm_pre $item
