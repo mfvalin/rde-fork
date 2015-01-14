@@ -4,5 +4,5 @@
 
 #EC_MKL = -mkl
 #RDE_OPTF_MODULE = -module $(BUILDMOD)
-RDE_FFLAGS = -diag-disable 7713 -fp-model strict -g -traceback
+RDE_FFLAGS = -diag-disable 7713 -diag-disable 10212 -fp-model strict -g -traceback
 ## ====================================================================

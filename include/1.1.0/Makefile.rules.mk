@@ -46,7 +46,7 @@ PTNC = sed 's/^[[:blank:]].*PROGRAM /      SUBROUTINE /' | sed 's/^[[:blank:]].*
 
 RBUILD3MPI = \
 	status=0 ;\
-	.pfmakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
+	.rdemakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
 	$(MAKE) bidon_$${MAINSUBNAME}.o >/dev/null || status=1 ; \
 	rm -f bidon_$${MAINSUBNAME}.f90 ;\
 	$(RBUILD) -obj bidon_$${MAINSUBNAME}.o -o $@ $(OMP) $(MPI) \
@@ -61,7 +61,7 @@ RBUILD3MPI = \
 
 RBUILD3NOMPI = \
 	status=0 ;\
-	.pfmakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
+	.rdemakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
 	$(MAKE) bidon_$${MAINSUBNAME}.o >/dev/null || status=1 ; \
 	rm -f bidon_$${MAINSUBNAME}.f90 ;\
 	$(RBUILD) -obj bidon_$${MAINSUBNAME}.o -o $@ $(OMP) \
@@ -76,7 +76,7 @@ RBUILD3NOMPI = \
 
 RBUILD3NOMPI_C = \
 	status=0 ;\
-	.pfmakemodelbidon -c $${MAINSUBNAME} > bidon_$${MAINSUBNAME}_c.c ; \
+	.rdemakemodelbidon -c $${MAINSUBNAME} > bidon_$${MAINSUBNAME}_c.c ; \
 	$(MAKE) bidon_$${MAINSUBNAME}_c.o >/dev/null || status=1 ; \
 	rm -f bidon_$${MAINSUBNAME}_c.c ;\
 	$(RBUILD) -obj bidon_$${MAINSUBNAME}_c.o -o $@ $(OMP) -conly \

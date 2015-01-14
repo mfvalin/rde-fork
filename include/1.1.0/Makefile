@@ -7,7 +7,9 @@ SHELL = /bin/bash
 ## ==== Basic definitions
 
 RDE_INCLUDE := $(shell rdevar rdeinc)
+ifeq (,$(RDE_DEP_SUPP_FILE))
 RDE_DEP_SUPP_FILE := $(rde)/etc/rdedep.supp
+endif
 
 ROOT     := $(PWD)
 BUILD    := $(ROOT)/$(shell rdevar build)
