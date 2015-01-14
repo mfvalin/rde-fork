@@ -1,6 +1,6 @@
 #!/usr/bin/perl
-require 5.010_001;
-#require 5.10.1;
+#use 5.010_001;
+use 5.008_008;
 #use warnings;        # Avertissement des messages d'erreurs
 #use strict;          # Verification des declarations
 use File::Spec::Functions;
@@ -13,8 +13,8 @@ my %msgl = ("q", 0 , "e", 1 ,"w", 2 ,"v", 3 ,"vv", 4, "vvv", 5 ) ;
 my $items_per_line = 4 ;   # number of items per Makefile line
 my $item_count = 0;
 my $ext = undef;
-my @listfile = ();
-my %listdir = ();
+#my @listfile = ();
+my %listfile = ();
 my @includelist = ();
 my $use_strict = undef;
 my $deep_include = undef;
@@ -26,18 +26,37 @@ my $dup_ok = undef;
 my $side_dir_inc = undef;
 my $anywhere_inc = undef;
 my $export_list = undef;
-my @current_dependencies_list = ();
+#my @current_dependencies_list = ();
+my %current_dependencies_list = ();
 my @outside_tree_list = ();
 my %module_missing = ();
 my %module_list = ();
 my %module_missing_ignored = ();
 my %include_missing_ignored = ();
 my %LISTOBJECT = ( ); # Hash of SRCFile object with filename, path and extension as the key
-#my @override_files = ();
 my %override_files = ();
 my %dirdeplist = ();
 my %invdeplist = ();
 my $myname  = "rdedep.pl";
+
+#TODO: replace @arrays by %hash or $hash_ref ; %hash = map { $_ => 1 } @array;
+#TODO: replace %hash by $hash_ref
+
+#########################################################################
+# Function for older perl versions
+#########################################################################
+sub mysmart {
+	 my $item = shift;
+	 my $myarray_ref = shift;
+ 	 # return ($item ~~ @$myarray_ref); #perl version >= 5.10.1 only
+	 return 0+ grep { $_ eq $item } @$myarray_ref;
+
+	 # use List::MoreUtils qw/any/
+	 # my $found = any { /\bsomething\b/      } @array_of_strings;
+	 # my $found = any { $_ == 42             } @array_of_numbers;
+	 # my $found = any { $_->isa('obj_type')  } @array;
+	 # my $found = any { $_->can('tupitar')   } @array;
+}
 
 #########################################################################
 # Process command line arguments
@@ -45,6 +64,7 @@ my $myname  = "rdedep.pl";
 my $help = 0;
 my $output_file='';
 my $include_dirs='';
+my $top_dirs='';
 my $suppress_errors_file='';
 my $defaultlibname = 'all';
 my $defaultlibext = '.a';
@@ -59,6 +79,7 @@ GetOptions('help'   => \$help,
            'any_inc' => \$anywhere_inc,
            'includes=s' => \$include_dirs,
            # 'local' => \$local_dir,
+			  'topdirs=s' => \$top_dirs,
            'strict' => \$use_strict,
            'deep-include' => \$deep_include,
            'soft-restriction' => \$soft_restriction,
@@ -71,9 +92,11 @@ GetOptions('help'   => \$help,
     )
     or $help=1;
 
-@listfile = @ARGV if ($#ARGV >= 0);
+#@listfile = @ARGV if ($#ARGV >= 0);
+%listfile = map { $_ => 1 } @ARGV if ($#ARGV >= 0);
 #print STDERR "listfile: $#listfile",@listfile,"\n";
-if (!$help and !($#listfile+1)) {
+#if (!$help and !($#listfile+1)) {
+if (!$help and (keys %listfile)<1) {
     $help=1;
     print STDERR "\nERRROR: you must provide a list of targets\n"
 }
@@ -85,7 +108,7 @@ Usage: $myname [-v|--quiet] \\
                [--supp=suppress_errors_file]  \\ 
                [--exp=output_of_produced_file] [--out=outfile] \\
                [--includes=list_of_inc_dirs]  \\ 
-               [--side_dir_inc] [--any_inc] \\
+               [--side_dir_inc] [--any_inc] [--topdirs=list_of_top_dirs]\\
                [--strict] [--deep-include] [--soft-restriction] \\
                [--flat_layout] [--short_target_names] \\
                list_of_files_dirs
@@ -99,7 +122,9 @@ Options:
    --includes         : Search for include file in the listed dir, do not process these dir
    --any_inc          : add all dir in list_of_files_dirs to the include_path
    --side_dir_inc     : 
-
+   --topdirs          : make list of files for each top dirs (OBJECTS_name var)
+                        the list of file is a subset from the list_of_files_dirs
+                        [colon separated]
    --strict           : Error on include 'myfile' if myfile is compilable
    --deep-include     : Deep search for dependencies, recusive include
    --soft-restriction : Allow to include files to have the same name
@@ -126,12 +151,14 @@ $myname \\
     --exp=$export_list \\
     --out=$output_file \\
     --includes=$include_dirs \\ 
+    --topdirs=$top_dirs \\
     --override_dir=$override_dir \\
     --side_dir_inc=$side_dir_inc --any_inc=$anywhere_inc  -v=$msg \\
     --strict=$use_stric       --deep-include=$deep_include --soft-restriction=$soft_restriction \\
     --flat_layout=$flat_layout --short_target_names=$short_target_names \\
-    ",join(" ", @listfile),"
+    ",join(" ", keys %listfile),"
    \n" if ($msg>=3);
+#    ",join(" ", @listfile),"
 
 #########################################################################
 # List of function and object definition
@@ -248,7 +275,7 @@ $myname \\
 # @preproc_suppfile: Process suppress_errors_file
 #------------------------------------------------------------------------
 sub preproc_suppfile {
-    my $suppfile = $_[0];
+    my $suppfile = shift;
     if ($suppfile) {
         print STDERR "Processing suppress_errors_file: $suppfile\n" if ($msg >= 3);
         if (!open(INPUT,"<", $suppfile)) {
@@ -303,7 +330,8 @@ sub preproc_srcfiles_overrides {
 
 sub preproc_srcfiles {
 	 #print STDERR "\npreproc_srcfiles $#listfile",@listfile,"\n";
-    for (@listfile){
+    #for (@listfile){
+    for (keys %listfile){
         if (-d $_) {
             print STDERR "Pre-processD: '$_' $dup_ok\n" if ($msg >= 3);
             for (glob "$_/*") {
@@ -340,7 +368,9 @@ sub preproc_srcfiles {
 #------------------------------------------------------------------------
 sub pre_process_file {
     return 1 if (! -f "$_[0]");
-    my ($entry, $_dup_ok, $_is_override) = @_;
+	 my $entry = shift;
+	 my $_dup_ok = shift;
+	 my $_is_override = shift;
 
     my $file = "$entry" ;
     $file =~ s/,v$// ;
@@ -490,7 +520,7 @@ sub process_file {
                 ${$file->{DEPENDENCIES}}{$include_filename} = $LISTOBJECT{$include_filename} if (!exists ${$file->{DEPENDENCIES}}{$include_filename} );
                 #print STDERR "$filename +: $modname \n";
             } else {
-                push @{$file->{UNSOLVED_MODULE}}, $modname; 
+                push @{$file->{UNSOLVED_MODULE}}, $modname if (!mysmart($modname,\@{$file->{UNSOLVED_MODULE}}));
                 #print STDERR "$filename -: $modname \n";
             }
 
@@ -513,7 +543,7 @@ sub process_file {
             }
 
             # Ajouter le module dans la liste des modules associer au fichier.
-            push @{$file->{ MODULE_LIST }}, $modname;
+            push @{$file->{MODULE_LIST}}, $modname if (!mysmart($modname,\@{$file->{MODULE_LIST}}));
 				if ($flat_layout) {
 					 $module_list{$modname} = $file->{NAMEyEXT};
 				} else {
@@ -579,7 +609,8 @@ sub process_file_for_include {
     }
     ## if (!exists $LISTOBJECT{"$path$filn.$exte"}) {
     if ((! -f "$path$filn.$exte") or ($anywhere_inc and !exists $LISTOBJECT{"$path$filn.$exte"})) {
-        if (!("$path$filn.$exte" ~~ @outside_tree_list)) {
+        #if (!("$path$filn.$exte" ~~ @outside_tree_list)) {
+        if (!mysmart("$path$filn.$exte",\@outside_tree_list)) {
             my $path1 = find_inc_file($file,$path,"$filn.$exte");
             if (!$path1) {
                 #print STDERR "No file $file->{NAMEyEXT}: $tmp_dir : $include_path : $path$filn.$exte\n";# if ($msg>=4);
@@ -700,6 +731,8 @@ sub print_files_list{
 # @print_object_list
 #------------------------------------------------------------------------
 sub print_object_list {
+	 my %listdir = ();
+	 my %listsubdir = ();
     print STDERR "Listing OBJECTS\n" if ($msg >= 3);
     print_header("OBJECTS","=","");
     for (sort keys %LISTOBJECT) {
@@ -711,22 +744,65 @@ sub print_object_list {
                 print_item("$file->{PATHyNAME}.o");
             }
             my(@dirs) = split("/",$file->{FULLPATH_SRC});
-            if (!exists($listdir{$dirs[0]})) {
-                @{$listdir{$dirs[0]}} = ();
-            }
+				@{$listdir{$dirs[0]}} = () if (!exists($listdir{$dirs[0]}));
             if ($flat_layout) {
-                push @{$listdir{$dirs[0]}},"$file->{FILENAME}.o";
+                push @{$listdir{$dirs[0]}},"$file->{FILENAME}.o" if (!mysmart("$file->{FILENAME}.o",\@{$listdir{$dirs[0]}}));
             } else {
-                push @{$listdir{$dirs[0]}},"$file->{PATHyNAME}.o";
+                push @{$listdir{$dirs[0]}},"$file->{PATHyNAME}.o" if (!mysmart("$file->{PATHyNAME}.o",\@{$listdir{$dirs[0]}}));
             }
         }
+		  if ($top_dirs) {
+				for (split(":",$top_dirs)) {
+					 my $topdir = $_;
+					 if ($_) {
+						  my(@dirs) = split("/",$topdir);
+						  my $dirname = $dirs[$#dirs];
+						  $dirname = $dirs[$#dirs-1] if ($dirname eq 'src');
+						  if (index($file->{FULLPATH_SRC}, $topdir) != -1) {
+								if ($file->{COMPILABLE}) {
+									 @{$listdir{$dirname}} = () if (!exists($listdir{$dirname}));
+									 if ($flat_layout) {
+										  push @{$listdir{$dirname}},"$file->{FILENAME}.o" if (!mysmart("$file->{FILENAME}.o",\@{$listdir{$dirname}}));
+									 } else {
+										  push @{$listdir{$dirname}},"$file->{PATHyNAME}.o" if (!mysmart("$file->{PATHyNAME}.o",\@{$listdir{$dirname}}));
+									 }
+									 $subdirname = substr($file->{FULLPATH_SRC},length($topdir),-1);
+									 if (not $subdirname) {
+										  $subdirname = '_';
+									 } else {
+										  $subdirname =~ s|/|_|;
+									 }
+									 $subdirname = $dirname.$subdirname;
+									 @{$listsubdir{$dirname}} = () if (!exists($listdir{$dirname}));
+									 push @{$listsubdir{$dirname}},$subdirname if (!mysmart($subdirname,\@{$listsubdir{$dirname}}));
+
+									 @{$listsubdir{$dirname}} = () if (!exists($listdir{$dirname}));
+									 if ($flat_layout) {
+										  push @{$listdir{$subdirname}},"$file->{FILENAME}.o" if (!mysmart("$file->{FILENAME}.o",\@{$listdir{$subdirname}}));
+									 } else {
+										  push @{$listdir{$subdirname}},"$file->{PATHyNAME}.o" if (!mysmart("$file->{PATHyNAME}.o",\@{$listdir{$subdirname}}));
+									 }
+								}
+						  }
+					 }
+				}
+		  }
     }
     print STDOUT "\n";
 
     #TODO: this should be optional
+    for (keys %listsubdir) {
+		  my $libname = $_;
+		  $libname = $defaultlibname if $libname eq '..' or $libname eq '.' or $libname eq '';
+        print_header("SUBDIRLIST_".$libname,"=","");
+        for my $item (@{$listsubdir{$_}}) {
+            print_item("$item");
+		  }
+        print STDOUT "\n";
+	 }
     for (keys %listdir) {
 		  my $libname = $_;
-		  $libname = $defaultlibname if $libname == '..' or $libname == '.';
+		  $libname = $defaultlibname if $libname eq '..' or $libname eq '.' or $libname eq '';
         print_header("OBJECTS_".$libname,"=","");
         for my $item (@{$listdir{$_}}) {
             print_item("$item");
@@ -739,8 +815,8 @@ sub print_object_list {
     print STDOUT "\n";
 	 print_header("ALL_LIBS=","");
 	 for (keys %listdir) {
-		  my $libname = $defaultlibname;
-		  $libname = 'malib' if $libname == '..' or $libname == '.';
+		  my $libname = $_;
+		  $libname = $defaultlibname if $libname eq '..' or $libname eq '.' or $libname eq '';
 		  print_item("\$(LIBDIR)/lib".$libname.$defaultlibext);
 	 }
 	 print STDOUT "\n\n";
@@ -750,6 +826,7 @@ sub print_object_list {
 # @print_module_list
 #------------------------------------------------------------------------
 sub print_module_list {
+	 my %listdir = ();
     print STDERR "Listing FORTRAN_MODULES\n" if ($msg >= 3);
     print_header("FORTRAN_MODULES","=","");
     for (sort keys %module_list) {
@@ -765,7 +842,7 @@ sub print_module_list {
         my $file = $LISTOBJECT{$_};
 		  my @list_of_modules = ();
         for (@{$file->{MODULE_LIST}}) {
-            push @list_of_modules, $_ if $_ ne "";
+            push @list_of_modules, $_ if $_ ne "" and (!mysmart($_,\@list_of_modules));
         }
 		  if ($#list_of_modules >= 0) {
 				print_header("FMOD_LIST_$file->{NAMEyEXT}","=","");
@@ -773,9 +850,37 @@ sub print_module_list {
 					 print_item("$_");
 				}
 				print STDOUT "\n";
+
+				if ($top_dirs) {
+					 for (split(":",$top_dirs)) {
+						  my $topdir = $_;
+						  if ($_) {
+								my(@dirs) = split("/",$topdir);
+								my $dirname = $dirs[$#dirs];
+								$dirname = $dirs[$#dirs-1] if ($dirname eq 'src');
+								if (index($file->{FULLPATH_SRC}, $topdir) != -1) {
+									 @{$listdir{$dirname}} = () if (!exists($listdir{$dirname}));
+									 for (@list_of_modules) {
+										  push @{$listdir{$dirname}},"$_" if (!mysmart("$_",\@{$listdir{$dirname}}));
+									 }
+								}
+						  }
+					 }
+				}
 		  }
 	 }
     print STDOUT "\n";
+	 
+    #TODO: this should be optional
+    for (keys %listdir) {
+		  my $libname = $_;
+		  $libname = $defaultlibname if $libname eq '..' or $libname eq '.' or $libname eq '';
+		  print_header("FORTRAN_MODULES_".$libname,"=","");
+        for my $item (@{$listdir{$_}}) {
+            print_item("$item");
+        }
+        print STDOUT "\n\n";
+	 }
 }
 
 #------------------------------------------------------------------------
@@ -799,7 +904,8 @@ sub print_dep_rules {
     print STDOUT "\n";
     for my $filename (sort keys %LISTOBJECT) {
         my $file = $LISTOBJECT{$filename};
-        @current_dependencies_list = ();
+        #@current_dependencies_list = ();
+        %current_dependencies_list = ();
         if ($file->{COMPILABLE}) {
             if ($flat_layout) {
                 print_header("$file->{FILENAME}.o",":",$file->{NAMEyEXT});
@@ -811,7 +917,8 @@ sub print_dep_rules {
             print_header("$file->{FILENAME}.o",":","$file->{PATHyNAME}.o") if ($short_target_names and $file->{FULLPATH_SRC} and !$flat_layout);
             print STDOUT "\n";
 
-				@current_dependencies_list = ();
+				#@current_dependencies_list = ();
+				%current_dependencies_list = ();
 				my $ext2 = undef;
 				$ext2 = 'f'   if ($file->{EXTENSION} eq 'ftn');
 				$ext2 = 'f90' if ($file->{EXTENSION} eq 'ftn90' or $file->{EXTENSION} eq 'cdk90');
@@ -848,10 +955,13 @@ sub rec_print_dependencies {
             $tmp_filename0 = "$dep_ptr->{NAMEyEXT}";
             $tmp_filename0 = "$dep_ptr->{FILENAME}.o" if ($dep_ptr->{COMPILABLE});
         }
-		  next if (($_[1] eq $dep_filename) or ($tmp_filename ~~ @current_dependencies_list));
+		  #next if (($_[1] eq $dep_filename) or ($tmp_filename ~~ @current_dependencies_list));
+		  #next if (($_[1] eq $dep_filename) or mysmart($tmp_filename,\@current_dependencies_list));
+		  next if (($_[1] eq $dep_filename) or exists($current_dependencies_list{$tmp_filename}));
 
         print_item($tmp_filename0);
-        push @current_dependencies_list, $tmp_filename;
+        #push @current_dependencies_list, $tmp_filename if (!mysmart($tmp_filename,\@current_dependencies_list));
+        $current_dependencies_list{$tmp_filename} = 1 if !exists($current_dependencies_list{$tmp_filename});
 
         # Recursively call the function to print all depedencies
         rec_print_dependencies(\%{$_[0]}, $dep_filename) if (!$dep_ptr->{COMPILABLE});
@@ -924,7 +1034,8 @@ sub print_dep_rules_inv2 {
 		  		# 	 my $dep = $LISTOBJECT{$depname};
 		  		# 	 push @{$dirdeplist{$file->{NAMEyEXT}}}, $dep->{NAMEyEXT};
 		  		# }
-				@current_dependencies_list = ();
+				#@current_dependencies_list = ();
+				%current_dependencies_list = ();
 				rec_fill_dirdeplist2($filename, $filename);				
 		  } else {
 		  		print STDERR "\nERROR: Inv Dep for non flat layout is not yet implements\n";
@@ -933,7 +1044,7 @@ sub print_dep_rules_inv2 {
 	 }
     for my $filename (keys %dirdeplist) {
 		  for my $depname (@{$dirdeplist{$filename}}) {
-				push @{$invdeplist{$depname}}, $filename;# if ($filename !~ @{$invdeplist{$depname}});
+				push @{$invdeplist{$depname}}, $filename if (!mysmart($filename,\@{$invdeplist{$depname}}));
 		  }
 	 }
     for my $depname (sort keys %invdeplist) {
@@ -941,7 +1052,8 @@ sub print_dep_rules_inv2 {
 				print STDOUT ".PHONY: _INVDEP_.".$depname."\n";
 				print_header("_INVDEP_.".$depname,":","");
 				for $fileyext (@{$invdeplist{$depname}}) {
-					 if ($fileyext ~~  /(.*\/)*(.*)[.]([^.]*$)/) {
+					 #if ($fileyext ~~  /(.*\/)*(.*)[.]([^.]*$)/) {
+					 if ($fileyext =~  /(.*\/)*(.*)[.]([^.]*$)/) {
 						  my $filn = ($2 ? $2 : "");
 						  my $exte = ($3 ? $3 : "");
 						  if ($SRCFile::TYPE_LIST{lc $exte} eq "COMPILABLE") {
@@ -953,10 +1065,11 @@ sub print_dep_rules_inv2 {
 		  #}
 	 }
     for my $depname (sort keys %invdeplist) {
-		  #if ($#{$invdeplist{$depname}} >= 0) {
+		  if ($#{$invdeplist{$depname}} >= 0) {
 				print_header("INVDEP_LIST_".$depname,"=","");
 				for $fileyext (@{$invdeplist{$depname}}) {
-					 if ($fileyext ~~  /(.*\/)*(.*)[.]([^.]*$)/) {
+					 #if ($fileyext ~~  /(.*\/)*(.*)[.]([^.]*$)/) {
+					 if ($fileyext =~  /(.*\/)*(.*)[.]([^.]*$)/) {
 						  my $filn = ($2 ? $2 : "");
 						  my $exte = ($3 ? $3 : "");
 						  if ($SRCFile::TYPE_LIST{lc $exte} eq "COMPILABLE") {
@@ -965,21 +1078,24 @@ sub print_dep_rules_inv2 {
 					 }
 				}
 				print STDOUT "\n";
-		  #}
+		  }
 	 }
 }
 
 sub rec_fill_dirdeplist2 {
-    my $filename  = $_[0];
-	 my $filename0 = $_[1];
+    my $filename  = shift;
+	 my $filename0 = shift;
 	 my $file = $LISTOBJECT{$filename};
 	 my $file0 = $LISTOBJECT{$filename0};
 	 for my $depname (keys %{$file->{DEPENDENCIES}}) {
 		  my $dep = $LISTOBJECT{$depname};
-		  next if (($depname eq $filename0) or ($depname ~~ @current_dependencies_list));
+		  #next if (($depname eq $filename0) or ($depname ~~ @current_dependencies_list));
+		  #next if (($depname eq $filename0) or mysmart($depname,\@current_dependencies_list));
+		  next if (($depname eq $filename0) or exists($current_dependencies_list{$depname}));
 
-		  push @{$dirdeplist{$file0->{NAMEyEXT}}}, $dep->{NAMEyEXT};
-		  push @current_dependencies_list, $filename;
+		  push @{$dirdeplist{$file0->{NAMEyEXT}}}, $dep->{NAMEyEXT} if (!mysmart($dep->{NAMEyEXT},\@{$dirdeplist{$file0->{NAMEyEXT}}}));
+		  #push @current_dependencies_list, $filename if (!mysmart($filename,\@current_dependencies_list));
+		  $current_dependencies_list{$filename} = 1 if !exists($current_dependencies_list{$depname});
         # Recursively call the function to fill all depedencies
         rec_fill_dirdeplist2($depname, $filename0);
 	 }
@@ -991,7 +1107,7 @@ sub rec_fill_dirdeplist2 {
 # OUT: object key, undef otherwise.
 #------------------------------------------------------------------------
 sub search_module {
-    my $module_name = $_[0];
+    my $module_name = shift;
     for (keys %LISTOBJECT) {
         return $_ if ($LISTOBJECT{$_}->has_module($module_name)); 
     }
@@ -1004,7 +1120,7 @@ sub search_module {
 # OUT: object key, undef otherwise.
 #------------------------------------------------------------------------
 sub search_unsolved_module {
-    my $module_name = $_[0];
+    my $module_name = shift;
     for (keys %LISTOBJECT) {
         return $_ if ($LISTOBJECT{$_}->SRCFile::has_unsolved_module($module_name));
     }
@@ -1112,7 +1228,7 @@ sub export_obj_list {
             }
         }
         for (@{$file->{MODULE_LIST}}) {
-            push @list_of_modules, $_ if $_ ne "";
+            push @list_of_modules, $_ if $_ ne "" and (!mysmart($_,\@list_of_modules));
         }
     }
     for (sort @list_of_modules) {
@@ -1130,7 +1246,7 @@ if ($output_file) {
     open(STDOUT,">", "$output_file") or die "\nERROR: Can't redirect STDOUT\n";
 }
 @includelist = split(':',$include_dirs) if ($include_dirs);
-push @includelist, $override_dir if $override_dir;
+push @includelist, $override_dir if $override_dir and (!mysmart($override_dir,\@includelist));
 
 preproc_suppfile($suppress_errors_file);
 
