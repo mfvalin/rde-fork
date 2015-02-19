@@ -22,6 +22,10 @@ BINDIR   := $(BUILDBIN)
 
 INCSUFFIXES := $(shell rdevar rdesuffix/inc)
 SRCSUFFIXES := $(shell rdevar rdesuffix/src)
+RDE_ARCH_LIST := $(shell rdevar srcpath_arch_list)
+ifeq (,$(RDE_ARCH_LIST))
+RDE_ARCH_LIST := $(shell rdevar rde_base_arch_list)
+endif
 
 ifeq (,$(rde))
    $(error FATAL ERROR: rde is not defined)
@@ -78,6 +82,10 @@ help:
 dep: 
 	rm -f Makefile.dep.$(BASE_ARCH).mk 2>/dev/null || true
 	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
+depall: 
+	rm -f Makefile.dep.*.mk 2>/dev/null || true
+	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE) --arch "$(RDE_ARCH_LIST)"
+
 
 sanity: Makefile Makefile.dep.$(BASE_ARCH).mk Makefile.build.mk Makefile.rules.mk $(BUILD) $(BUILDOBJ)
 links: sanity

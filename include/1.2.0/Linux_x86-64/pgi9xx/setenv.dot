@@ -1,7 +1,0 @@
-. s.ssmuse.dot \
-   mpich2 \
-   pgi9xx \
-   legacy \
-   rmnlib-dev \
-   devtools \
-   /ssm/net/rpn/libs/4.0
