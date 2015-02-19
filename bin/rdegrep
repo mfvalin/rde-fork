@@ -63,12 +63,12 @@ for PATH_BASE in $SEARCH_PATH_BASE ; do
          myecho 1 "Searching $recurse in ${PATH_BASE}/${MYPATH}"
          if [[ -d ${MYPATH} ]] ; then
             if [[ x$recurse == x ]] ; then
-               myfiles="$(ls -d1 ${MYPATH}/* ${MYPATH}/.[a-zA-Z0-9_-]* 2>/dev/null | grep -v '.Abs' | grep -v malib | grep -v build| grep -v Makefile.dep.mk)"
+               myfiles="$(ls -d1 ${MYPATH}/* ${MYPATH}/.[a-zA-Z0-9_-]* 2>/dev/null | grep -v '.Abs' | grep -v malib | grep -v build| grep -v Makefile.dep.)"
                if [[ x"${myfiles}" != x"" ]] ; then
                   grep -H ${GREP_OPTIONS} "${SEARCH_STRING}" ${myfiles}
                fi
             else
-               find -L ${MYPATH} -type f -exec grep -H ${GREP_OPTIONS} "${SEARCH_STRING}" {} \; | grep -v Makefile.dep.mk:
+               find -L ${MYPATH} -type f -exec grep -H ${GREP_OPTIONS} "${SEARCH_STRING}" {} \; | grep -v Makefile.dep.:
             fi
          else
             grep -H ${GREP_OPTIONS} "${SEARCH_STRING}" ${MYPATH}

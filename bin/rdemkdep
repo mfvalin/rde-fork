@@ -5,7 +5,7 @@
 . .rdebase.inc.dot
 
 DESC='Build depedecies list'
-USAGE="USAGE: ${MYSELF} [-h] [-v] [--supp myfile.supp]"
+USAGE="USAGE: ${MYSELF} [-h] [-v] [--supp myfile.supp] [--arch ARCH]"
 
 usage_long() {
 	 toto=$(echo -e $USAGE)
@@ -25,6 +25,7 @@ Options:
                          the supp file is a concatenation of
                          all \$PATH and \$PATH/rdedep.supp
                          with $DEP_SUPP_FILE_SYS.
+        --arch         : make dep for provided ARCHs
         --prof         : run in profiler
 
 The list of dependencies is done from the list of files in: \$(pwd) \$(rdevar srcpath)
@@ -41,6 +42,7 @@ DEP_SUPP_FILE_GEM=$rde/etc/rdedep-gem.supp
 #DEP_SUPP_FILE_PATH0="$DEP_SUPP_FILE_GEM"
 DEP_SUPP_FILE_PATH0=":"
 DEP_SUPP_FILE_PATH=""
+DEP_ARCH="$BASE_ARCH"
 VERBOSE=''
 PERLPROF=''
 DEP_DUP_OK=''
@@ -55,9 +57,13 @@ while [[ $# -gt 0 ]] ; do
          if [[ x$2 != x && x$(echo $2 | cut -c1) != x- ]] ; then
             shift ; DEP_SUPP_FILE_PATH=$1
          fi;;
+      (--arch) 
+         if [[ x$2 != x && x$(echo $2 | cut -c1) != x- ]] ; then
+            shift ; DEP_ARCH=$1
+         fi;;
       (--prof) PERLPROF="perl -d:DProf ${rde}/bin/";
          echo "Perl profiling on; use 'dprofpp -r -E' to view prof results";;
-      (*) myerror "Option Not recognized: $1";;
+      (*) if [[ x$1 != x ]] ; then myerror "Option Not recognized: $1"; fi;;
     esac
     shift
 done
@@ -80,45 +86,55 @@ if [[ x$DEP_SUPP_FILE_PATH != x ]] ; then
 fi
 echo DEP_SUPP_FILE_PATH=$DEP_SUPP_FILE_PATH
 echo DEP_SUPP_FILE=$DEP_SUPP_FILE
-cat $DEP_SUPP_FILE
 
 if [[ x$DEP_SUPP_FILE != x ]] ; then
    DEP_SUPP_FILE_ARG="--supp=$DEP_SUPP_FILE"
 fi
 
-SRCPATH="$(rdevar srcpath)"
-SRCPATH_RECURSE="$(rdevar srcpath_recurse)"
-TOPDIROPT=""
-if [[ x${SRCPATH_RECURSE:-0} != x0 ]] ; then
-  SRCPATH_R="$(rdevar srcpath_r)"
-  TOPDIROPT="--topdirs=$(echo $SRCPATH_R | tr ' ' ':')"
-fi
-OVERRIDEDIR="--override_dir=$ROOT"
-if [[ x"$SRCPATH" == x ]] ; then
-   SRCPATH="$(pwd)"
-   OVERRIDEDIR=""
-fi
-if [[ x$OVERRIDEDIR != x ]] ; then
-   OVERRIDEDIR2=$(true_path ${OVERRIDEDIR#*=})
-   for item in $SRCPATH ; do
-      if [[ x$OVERRIDEDIR2 == x$(true_path $item) ]] ; then
+mkdepfn() {
+   MYARCH=$1
+   SRCPATH="$(rdevar --arch $MYARCH -- srcpath)"
+   SRCPATH_RECURSE="$(rdevar --arch $MYARCH -- srcpath_recurse)"
+   TOPDIROPT=""
+   if [[ x${SRCPATH_RECURSE:-0} != x0 ]] ; then
+      SRCPATH_R="$(rdevar --arch $MYARCH -- srcpath_r)"
+      TOPDIROPT="--topdirs=$(echo $SRCPATH_R | tr ' ' ':')"
+   fi
+   OVERRIDEDIR="--override_dir=$ROOT"
+   if [[ x"$SRCPATH" == x ]] ; then
+      SRCPATH="$(pwd)"
+      OVERRIDEDIR=""
+   fi
+   if [[ x$OVERRIDEDIR != x ]] ; then
+      OVERRIDEDIR2=$(true_path ${OVERRIDEDIR#*=})
+      for item in $SRCPATH ; do
+         if [[ x$OVERRIDEDIR2 == x$(true_path $item) ]] ; then
          #TODO: should remove it from srcpath instead
-         OVERRIDEDIR=""
-      fi
-   done
-fi
+            OVERRIDEDIR=""
+         fi
+      done
+   fi
 
-${MYTIME} ${PERLPROF}rdedep.pl ${VERBOSE} ${DEP_DUP_OK} ${DEP_FLAT} \
-   --deep-include \
-   --any_inc \
-   --soft-restriction \
-   --libext=.a.fl \
-   --out=Makefile.dep.mk \
-   $DEP_SUPP_FILE_ARG \
-   $TOPDIROPT \
-   $OVERRIDEDIR \
-   $SRCPATH
-mystatus=$?
+   ${MYTIME} ${PERLPROF}rdedep.pl ${VERBOSE} ${DEP_DUP_OK} ${DEP_FLAT} \
+      --deep-include \
+      --any_inc \
+      --soft-restriction \
+      --libext=.a.fl \
+      --out=Makefile.dep.${MYARCH}.mk \
+      $DEP_SUPP_FILE_ARG \
+      $TOPDIROPT \
+      $OVERRIDEDIR \
+      $SRCPATH
+   mystatus=$?
+}
+
+mystatus=0
+for item in $DEP_ARCH ; do
+   mkdepfn $item
+   if [[ x$mystatus != x0 ]] ; then
+      exit $mystatus
+   fi
+done
 
 #TODO: remove --any when code is clean from cross dir includes
 #TODO:   --inc="$(echo $SRCPATH | sed 's| |/include:|g')

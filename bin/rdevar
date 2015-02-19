@@ -10,7 +10,7 @@
 
 MYSELF=${0##*/}
 DESC='Echo specific RDE var or path'
-USAGE="Usage: ${MYSELF} [-h] [-l]"
+USAGE="Usage: ${MYSELF} [-h] [-l] [--arch ARCH]"
 
 usage_long() {
 	 toto=$(echo -e $USAGE)
@@ -22,16 +22,22 @@ $toto
 Options:
     -h, --help  : print this help
     -l, --list  : list known vars, with short match if any
+        --arch  : provide var as if EC_ARCH were provided arch
 
 EOF
 }
 
 dolist=0
 namelist=""
+DEP_ARCH="$EC_ARCH"
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
       (-l|--list) dolist=1; shift ; break;;
+      (--arch) 
+         if [[ x$2 != x && x$(echo $2 | cut -c1) != x- ]] ; then
+            shift ; DEP_ARCH=$1
+         fi;;
       (--) shift ; break;;
       (-*) echo "ERROR: Option Not recognized: $1" 1>&2 ; exit 1;;
       *) namelist="$namelist $1";;
@@ -39,8 +45,10 @@ while [[ $# -gt 0 ]] ; do
     shift
 done
 namelist="$namelist $@"
+export EC_ARCH=$DEP_ARCH
+export BASE_ARCH=${DEP_ARCH%%/*}
 
-INCSUFFIXES=".cdk .h .hf .fh .itf90 .inc"
+INCSUFFIXES=".cdk .h .hf .fh .itf90 .inc .include"
 SRCSUFFIXES=".c .cpp .f .ftn .ptn .f90 .f95 .f03 .ftn90 .ptn90 .cdk90 .tmpl90 .F .FOR .F90 .F95 .F03"
 
 #COMP_ARCH0=${EC_ARCH##*/}
@@ -48,7 +56,10 @@ SRCSUFFIXES=".c .cpp .f .ftn .ptn .f90 .f95 .f03 .ftn90 .ptn90 .cdk90 .tmpl90 .F
 hostarch=-${BASE_ARCH}
 hostarch2=-${EC_ARCH}
 
-SRC_PATH_FILE=.exper_cour
+RDE_INC=$rde/include/$RDE_COMPILER_VERSION
+RDE_ARCH_LIST="$(cd $RDE_INC ; find */* -type d)"
+RDE_BASE_ARCH_LIST="$(cd $RDE_INC ; find.py * --type=d --maxdepth=0)"
+SRC_PATH_FILE=.rdesrcpath
 mysrcpath0() {
    if [[ -r $SRC_PATH_FILE ]] ; then
       . ./$SRC_PATH_FILE
@@ -68,9 +79,42 @@ mysrcpath0_r() {
    fi
    echo ${SRCPATH_R}
 }
+mysrcpath0_archlist() {
+   if [[ -r $SRC_PATH_FILE ]] ; then
+      . ./$SRC_PATH_FILE
+   fi
+   echo ${SRCPATH_ARCH_LIST}
+}
+
+myvars="
+ rdeinc=          \$RDE_INC;
+ rdesuffix=       \$INCSUFFIXES \$SRCSUFFIXES;
+ rdesuffix/inc=   \$INCSUFFIXES;
+ rdesuffix/src=   \$SRCSUFFIXES;
+ rde_arch_list=   \$RDE_ARCH_LIST;
+ rde_base_arch_list= \$RDE_BASE_ARCH_LIST;
+ build=           build\${hostarch};
+ build/src=       build\${hostarch2};
+ build/pre=       build\${hostarch2};
+ build/obj=       build\${hostarch2};
+ build/mod=       build\${hostarch2};
+ build/lib=       build\${hostarch2};
+ build/bin=       build\${hostarch};
+ build/run=       build\${hostarch};
+ local/src=       .;
+ local/bin=       bin;
+ ref/src=         ref/src;
+ ref/bin=         ref/bin;
+ srcpathfile=     \${SRC_PATH_FILE};
+ srcpath=         \$(mysrcpath0);
+ srcpath_recurse= \$(mysrcpath0_recurse);
+ srcpath_r=       \$(mysrcpath0_r);
+ srcpath_arch_list= \$(mysrcpath0_archlist);
+ storage=         \$(rdemodel_path -l storage);
+"
 
 if [[ $dolist == 1 ]] ; then
-   knownnames="rdeinc rdesuffix rdesuffix/inc rdesuffix/src build build/src build/pre build/obj build/mod build/lib build/bin local/src local/bin ref/src ref/bin srcpathfile srcpath srcpath_recurse srcpath_r storage"
+   knownnames="$(echo $myvars | tr ';' '\n' | sed 's/=.*$//g' )"
    myname0=$(echo $namelist | cut -d' ' -f1)
    knownnames1=""
    for myname in $knownnames ; do
@@ -84,29 +128,15 @@ if [[ $dolist == 1 ]] ; then
 fi
 
 for item in $namelist ; do
-   case $item in
-      (rdeinc)        echo $rde/include/$RDE_COMPILER_VERSION;;
-      (rdesuffix)     echo $INCSUFFIXES $SRCSUFFIXES;;
-      (rdesuffix/inc) echo $INCSUFFIXES;;
-      (rdesuffix/src) echo $SRCSUFFIXES;;
-      (build)         echo build${hostarch};;
-      (build/src)     echo build${hostarch2};;
-      (build/pre)     echo build${hostarch2};;
-      (build/obj)     echo build${hostarch2};;
-      (build/mod)     echo build${hostarch2};;
-      (build/lib)     echo build${hostarch2};;
-      (build/bin)     echo build${hostarch};;
-      (build/run)     echo build${hostarch};;
-      (local/src)     echo .;;
-      (local/bin)     echo bin;;
-      (ref/src)       echo ref/src;;
-      (ref/bin)       echo ref/bin;;
-      (srcpathfile)   echo ${SRC_PATH_FILE};;
-      (srcpath)       echo $(mysrcpath0);;
-      (srcpath_recurse) echo $(mysrcpath0_recurse);;
-      (srcpath_r)     echo $(mysrcpath0_r);;
-      (storage)       echo $(rdemodel_path -l storage);;
-      (*) echo "ERROR: Unknown var name: $item" 1>&2 ; exit 1;;
-    esac
+   myvar="$(echo $myvars | tr ';' '\n' | grep "^ ${item}=")"
+   if [[ ! -n $myvar ]] ; then
+      myvar="$(echo $myvars | tr ';' '\n' | grep "^${item}=")"
+   fi
+   if [[ -n $myvar ]] ; then
+      echo $(eval echo $(echo $myvar | cut -d= -f2))
+   else
+      echo "ERROR: Unknown var name: $item" 1>&2
+      exit 1
+   fi
 done
 

@@ -32,7 +32,7 @@ while [[ $# -gt 0 ]] ; do
       (-v|--verbose) ((verbose=verbose+1));;
       (-f|--force) myforce=1;;
       (--) shift ;;
-      *) myerror "Option Not recognized: $1";;
+      *) if [[ x$1 != x ]] ; then myerror "Option Not recognized: $1";fi;;
     esac
     shift
 done
@@ -69,7 +69,7 @@ get_modules_in_file() {
 	 #     _mylist="${_mylist} ${_item2}"
 	 # done
 	 # echo ${_mylist}
-   make -s -f ${ROOT}/Makefile.dep.mk echo_mydepvar MYVAR=FMOD_LIST_${1##*/}
+   make -s -f ${ROOT}/Makefile.dep.${BASE_ARCH}.mk echo_mydepvar MYVAR=FMOD_LIST_${1##*/}
 }
 
 ## myrm_mod filename.ftn90
@@ -92,7 +92,7 @@ myrm_mod() {
 
 ## get_invdep_list filename.ftn90
 get_invdep_list() {
-   make -s -f ${ROOT}/Makefile.dep.mk echo_mydepvar MYVAR=INVDEP_LIST_${1}
+   make -s -f ${ROOT}/Makefile.dep.${BASE_ARCH}.mk echo_mydepvar MYVAR=INVDEP_LIST_${1}
 }
 
 
@@ -142,12 +142,12 @@ myrm_empty() {
 #VALIDEXTWILD="*.F *.F90 *.f *.f90 *.ftn *.ftn90 *.cdk *.cdk90 *.fh* *.inc *.h* *.c *.cpp"
 VALIDEXTWILD="$(echo $VALIDEXT | sed 's/\./*./g')"
 
-mylist="$(ls $SRC_PATH_FILE Makefile.build.mk Makefile.rules.mk Makefile.dep.mk Makefile.user.mk $VALIDEXTWILD 2>/dev/null | sort)"
+mylist="$(ls $SRC_PATH_FILE Makefile.build.mk Makefile.rules.mk Makefile.dep.${BASE_ARCH}.mk Makefile.user.mk $VALIDEXTWILD 2>/dev/null | sort)"
 
 BUILDSRC=$(rdevar build/src)
 cd ${BUILDSRC}
 
-mylist2="$(ls $SRC_PATH_FILE Makefile.build.mk Makefile.rules.mk Makefile.dep.mk Makefile.user.mk $VALIDEXTWILD 2>/dev/null | sort)"
+mylist2="$(ls $SRC_PATH_FILE Makefile.build.mk Makefile.rules.mk Makefile.dep.${BASE_ARCH}.mk Makefile.user.mk $VALIDEXTWILD 2>/dev/null | sort)"
 
 ## Checking changes status
 echo $mylist > $TMPDIR/.rdesrcusrls

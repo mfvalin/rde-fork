@@ -19,6 +19,9 @@ Options:
     -R  --recurse      : recursively include dirs
         --reset        : replace existing SRCPATH if any
     -k, --keep         : keep existing SRCPATHFILE as backup if any
+        --arch [ARCH]  : restrict SRCPATH to BASE_ARCH=ARCH or EC_ARCH=ARCH
+                         default: no restriction
+                         default ARCH=BASE_ARCH      
 
     DIRLIST: space separated
 EOF
@@ -30,6 +33,7 @@ mykeep=0
 myrecurse=0
 DIRLIST=''
 previous=""
+myarch=""
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
@@ -38,9 +42,15 @@ while [[ $# -gt 0 ]] ; do
       (-R|--recurse) myrecurse=9;;
       (-k|--keep) mykeep=1;;
       (--reset) myreset=1;;
+      (--arch) myarch=${BASE_ARCH}; mykeep=1;;
       (--) shift ; break;;
       (-*) myerror "Option Not recognized: $1";;
-        *) DIRLIST="$DIRLIST $1";;
+        *) 
+         case $previous in
+            (-R|--recurse) myrecurse=$1;;
+            (--arch) myarch=$1;;
+            *) DIRLIST="$DIRLIST $1" ;;
+         esac ;;
     esac
     previous=$1
     shift
@@ -52,6 +62,7 @@ if [[ "x$DIRLIST" == x ]] ; then
    echo DIRLIST=$DIRLIST
    myerror "You need to provide at least one dir"
 fi
+export BASE_ARCH=${myarch:-$BASE_ARCH}
 
 SRCPATH="$(rdevar srcpath)"
 SRCPATH_R="$(rdevar srcpath_r)"
@@ -69,7 +80,6 @@ else
    SRCPATH=""
    SRCPATH_R=""
 fi
-
 
 SRCPATH1=""
 for mydir in $DIRLIST; do
@@ -89,7 +99,6 @@ done
 SRCPATH_R="$SRCPATH_R $SRCPATH1"
 SRCPATH="\$SRCPATH_R"
 
-#TODO: honnor .restricted whitelist file
 #TODO: add option for arch_specific (would imply --keep to preserve other arch srcpath
 
 if [[ x$myrecurse != x0 ]] ; then
@@ -97,7 +106,7 @@ if [[ x$myrecurse != x0 ]] ; then
    for mydir in $SRCPATH_R; do
       mystderr 1 "Recursively Looking into: $mydir"
       #SRCPATH1="$SRCPATH1 $mydir"
-      SRCPATH1="$SRCPATH1 $(find.py $mydir --type d --maxdepth $myrecurse --restricted --nodotdir --name '[a-zA-Z0-9]*')"
+      SRCPATH1="$SRCPATH1 $(find.py $mydir --type d -L --maxdepth $myrecurse --restricted --nodotdir --name '[a-zA-Z0-9]*' | sort -r)"
    done
    SRCPATH="$SRCPATH1"
 fi
@@ -107,9 +116,19 @@ if [[ x$mykeep == x0 ]] ; then
    rm -f $SRC_PATH_FILE
 fi
 mystderr 1 "Setting SRCPATH=$SRCPATH"
+if [[ x$myarch != x ]] ; then
+cat >> $SRC_PATH_FILE <<EOF
+SRCPATH_ARCH_LIST="\$SRCPATH_ARCH_LIST $myarch"
+if [[ x\$BASE_ARCH == x$myarch || x\$EC_ARCH == x$myarch || x\$COMP_ARCH == x$myarch ]] ; then
+EOF
+fi
 cat >> $SRC_PATH_FILE <<EOF
 SRCPATH_RECURSE=$myrecurse
 SRCPATH_R="$SRCPATH_R"
 SRCPATH="$SRCPATH"
 EOF
-
+if [[ x$myarch != x ]] ; then
+cat >> $SRC_PATH_FILE <<EOF
+fi
+EOF
+fi

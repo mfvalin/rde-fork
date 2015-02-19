@@ -6,7 +6,7 @@ SHELL = /bin/bash
 
 ## ==== Basic definitions
 
-RDE_INCLUDE := $(shell rdevar rdeinc)
+RDE_INCLUDE0 := $(shell rdevar rdeinc)
 ifeq (,$(RDE_DEP_SUPP_FILE))
 RDE_DEP_SUPP_FILE := $(rde)/etc/rdedep.supp
 endif
@@ -76,16 +76,16 @@ help:
 	@echo "=============================================================="
 
 dep: 
-	rm -f Makefile.dep.mk 2>/dev/null || true
+	rm -f Makefile.dep.$(BASE_ARCH).mk 2>/dev/null || true
 	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
 
-sanity: Makefile Makefile.dep.mk Makefile.build.mk Makefile.rules.mk $(BUILD) $(BUILDOBJ)
+sanity: Makefile Makefile.dep.$(BASE_ARCH).mk Makefile.build.mk Makefile.rules.mk $(BUILD) $(BUILDOBJ)
 links: sanity
 	$(MAKE_LINKS)
 
 Makefile:
 	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
-Makefile.dep.mk:
+Makefile.dep.$(BASE_ARCH).mk:
 	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
 Makefile.build.mk:
 	rdemklink $(VERBOSE)

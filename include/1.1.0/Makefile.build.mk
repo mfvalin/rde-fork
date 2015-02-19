@@ -47,7 +47,7 @@ INCLUDE_MOD  = "$(BUILDMOD)"
 
 LIBDIR = $(BUILDLIB)
 #BINDIR = $(BUILDBIN)
-LIBDEP_ALL =  Makefile.dep.mk
+LIBDEP_ALL =  Makefile.dep.$(BASE_ARCH).mk
 
 LIBPATH = $(PWD) $(LIBPATH_PRE) $(BUILDLIB) $(LIBPATHEXTRA) $(LIBSYSPATHEXTRA) $(LIBPATHOTHER) $(LIBPATH_POST)
 #LIBAPPL = $(LIBS_PRE) $(LIBLOCAL) $(LIBOTHERS) $(LIBEXTRA) $(LIBS_POST)
@@ -100,11 +100,11 @@ endif
 #Override model's components Makefile.local.mk LCLPO=malib$(EC_ARCH)
 LCLPO = .
 
-ifneq (,$(wildcard $(ROOT)/Makefile.dep.mk))
+ifneq (,$(wildcard $(ROOT)/Makefile.dep.$(BASE_ARCH).mk))
    ifneq (,$(DEBUGMAKE))
-      $(info include $(ROOT)/Makefile.dep.mk)
+      $(info include $(ROOT)/Makefile.dep.$(BASE_ARCH).mk)
    endif
-   include $(ROOT)/Makefile.dep.mk
+   include $(ROOT)/Makefile.dep.$(BASE_ARCH).mk
 endif
 
 ifneq (,$(wildcard $(ROOT)/Makefile.user.mk))
@@ -141,9 +141,9 @@ objects: $(OBJECTS)
 # #Mettre tous les objets de l experience en cours dans la programmatheque $MALIB
 # extractall:
 
-# lib: Makefile.dep.mk $(OBJECTS) $(ALL_LIBS)
+# lib: Makefile.dep.$(BASE_ARCH).mk $(OBJECTS) $(ALL_LIBS)
 
-# all: Makefile.dep.mk $(OBJECTS) $(ALL_LIBS) $(ALL_BINS)
+# all: Makefile.dep.$(BASE_ARCH).mk $(OBJECTS) $(ALL_LIBS) $(ALL_BINS)
 # bin: all
 # bin_check: $(ALL_BINS_CHECK)
 
