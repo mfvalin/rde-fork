@@ -11,7 +11,23 @@ ERROR: PKGNAME or PKGVERSION not provided
 
 $DESC
 
-USAGE: $0 PKGNAME PKGVERSION LIBDIR MODDIR
+USAGE: $0 PKGNAME PKGVERSION \${DESTDIR:-.} \${MODE:-sh} \${NAMEFMT:-l}
+
+Where:
+   PKGNAME    : Name of the program/lib
+   PKGVERSION : Version of the program/lib
+   DESTDIR    : (optional) Where to create the file (Default: .)
+   MODE       : (optional) Type of versin file to create (Default: sh)
+                Knownk values: sh, c, f
+   NAMEFMT    : (optional) If MODE=sh and NAMEFMT=s
+                File name will be short format (.VERSION)
+                instead if long (\${pkgname_}_version.ext)  
+
+The version file defines the following variables in the spefcified language:
+   \${PKGNAME}_NAME_S
+   \${PKGNAME}_VERSION_S
+   \${PKGNAME}_DSTP_S
+   \${PKGNAME}_EC_ARCH_S
 
 EOF
     exit 1

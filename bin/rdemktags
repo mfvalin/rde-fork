@@ -38,6 +38,7 @@ while [[ $# -gt 0 ]] ; do
       (-E|--emacs) EDITOR=emacs;;
       (-V|--vi) EDITOR=vi;;
       (-*) myerror "Option Not recognized: $1";;
+      (*) if [[ x$1 != x ]] ; then myerror "Option Not recognized: $1"; fi;;
     esac
 	 previous=$1
     shift

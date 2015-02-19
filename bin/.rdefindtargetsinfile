@@ -32,10 +32,6 @@ if [[ -x $filelist ]] ; then
 fi
 
 for item in $filelist ; do
-   # if [[ $nodep == 1 && x"${item##*/}" == x"Makefile.dep.mk" ]] ; then
-   #    a=1
-   #    #echo ignoring ${item##*/}
-   # elif [[ $norules == 1 && x"${item##*/}" == x"Makefile.rules.mk" ]] ; then
    if [[ $norules == 1 && x"${item##*/}" == x"Makefile.rules.mk" ]] ; then
       a=1
       #echo ignoring ${item##*/}

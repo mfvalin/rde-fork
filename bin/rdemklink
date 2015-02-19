@@ -27,7 +27,7 @@ while [[ $# -gt 0 ]] ; do
       (-h|--help) usage_long; exit 0;;
       (-v|--verbose) ((verbose=verbose+1));;
       (-f|--force) myforce=1;;
-      (*) myerror "Option Not recognized: $1";;
+      (*) if [[ x$1 != x ]] ; then myerror "Option Not recognized: $1";fi;;
     esac
     shift
 done
