@@ -1,0 +1,74 @@
+#!/bin/ksh
+#
+# s.f90
+
+# set EC_LD_LIBRARY_PATH and EC_INCLUDE_PATH using LD_LIBRARY_PATH
+#export EC_LD_LIBRARY_PATH=`s.generate_ec_path --lib`
+#export EC_INCLUDE_PATH=`s.generate_ec_path --include`
+
+COMPILING_FORTRAN=YES
+. rde.get_compiler_rules.dot
+
+## De-Archive .a.fl objects
+_alllibs="${LIBRARIES} ${SYSLIBS}"
+if [[ x${WILL_LINK} == xyes ]] ; then
+   _alllibs=""
+   #TODO: should libs and libpaths be treated reversly?
+   mkdir .fo >/dev/null 2>&1
+   rm -f .fo/*.o
+   cd .fo/
+   for mylib in ${LIBRARIES} ${SYSLIBS} ; do
+      _found=0
+      for mypath in ${LIBRARIES_PATH} ${EC_LD_LIBRARY_PATH} ; do
+         if [[ -r ${mypath}/lib${mylib}.a.fl ]] ; then
+            ar x ${mypath}/lib${mylib}.a.fl
+            _found=1
+            exit
+         fi
+      done
+      if [[ ${_found} == 0 ]] ; then
+         _alllibs="${_alllibs} ${mylib}"
+      fi
+   done
+   cd ..
+
+   ## Removed redondant .a.fl objects
+   for item2 in $@ ; do
+      if [[ x${item2##*.} == xo ]] ; then
+         rm -f .fo/${item2##*/} 2>/dev/null
+      fi
+   done
+fi
+
+_mydefines="$(s.prefix "${Dprefix}" ${DEFINES} )"
+_myincludes="$(s.prefix "${Iprefix}" ${INCLUDES} ${EC_INCLUDE_PATH})"
+_mylibpath="$(s.prefix "${Lprefix}" ${LIBRARIES_PATH} ${EC_LD_LIBRARY_PATH})"
+_mylibs="$(s.prefix "${lprefix}" ${_alllibs} )"
+_myfobj="$(ls .fo/*.o 2>/dev/null)"
+
+if [[ -n $Verbose ]] ; then
+   cat <<EOF
+
+$F90C ${SourceFile} ${FC_options} ${FC_LD_options} ${FFLAGS} \\
+	$_mydefines \\
+	$_myincludes \\
+	$_mylibpath \\
+	$_mylibs \\
+	$_myfobj \\
+	"$@"
+
+EOF
+fi
+
+$F90C ${SourceFile} ${FC_options} ${FC_LD_options} ${FFLAGS} \
+	$_mydefines \
+	$_myincludes \
+	$_mylibpath \
+	$_mylibs \
+	$_myfobj \\
+	"$@"
+_status=$?
+
+rm -f .fo/*.o 2>/dev/null
+
+exit ${_status}
