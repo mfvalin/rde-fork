@@ -38,7 +38,7 @@ for item in $filelist ; do
    else
       #echo Parsing ${item} : ${item##*/}
       if [[ $nodep == 1 ]] ; then
-         grep [a-zA-Z0-9]: ${item} | grep -v PHONY | grep -v .DEFAULT | grep -v '\.o:' | grep -v '_INVDEP_' | cut -d: -f1 | grep -v \# | grep -v \( | grep -v \"
+         grep [a-zA-Z0-9]: ${item} | grep -v PHONY | grep -v .DEFAULT | grep -v '\.o:' | grep -v '_invdep_' | cut -d: -f1 | grep -v \# | grep -v \( | grep -v \"
       else
          grep [a-zA-Z0-9]: ${item} | grep -v PHONY | grep -v .DEFAULT | cut -d: -f1 | grep -v \# | grep -v \( | grep -v \"
       fi

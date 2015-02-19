@@ -797,7 +797,9 @@ sub print_object_list {
                      if (not $subdirname) {
                         $subdirname = '_';
                      } else {
-                        $subdirname =~ s|/|_|;
+                        $subdirname =~ s|^src/||;
+                        $subdirname =~ s|^/src/|/|;
+                        $subdirname =~ s|/|_|g;
                      }
                      $subdirname = $topname.$subdirname;
                      @{$listsubdir{$topname}} = () if (!exists($listsubdir{$topname}));
@@ -829,11 +831,20 @@ sub print_object_list {
    print STDOUT "\n";
 
    #TODO: this should be optional
+   print_header("TOPDIRLIST","=",join(" ",split(":",$top_dirs)));
+   print STDOUT "\n";
+   print_header("TOPDIRLIST_NAMES","=","");
+   for (split(":",$top_dirs)) {
+      print_item(get_topname($_));
+   }
+   print STDOUT "\n";
+
    for (keys %listsubdir) {
       my $libname = $_;
       $libname = $defaultlibname if $libname eq '..' or $libname eq '.' or $libname eq '';
       print_header("SUBDIRLIST_".$libname,"=","");
       for my $item (@{$listsubdir{$_}}) {
+         $item =~ s|^[^_]*_||;
          print_item("$item");
       }
       print STDOUT "\n";
@@ -1085,8 +1096,8 @@ sub print_dep_rules_inv2 {
    }
    for my $depname (sort keys %invdeplist) {
       #if ($#{$invdeplist{$depname}} >= 0) {
-      print STDOUT ".PHONY: _INVDEP_.".$depname."\n";
-      print_header("_INVDEP_.".$depname,":","");
+      print STDOUT ".PHONY: _invdep_.".$depname."\n";
+      print_header("_invdep_.".$depname,":","");
       for $fileyext (@{$invdeplist{$depname}}) {
          #if ($fileyext ~~  /(.*\/)*(.*)[.]([^.]*$)/) {
          if ($fileyext =~  /(.*\/)*(.*)[.]([^.]*$)/) {

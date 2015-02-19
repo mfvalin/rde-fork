@@ -8,7 +8,7 @@
  
  FILENAME.o     : Build a single .o if not up to date
                   To force a build of a .o you need to 'touch' its source file
- _INVDEP_.FILENAME.ext : 
+ _invdep_.FILENAME.ext : 
                   Build all inverse dependencies of FILENAME.ext if not up to date
                   To force a re-build all inverse dependencies of FILENAME.ext
                   you'll need to 'touch' FILENAME.ext
