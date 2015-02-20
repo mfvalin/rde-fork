@@ -27,7 +27,7 @@
  OMP     = -openmp
  MPI     = -mpi
  #LFLAGS = 
- FFLAGS  = '-g -C -traceback'
+ FFLAGS  = '-g -C -traceback -warn all'
  #CFLAGS  =
  
  ## Sample dummy target

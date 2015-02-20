@@ -83,6 +83,21 @@ if [[ ! -e Makefile.user.mk ]] ; then
    touch Makefile.user.mk
 fi
 
+RDE_CONFIG_FILE=$(rdevar rde_config_file)
+RDE_ARCH=$(rdevar rde_arch)
+RDE_LINKED_ARCH_LIST="$(rdevar rde_linked_arch_list)"
+_found=0
+for item in $RDE_LINKED_ARCH_LIST ; do
+   if [[ x$item == x$RDE_ARCH ]] ; then
+      _found=1
+   fi
+done
+if [[ $_found == 0 ]] ; then
+   cat >> $RDE_CONFIG_FILE <<EOF
+RDE_LINKED_ARCH_LIST="\$RDE_LINKED_ARCH_LIST $RDE_ARCH"
+EOF
+fi
+
 #TODO: create/update .setenv.dot to reload rde/model?
 
 

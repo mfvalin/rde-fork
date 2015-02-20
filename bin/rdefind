@@ -4,6 +4,9 @@ import os,optparse,fnmatch,re
 RESTRICTED_FNAME = '.restricted'
 BASE_ARCH = os.environ['BASE_ARCH']
 EC_ARCH = os.environ['EC_ARCH']
+COMP_ARCH = os.environ['COMP_ARCH']
+ORDENV_PLAT = os.environ['ORDENV_PLAT']
+ORDENV_ARCH = ORDENV_PLAT+'/'+COMP_ARCH
 
 def listfiles(folder,ftype,namepattern,lfollow,lrestrict,lnodotdir,maxdepth=-1):
     restricteddir = set()
@@ -28,7 +31,7 @@ def listfiles(folder,ftype,namepattern,lfollow,lrestrict,lnodotdir,maxdepth=-1):
                     myfile = open(rfname, "r")
                     for line in myfile:
                         ## if re.match(BASE_ARCH, line) or re.match(EC_ARCH, line):
-                        if line.strip() in (BASE_ARCH,EC_ARCH,BASE_ARCH+':',EC_ARCH+':'):
+                        if line.strip() in (BASE_ARCH,COMP_ARCH,EC_ARCH,ORDENV_PLAT,ORDENV_ARCH,BASE_ARCH+':',COMP_ARCH+':',EC_ARCH+':',ORDENV_PLAT+':',ORDENV_ARCH+':'):
                             isrestricted = False
                             break
                     myfile.close()

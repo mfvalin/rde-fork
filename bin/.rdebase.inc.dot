@@ -17,7 +17,9 @@ fi
 verbose=${verbose:-0}
 quiet=${quiet:-0}
 MYSELF=${0##*/}
-COMP_ARCH=${COMP_ARCH:-${EC_ARCH#*/}}
+RDE_BASE_ARCH=$(rdevar rde_base_arch)
+RDE_COMP_ARCH=$(rdevar rde_comp_arch)
+RDE_ARCH=$(rdevar rde_arch)
 ROOT=$(pwd)
 BUILDOBJ=$(rdevar build/obj)
 BUILDBIN=$(rdevar build/bin)

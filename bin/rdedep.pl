@@ -1096,6 +1096,8 @@ sub print_dep_rules_inv2 {
    }
    for my $depname (sort keys %invdeplist) {
       #if ($#{$invdeplist{$depname}} >= 0) {
+      my $mysize = scalar @{$invdeplist{$depname}};
+      if ($mysize > 0) { 
       print STDOUT ".PHONY: _invdep_.".$depname."\n";
       print_header("_invdep_.".$depname,":","");
       for $fileyext (@{$invdeplist{$depname}}) {
@@ -1109,10 +1111,12 @@ sub print_dep_rules_inv2 {
          }
       }
       print STDOUT "\n";
-      #}
+      }
    }
    for my $depname (sort keys %invdeplist) {
-      if ($#{$invdeplist{$depname}} >= 0) {
+      #if ($#{$invdeplist{$depname}} >= 0) {
+      my $mysize = scalar @{$invdeplist{$depname}};
+      if ($mysize > 0) { 
          print_header("INVDEP_LIST_".$depname,"=","");
          for $fileyext (@{$invdeplist{$depname}}) {
             #if ($fileyext ~~  /(.*\/)*(.*)[.]([^.]*$)/) {

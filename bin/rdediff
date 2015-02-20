@@ -90,7 +90,7 @@ find_src_file_list() {
       if [[ $_myrecurse == 1 ]] ; then
          _mypath="$(find ${followlinks} ${_myfile} -type f 2>/dev/null)"
       else
-         _mypath="$(find.py ${followlinks} ${_myfile} --type f --maxdepth 0 2>/dev/null)"
+         _mypath="$(rdefind ${followlinks} ${_myfile} --type f --maxdepth 0 2>/dev/null)"
       fi
       for _myfile2 in $_mypath ; do
          mytype="$(echo ${_myfile2##*.} | cut -c1 | tr 'cfhiCFHIt' 'fffffffff')"

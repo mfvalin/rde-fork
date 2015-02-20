@@ -20,6 +20,8 @@ BUILDLIB := $(ROOT)/$(shell rdevar build/lib)
 BUILDBIN := $(ROOT)/$(shell rdevar build/bin)
 BINDIR   := $(BUILDBIN)
 
+MAKEFILEDEP := $(shell rdevar Makefile.dep)
+
 INCSUFFIXES := $(shell rdevar rdesuffix/inc)
 SRCSUFFIXES := $(shell rdevar rdesuffix/src)
 
@@ -76,16 +78,16 @@ help:
 	@echo "=============================================================="
 
 dep: 
-	rm -f Makefile.dep.$(BASE_ARCH).mk 2>/dev/null || true
+	rm -f $(MAKEFILEDEP) 2>/dev/null || true
 	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
 
-sanity: Makefile Makefile.dep.$(BASE_ARCH).mk Makefile.build.mk Makefile.rules.mk $(BUILD) $(BUILDOBJ)
+sanity: Makefile $(MAKEFILEDEP) Makefile.build.mk Makefile.rules.mk $(BUILD) $(BUILDOBJ)
 links: sanity
 	$(MAKE_LINKS)
 
 Makefile:
 	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
-Makefile.dep.$(BASE_ARCH).mk:
+$(MAKEFILEDEP):
 	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
 Makefile.build.mk:
 	rdemklink $(VERBOSE)

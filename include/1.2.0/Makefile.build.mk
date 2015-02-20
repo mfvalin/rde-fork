@@ -13,6 +13,9 @@ BUILDSRC := $(ROOT)/$(shell rdevar build/src)
 BUILDPRE := $(ROOT)/$(shell rdevar build/pre)
 BUILDBIN := $(ROOT)/$(shell rdevar build/pre)
 
+export RDE_EXP_ROOT := $(ROOT)
+MAKEFILEDEP := $(shell export RDE_EXP_ROOT=$(RDE_EXP_ROOT) && rdevar Makefile.dep)
+
 VPATH    := $(ROOT)/$(shell rdevar build/src)
 SRCPATH  := $(shell rdevar srcpath)
 
@@ -164,10 +167,10 @@ RDEALL_LIBSYS       = $(RDEALL_LIBSYS_PRE) $(LIBSYS) $(MODEL_LIBSYS) $(MODEL5_LI
 RDEALL_LIBS_NAMES = $(RDEALL_LIBAPPL) $(LIBRMN) $(RDEALL_LIBSYS)
 RDEALL_LIBS       = $(foreach item,$(RDEALL_LIBS_NAMES),-l$(item))
 
-## ==== Constants for Makefile.dep.$(BASE_ARCH).mk
+## ==== Constants for $(MAKEFILEDEP)
 
 ## all libs tagets have a dependency on LIBDEP_ALL
-LIBDEP_ALL =  Makefile.dep.$(BASE_ARCH).mk
+LIBDEP_ALL =  $(MAKEFILEDEP)
 ## Local Libraries are created in LIBDIR
 LIBDIR = $(BUILDLIB)
 ## Local Abs are created in BINDIR
@@ -224,11 +227,11 @@ endif
 #Override model's components Makefile.local.mk LCLPO=malib$(EC_ARCH)
 LCLPO = .
 
-ifneq (,$(wildcard $(ROOT)/Makefile.dep.$(BASE_ARCH).mk))
+ifneq (,$(wildcard $(ROOT)/$(MAKEFILEDEP)))
    ifneq (,$(DEBUGMAKE))
-      $(info include $(ROOT)/Makefile.dep.$(BASE_ARCH).mk)
+      $(info include $(ROOT)/$(MAKEFILEDEP))
    endif
-   include $(ROOT)/Makefile.dep.$(BASE_ARCH).mk
+   include $(ROOT)/$(MAKEFILEDEP)
 endif
 
 ifneq (,$(wildcard $(ROOT)/Makefile.user.mk))
@@ -265,9 +268,9 @@ objects: $(OBJECTS)
 # #Mettre tous les objets de l experience en cours dans la programmatheque $MALIB
 # extractall:
 
-# lib: Makefile.dep.$(BASE_ARCH).mk $(OBJECTS) $(ALL_LIBS)
+# lib: $(MAKEFILEDEP) $(OBJECTS) $(ALL_LIBS)
 
-# all: Makefile.dep.$(BASE_ARCH).mk $(OBJECTS) $(ALL_LIBS) $(ALL_BINS)
+# all: $(MAKEFILEDEP) $(OBJECTS) $(ALL_LIBS) $(ALL_BINS)
 # bin: all
 # bin_check: $(ALL_BINS_CHECK)
 

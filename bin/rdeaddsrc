@@ -21,33 +21,37 @@ Options:
     -k, --keep         : keep existing SRCPATHFILE as backup if any
         --arch [ARCH]  : restrict SRCPATH to BASE_ARCH=ARCH or EC_ARCH=ARCH
                          default: no restriction
-                         default ARCH=BASE_ARCH      
+                         default ARCH=BASE_ARCH
+        --topdirs      : list of top dirs, used for grouping
 
     DIRLIST: space separated
 EOF
 }
 
+RDE_BASE_ARCH=$(rdevar rde_base_arch)
 myforce=0
 myreset=0
 mykeep=0
-myrecurse=0
+mymaxdepth=0
 DIRLIST=''
 previous=""
 myarch=""
+mytopdirs=""
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
       (-v|--verbose) ((verbose=verbose+1));;
       (-f|--force) myforce=1;;
-      (-R|--recurse) myrecurse=9;;
+      (-R|--recurse) mymaxdepth=9;;
       (-k|--keep) mykeep=1;;
       (--reset) myreset=1;;
-      (--arch) myarch=${BASE_ARCH}; mykeep=1;;
+      (--arch) myarch=${RDE_BASE_ARCH}; mykeep=1;;
+      (--topdirs) mytopdirs=$2 ; shift;;
       (--) shift ; break;;
       (-*) myerror "Option Not recognized: $1";;
         *) 
          case $previous in
-            (-R|--recurse) myrecurse=$1;;
+            (-R|--recurse) mymaxdepth=$1;;
             (--arch) myarch=$1;;
             *) DIRLIST="$DIRLIST $1" ;;
          esac ;;
@@ -62,17 +66,17 @@ if [[ "x$DIRLIST" == x ]] ; then
    echo DIRLIST=$DIRLIST
    myerror "You need to provide at least one dir"
 fi
-export BASE_ARCH=${myarch:-$BASE_ARCH}
+export BASE_ARCH=${myarch:-${RDE_BASE_ARCH:-$BASE_ARCH}}
 
 SRCPATH="$(rdevar srcpath)"
 SRCPATH_R="$(rdevar srcpath_r)"
 if [[ x$myreset == x0 ]] ; then
-   myrecurse0="$(rdevar srcpath_recurse)"
-   if [[ x$myrecurse0 != x ]] ; then
-      if [[ x$myrecurse0 != x$myrecurse && x$myrecurse != x0 ]] ; then
+   mymaxdepth0="$(rdevar srcpath_maxdepth)"
+   if [[ x$mymaxdepth0 != x ]] ; then
+      if [[ x$mymaxdepth0 != x$mymaxdepth && x$mymaxdepth != x0 ]] ; then
          myerror "Cannot change recursivity unless you use --reset"
       fi
-      myrecurse=$myrecurse0
+      mymaxdepth=$mymaxdepth0
    fi
    mystderr 1 "Previous SRCPATH=$SRCPATH"
 else
@@ -101,12 +105,12 @@ SRCPATH="\$SRCPATH_R"
 
 #TODO: add option for arch_specific (would imply --keep to preserve other arch srcpath
 
-if [[ x$myrecurse != x0 ]] ; then
+if [[ x$mymaxdepth != x0 ]] ; then
    SRCPATH1=""
    for mydir in $SRCPATH_R; do
       mystderr 1 "Recursively Looking into: $mydir"
       #SRCPATH1="$SRCPATH1 $mydir"
-      SRCPATH1="$SRCPATH1 $(find.py $mydir --type d -L --maxdepth $myrecurse --restricted --nodotdir --name '[a-zA-Z0-9]*' | sort -r)"
+      SRCPATH1="$SRCPATH1 $(rdefind $mydir --type d -L --maxdepth $mymaxdepth --restricted --nodotdir --name '[a-zA-Z0-9]*' | sort -r)"
    done
    SRCPATH="$SRCPATH1"
 fi
@@ -119,13 +123,14 @@ mystderr 1 "Setting SRCPATH=$SRCPATH"
 if [[ x$myarch != x ]] ; then
 cat >> $SRC_PATH_FILE <<EOF
 SRCPATH_ARCH_LIST="\$SRCPATH_ARCH_LIST $myarch"
-if [[ x\$BASE_ARCH == x$myarch || x\$EC_ARCH == x$myarch || x\$COMP_ARCH == x$myarch ]] ; then
+if [[ x\${RDE_BASE_ARCH:-NIL} == x$myarch || x\${RDE_ARCH:-NIL} == x$myarch || x\$BASE_ARCH == x$myarch || x\$EC_ARCH == x$myarch || x\$COMP_ARCH == x$myarch || x\$ORDENV_PLAT == x$myarch || x\$ORDENV_PLAT/\$COMP_ARCH == x$myarch ]] ; then
 EOF
 fi
 cat >> $SRC_PATH_FILE <<EOF
-SRCPATH_RECURSE=$myrecurse
+SRCPATH_MAXDEPTH=$mymaxdepth
 SRCPATH_R="$SRCPATH_R"
 SRCPATH="$SRCPATH"
+SRCPATH_TOPDIRS="${mytopdirs}"
 EOF
 if [[ x$myarch != x ]] ; then
 cat >> $SRC_PATH_FILE <<EOF

@@ -23,7 +23,7 @@ if [[ x${WILL_LINK} == xyes ]] ; then
          if [[ -r ${mypath}/lib${mylib}.a.fl ]] ; then
             ar x ${mypath}/lib${mylib}.a.fl
             _found=1
-            exit
+            break
          fi
       done
       if [[ ${_found} == 0 ]] ; then
@@ -44,7 +44,7 @@ _mydefines="$(s.prefix "${Dprefix}" ${DEFINES} )"
 _myincludes="$(s.prefix "${Iprefix}" ${INCLUDES} ${EC_INCLUDE_PATH})"
 _mylibpath="$(s.prefix "${Lprefix}" ${LIBRARIES_PATH} ${EC_LD_LIBRARY_PATH})"
 _mylibs="$(s.prefix "${lprefix}" ${_alllibs} )"
-_myfobj="$(ls .fo/*.o 2>/dev/null)"
+_myfobj="$(ls .fo/*.o |tr '\n' ' ' 2>/dev/null)"
 
 if [[ -n $Verbose ]] ; then
    cat <<EOF
@@ -65,7 +65,7 @@ $F90C ${SourceFile} ${FC_options} ${FC_LD_options} ${FFLAGS} \
 	$_myincludes \
 	$_mylibpath \
 	$_mylibs \
-	$_myfobj \\
+	$_myfobj \
 	"$@"
 _status=$?
 

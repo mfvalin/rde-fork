@@ -29,7 +29,19 @@ EOF
 
 dolist=0
 namelist=""
-DEP_ARCH="$EC_ARCH"
+if [[ x$RDE_USE_OLD_ARCH != x1 ]] ; then
+   export RDE_KNOWN_BASE_ARCH="ubuntu-10.04-amd64-64 ubuntu-12.04-amd64-64 aix-7.1-ppc7-64"
+   export RDE_KNOWN_BASE_ARCH_OLD="ubuntu-10.04-amd64-64:Linux_x86-64 ubuntu-12.04-amd64-64:Linux_x86-64 aix-7.1-ppc7-64:AIX-powerpc7"
+   #TODO: export RDE_KNOWN_ARCH=
+   export RDE_BASE_ARCH=$ORDENV_PLAT
+else
+   export RDE_KNOWN_BASE_ARCH="Linux_x86-64 AIX-powerpc7"
+   export RDE_KNOWN_BASE_ARCH_OLD="Linux_x86-64:Linux_x86-64 AIX-powerpc7:Linux_x86-64"
+   #TODO: export RDE_KNOWN_ARCH=
+   export RDE_BASE_ARCH=${EC_ARCH%%/*}
+fi
+export RDE_COMP_ARCH=${EC_ARCH#*/}
+DEP_ARCH=${RDE_BASE_ARCH}/${RDE_COMP_ARCH}
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
@@ -45,54 +57,70 @@ while [[ $# -gt 0 ]] ; do
     shift
 done
 namelist="$namelist $@"
-export EC_ARCH=$DEP_ARCH
-export BASE_ARCH=${DEP_ARCH%%/*}
+export RDE_ARCH=$DEP_ARCH
+export RDE_BASE_ARCH=${DEP_ARCH%%/*}
+export RDE_COMP_ARCH=${DEP_ARCH#*/}
+export RDE_ARCH_FLAT=${RDE_BASE_ARCH}_${RDE_COMP_ARCH}
 
 INCSUFFIXES=".cdk .h .hf .fh .itf90 .inc .include"
 SRCSUFFIXES=".c .cpp .f .ftn .ptn .f90 .f95 .f03 .ftn90 .ptn90 .cdk90 .tmpl90 .F .FOR .F90 .F95 .F03"
 
-#COMP_ARCH0=${EC_ARCH##*/}
-#hostarch=-${TRUE_HOST}-${COMP_ARCH:-${COMP_ARCH0:-unknown}}
-hostarch=-${BASE_ARCH}
-hostarch2=-${EC_ARCH}
+#RDE_COMP_ARCH0=${RDE_ARCH##*/}
+#hostarch=-${TRUE_HOST}-${RDE_COMP_ARCH:-${RDE_COMP_ARCH0:-unknown}}
+hostarch=-${RDE_BASE_ARCH}
+hostarch2=-${RDE_BASE_ARCH}/${RDE_COMP_ARCH}
 
+RDE_EXP_ROOT=${RDE_EXP_ROOT:-.}
+RDE_CONFIG_FILE=${RDE_EXP_ROOT}/.rde.config.dot
 RDE_INC=$rde/include/$RDE_COMPILER_VERSION
-RDE_ARCH_LIST="$(cd $RDE_INC ; find */* -type d)"
-RDE_BASE_ARCH_LIST="$(cd $RDE_INC ; find.py * --type=d --maxdepth=0)"
-SRC_PATH_FILE=.rdesrcpath
-mysrcpath0() {
-   if [[ -r $SRC_PATH_FILE ]] ; then
-      . ./$SRC_PATH_FILE
-   fi
-   echo $SRCPATH
+SRC_PATH_FILE=${RDE_EXP_ROOT}/.rde.srcpath.dot
+
+
+myrde_arch_list() {
+   echo "$(cd $RDE_INC ; find */* -type d)"
 }
-mysrcpath0_recurse() {
-   if [[ -r $SRC_PATH_FILE ]] ; then
-      . ./$SRC_PATH_FILE
-   fi
-   #echo ${SRCPATH_RECURSE:-0}
-   echo ${SRCPATH_RECURSE}
+myrde_base_arch_list() {
+   echo "$(cd $RDE_INC ; rdefind * --type=d --maxdepth=0)"
+
 }
-mysrcpath0_r() {
-   if [[ -r $SRC_PATH_FILE ]] ; then
-      . ./$SRC_PATH_FILE
+myrdeconfigvar() {
+   if [[ -r $RDE_CONFIG_FILE ]] ; then
+      . $RDE_CONFIG_FILE
    fi
-   echo ${SRCPATH_R}
+   echo $(eval "echo $(echo \${$1})")
 }
-mysrcpath0_archlist() {
+mysrcpathvar() {
    if [[ -r $SRC_PATH_FILE ]] ; then
-      . ./$SRC_PATH_FILE
+      . $SRC_PATH_FILE
    fi
-   echo ${SRCPATH_ARCH_LIST}
+   echo $(eval "echo $(echo \${$1})")
+}
+
+mybasearch() {
+   for item in $RDE_KNOWN_BASE_ARCH_OLD ; do
+      if [[ x${item%:*} == x$RDE_BASE_ARCH ]] ; then
+         echo ${item#*:}
+         return
+      fi
+   done
 }
 
 myvars="
+ base_arch=       \$(mybasearch);
  rdeinc=          \$RDE_INC;
  rdesuffix=       \$INCSUFFIXES \$SRCSUFFIXES;
  rdesuffix/inc=   \$INCSUFFIXES;
  rdesuffix/src=   \$SRCSUFFIXES;
- rde_arch_list=   \$RDE_ARCH_LIST;
- rde_base_arch_list= \$RDE_BASE_ARCH_LIST;
+ rde_config_file= \$RDE_CONFIG_FILE;
+ rde_known_arch_list=   \$RDE_KNOWN_ARCH;
+ rde_known_base_arch_list= \$RDE_KNOWN_BASE_ARCH;
+ rde_supp_arch_list=   \$(myrde_arch_list);
+ rde_supp_base_arch_list= \$(myrde_base_arch_list);
+ rde_linked_arch_list= \$(myrdeconfigvar RDE_LINKED_ARCH_LIST);
+ rde_arch=        \$RDE_ARCH;
+ rde_arch_flat=   \$RDE_ARCH_FLAT;
+ rde_base_arch=   \$RDE_BASE_ARCH;
+ rde_comp_arch=   \$RDE_COMP_ARCH;
  build=           build\${hostarch};
  build/src=       build\${hostarch2};
  build/pre=       build\${hostarch2};
@@ -106,11 +134,13 @@ myvars="
  ref/src=         ref/src;
  ref/bin=         ref/bin;
  srcpathfile=     \${SRC_PATH_FILE};
- srcpath=         \$(mysrcpath0);
- srcpath_recurse= \$(mysrcpath0_recurse);
- srcpath_r=       \$(mysrcpath0_r);
- srcpath_arch_list= \$(mysrcpath0_archlist);
+ srcpath=         \$(mysrcpathvar SRCPATH);
+ srcpath_maxdepth= \$(mysrcpathvar SRCPATH_MAXDEPTH);
+ srcpath_r=       \$(mysrcpathvar SRCPATH_R);
+ srcpath_arch_list= \$(mysrcpathvar SRCPATH_ARCH_LIST);
+ srcpath_topdirs= \$(mysrcpathvar SRCPATH_TOPDIRS);
  storage=         \$(rdemodel_path -l storage);
+ Makefile.dep=    Makefile.dep.\${RDE_ARCH_FLAT}.mk;
 "
 
 if [[ $dolist == 1 ]] ; then

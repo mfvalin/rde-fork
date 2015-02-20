@@ -42,7 +42,7 @@ DEP_SUPP_FILE_GEM=$rde/etc/rdedep-gem.supp
 #DEP_SUPP_FILE_PATH0="$DEP_SUPP_FILE_GEM"
 DEP_SUPP_FILE_PATH0=":"
 DEP_SUPP_FILE_PATH=""
-DEP_ARCH="$BASE_ARCH"
+DEP_ARCH="$(rdevar rde_arch)"
 VERBOSE=''
 PERLPROF=''
 DEP_DUP_OK=''
@@ -93,12 +93,17 @@ fi
 
 mkdepfn() {
    MYARCH=$1
-   SRCPATH="$(rdevar --arch $MYARCH -- srcpath)"
-   SRCPATH_RECURSE="$(rdevar --arch $MYARCH -- srcpath_recurse)"
+   MYARCH_OLD="$(rdevar --arch $MYARCH -- base_arch)"
+   MAKEFILEDEP="$(rdevar --arch $MYARCH -- Makefile.dep)"
+   SRCPATH="$(rdevar --arch $MYARCH_OLD -- srcpath)"
+   SRCPATH_MAXDEPTH="$(rdevar --arch $MYARCH_OLD -- srcpath_maxdepth)"
    TOPDIROPT=""
-   if [[ x${SRCPATH_RECURSE:-0} != x0 ]] ; then
-      SRCPATH_R="$(rdevar --arch $MYARCH -- srcpath_r)"
-      TOPDIROPT="--topdirs=$(echo $SRCPATH_R | tr ' ' ':')"
+   TOPDIRLIST="$(rdevar --arch $MYARCH_OLD -- srcpath_topdirs)"
+   if [[ x$TOPDIRLIST == x && x${SRCPATH_MAXDEPTH:-0} != x0 ]] ; then
+      TOPDIRLIST="$(rdevar --arch $MYARCH_OLD -- srcpath_r)"
+   fi
+   if [[ x$TOPDIRLIST != x ]] ; then
+      TOPDIROPT="--topdirs=$(echo $TOPDIRLIST | tr ' ' ':')"
    fi
    OVERRIDEDIR="--override_dir=$ROOT"
    if [[ x"$SRCPATH" == x ]] ; then
@@ -120,7 +125,7 @@ mkdepfn() {
       --any_inc \
       --soft-restriction \
       --libext=.a.fl \
-      --out=Makefile.dep.${MYARCH}.mk \
+      --out=${MAKEFILEDEP} \
       $DEP_SUPP_FILE_ARG \
       $TOPDIROPT \
       $OVERRIDEDIR \

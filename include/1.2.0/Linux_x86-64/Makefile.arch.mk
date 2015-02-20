@@ -5,7 +5,8 @@ RDE_DEFINES_ARCH = -DLINUX_X86_64
 LAPACK = lapack
 BLAS   = blas
 LIBMASSWRAP =  
-LIBMASS  = $(LIBMASSWRAP) modelutils_massvp4
+#LIBMASS  = $(LIBMASSWRAP) modelutils_massvp4
+LIBMASS  = $(LIBMASSWRAP) massv_p4
 
 # LIBSYSOTHERS = $(LIBMASS) $(LAPACK) $(BLAS) $(HPCSPERF)
 ## ====================================================================

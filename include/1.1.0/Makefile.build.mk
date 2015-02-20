@@ -14,6 +14,9 @@ BUILDLIB := $(ROOT)/$(shell rdevar build/lib)
 VPATH    := $(ROOT)/$(shell rdevar build/src)
 SRCPATH  := $(shell rdevar srcpath)
 
+export RDE_EXP_ROOT := $(ROOT)
+MAKEFILEDEP := $(shell export RDE_EXP_ROOT=$(RDE_EXP_ROOT) && rdevar Makefile.dep)
+
 ifeq (,$(rde))
    $(error FATAL ERROR: rde is not defined)
 endif
@@ -47,7 +50,7 @@ INCLUDE_MOD  = "$(BUILDMOD)"
 
 LIBDIR = $(BUILDLIB)
 #BINDIR = $(BUILDBIN)
-LIBDEP_ALL =  Makefile.dep.$(BASE_ARCH).mk
+LIBDEP_ALL =  $(MAKEFILEDEP)
 
 LIBPATH = $(PWD) $(LIBPATH_PRE) $(BUILDLIB) $(LIBPATHEXTRA) $(LIBSYSPATHEXTRA) $(LIBPATHOTHER) $(LIBPATH_POST)
 #LIBAPPL = $(LIBS_PRE) $(LIBLOCAL) $(LIBOTHERS) $(LIBEXTRA) $(LIBS_POST)
@@ -100,11 +103,11 @@ endif
 #Override model's components Makefile.local.mk LCLPO=malib$(EC_ARCH)
 LCLPO = .
 
-ifneq (,$(wildcard $(ROOT)/Makefile.dep.$(BASE_ARCH).mk))
+ifneq (,$(wildcard $(ROOT)/$(MAKEFILEDEP)))
    ifneq (,$(DEBUGMAKE))
-      $(info include $(ROOT)/Makefile.dep.$(BASE_ARCH).mk)
+      $(info include $(ROOT)/$(MAKEFILEDEP))
    endif
-   include $(ROOT)/Makefile.dep.$(BASE_ARCH).mk
+   include $(ROOT)/$(MAKEFILEDEP)
 endif
 
 ifneq (,$(wildcard $(ROOT)/Makefile.user.mk))
@@ -141,9 +144,9 @@ objects: $(OBJECTS)
 # #Mettre tous les objets de l experience en cours dans la programmatheque $MALIB
 # extractall:
 
-# lib: Makefile.dep.$(BASE_ARCH).mk $(OBJECTS) $(ALL_LIBS)
+# lib: $(MAKEFILEDEP) $(OBJECTS) $(ALL_LIBS)
 
-# all: Makefile.dep.$(BASE_ARCH).mk $(OBJECTS) $(ALL_LIBS) $(ALL_BINS)
+# all: $(MAKEFILEDEP) $(OBJECTS) $(ALL_LIBS) $(ALL_BINS)
 # bin: all
 # bin_check: $(ALL_BINS_CHECK)
 
