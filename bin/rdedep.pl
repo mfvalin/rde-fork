@@ -947,7 +947,7 @@ sub print_targets {
 #------------------------------------------------------------------------
 sub print_dep_rules {
    #TODO: Dependencies to Modules should be on .mod:.o not direcly on .o (.mod could have been erased accidentaly)
-   print STDERR "Printing dependencie rules\n" if ($msg >= 3);
+   print STDERR "Printing dependency rules\n" if ($msg >= 3);
    print STDOUT "\n";
    for my $filename (sort keys %LISTOBJECT) {
       my $file = $LISTOBJECT{$filename};
@@ -1020,7 +1020,7 @@ sub rec_print_dependencies {
 #------------------------------------------------------------------------
 # sub print_dep_rules_inv {
 # 	 #return 0;
-#     print STDERR "Printing inverse dependencie\n" if ($msg >= 3);
+#     print STDERR "Printing inverse dependencies\n" if ($msg >= 3);
 #     for my $filename (keys %LISTOBJECT) {
 #         my $file = $LISTOBJECT{$filename};
 # 		  if ($flat_layout) {
@@ -1071,7 +1071,7 @@ sub rec_print_dependencies {
 
 sub print_dep_rules_inv2 {
    #return 0;
-   print STDERR "Printing inverse dependencie\n" if ($msg >= 3);
+   print STDERR "Printing inverse dependencies\n" if ($msg >= 3);
    for my $filename (keys %LISTOBJECT) {
       my $file = $LISTOBJECT{$filename};
       if ($flat_layout) {

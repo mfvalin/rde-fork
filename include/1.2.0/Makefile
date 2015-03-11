@@ -72,7 +72,7 @@ all: obj
 	cd $(BUILDOBJ) ;\
 	$(MAKE) $(NOPRINTDIR) $@ $(MYMAKE_VARS)
 
-.PHONY: help sanity links dep objloc obj_forced obj_touch qclean clean rmpo distclean
+.PHONY: help sanity links dep deplocal objloc obj_forced obj_touch qclean clean rmpo distclean
 
 help:
 	@more $(rde)/etc/rde_make_help.txt
@@ -81,13 +81,12 @@ help:
 	@.rdefindtargets
 	@echo "=============================================================="
 
-dep: 
+deplocal: 
 	rm -f $(MAKEFILEDEP) 2>/dev/null || true
 	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
-depall: 
+dep: 
 	rm -f Makefile.dep.*.mk 2>/dev/null || true
 	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE) --arch "$(RDE_ARCH_LIST)"
-
 
 sanity: Makefile $(MAKEFILEDEP) Makefile.build.mk Makefile.rules.mk $(BUILD) $(BUILDOBJ)
 links: sanity

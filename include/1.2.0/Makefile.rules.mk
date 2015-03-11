@@ -44,123 +44,117 @@ BUILDCC = export EC_INCLUDE_PATH="" ; $(RDECC)  $(RDEALL_LFLAGS) $(RDEALL_LIBPAT
 BUILDFC_NOMPI = export EC_INCLUDE_PATH="" ; $(RDEF90_LD) $(RDEALL_LFLAGS_NOMPI) $(RDEALL_LIBPATH)
 BUILDCC_NOMPI = export EC_INCLUDE_PATH="" ; $(RDECC)  $(RDEALL_LFLAGS_NOMPI) $(RDEALL_LIBPATH)
 
-RBUILD_EXTRA_OBJ0 = *.o
-RBUILD4objMPI = RBUILD_EXTRA_OBJ=$(RBUILD_EXTRA_OBJ0) ; $(RBUILD4MPI)
-RBUILD4MPI = \
-	status=0 ;\
+DORBUILD4BIDONF = \
+	mkdir .bidon 2>/dev/null ; cd .bidon ;\
 	.rdemakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ;\
 	$(FC90a) bidon_$${MAINSUBNAME}.f90 >/dev/null || status=1 ;\
 	rm -f bidon_$${MAINSUBNAME}.f90 ;\
-	lRBUILD_EXTRA_OBJ="" ;\
-	for item in $${RBUILD_EXTRA_OBJ} ; do \
-	   lRBUILD_EXTRA_OBJ="$${lRBUILD_EXTRA_OBJ} -l$${item}" ;\
-	done ;\
-	$(BUILDFC) -o $@ $${RBUILD_EXTRA_LIB} $(RDEALL_LIBS) \
-	   bidon_$${MAINSUBNAME}.o $${lRBUILD_EXTRA_OBJ} $(CODEBETA) || status=1 ;\
-	rm -f bidon_$${MAINSUBNAME}.o 2>/dev/null || true ;\
+	cd ..
+DORBUILD4BIDONC = \
+	mkdir .bidon 2>/dev/null ; cd .bidon ;\
+	.rdemakemodelbidon -c $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.c ;\
+	$(CC) bidon_$${MAINSUBNAME}.c >/dev/null || status=1 ;\
+	rm -f bidon_$${MAINSUBNAME}.c ;\
+	cd ..
+DORBUILD4EXTRAOBJ = \
+	RBUILD_EXTRA_OBJ1="`ls $${RBUILD_EXTRA_OBJ:-_RDEBUILDNOOBJ_} 2>/dev/null`"
+DORBUILD4COMMSTUBS = \
+	lRBUILD_COMM_STUBS="" ;\
+	if [[ x"$${RBUILD_COMM_STUBS}" != x"" ]] ; then \
+	   lRBUILD_COMM_STUBS="-l$${RBUILD_COMM_STUBS}";\
+	fi
+DORBUILD4FINALIZE = \
+	rm -f .bidon/bidon_$${MAINSUBNAME}.o 2>/dev/null || true ;\
 	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
+
+RBUILD_EXTRA_OBJ0 = *.o
+
+RBUILD4objMPI = RBUILD_EXTRA_OBJ=$(RBUILD_EXTRA_OBJ0) ; $(RBUILD4MPI)
+RBUILD4MPI = \
+	status=0 ;\
+	$(DORBUILD4BIDONF) ;\
+	$(DORBUILD4EXTRAOBJ) ;\
+	$(BUILDFC) -mpi -o $@ $${RBUILD_EXTRA_LIB} $(RDEALL_LIBS) \
+	   .bidon/bidon_$${MAINSUBNAME}.o $${RBUILD_EXTRA_OBJ1} $(CODEBETA) || status=1 ;\
+	$(DORBUILD4FINALIZE)
 
 RBUILD4objNOMPI = RBUILD_EXTRA_OBJ=$(RBUILD_EXTRA_OBJ0) ; $(RBUILD4NOMPI)
 RBUILD4NOMPI = \
 	status=0 ;\
-	.rdemakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ;\
-	$(FC90a) bidon_$${MAINSUBNAME}.f90 >/dev/null || status=1 ;\
-	rm -f bidon_$${MAINSUBNAME}.f90 ;\
-	lRBUILD_EXTRA_OBJ="" ;\
-	for item in $${RBUILD_EXTRA_OBJ} ; do \
-	   lRBUILD_EXTRA_OBJ="$${lRBUILD_EXTRA_OBJ} -l$${item}" ;\
-	done ;\
-	lRBUILD_COMM_STUBS="" ;\
-	if [[ x"$${RBUILD_COMM_STUBS}" != x"" ]] ; then \
-	   lRBUILD_COMM_STUBS="-l$${RBUILD_COMM_STUBS}";\
-	fi ;\
+	$(DORBUILD4BIDONF) ;\
+	$(DORBUILD4EXTRAOBJ) ;\
+	$(DORBUILD4COMMSTUBS) ;\
 	$(BUILDFC_NOMPI) -o $@ $${RBUILD_EXTRA_LIB} $(RDEALL_LIBS) $${lRBUILD_COMM_STUBS}\
-	   bidon_$${MAINSUBNAME}.o $${lRBUILD_EXTRA_OBJ} $(CODEBETA) || status=1 ;\
-	rm -f bidon_$${MAINSUBNAME}.o 2>/dev/null || true ;\
-	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
+	   .bidon/bidon_$${MAINSUBNAME}.o $${RBUILD_EXTRA_OBJ1} $(CODEBETA) || status=1 ;\
+	$(DORBUILD4FINALIZE)
 
 RBUILD4objMPI_C = RBUILD_EXTRA_OBJ=$(RBUILD_EXTRA_OBJ0) ; $(RBUILD4MPI_C)
 RBUILD4MPI_C = \
 	status=0 ;\
-	.rdemakemodelbidon -c $${MAINSUBNAME} > bidon_$${MAINSUBNAME}_c.c ; \
-	$(CC) bidon_$${MAINSUBNAME}_c.c >/dev/null || status=1 ; \
-	rm -f bidon_$${MAINSUBNAME}_c.c ;\
-	lRBUILD_EXTRA_OBJ="" ;\
-	for item in $${RBUILD_EXTRA_OBJ} ; do \
-	   lRBUILD_EXTRA_OBJ="$${lRBUILD_EXTRA_OBJ} -l$${item}" ;\
-	done ;\
-	$(BUILDCC) -o $@ $${RBUILD_EXTRA_LIB} $(RDEALL_LIBS) \
-	   bidon_$${MAINSUBNAME}.o $${lRBUILD_EXTRA_OBJ} $(CODEBETA) || status=1 ;\
-	rm -f bidon_$${MAINSUBNAME}_c.o 2>/dev/null || true ;\
-	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
+	$(DORBUILD4BIDONC) ;\
+	$(DORBUILD4EXTRAOBJ) ;\
+	$(BUILDCC)  -mpi -o $@ $${RBUILD_EXTRA_LIB} $(RDEALL_LIBS) \
+	   .bidon/bidon_$${MAINSUBNAME}.o $${RBUILD_EXTRA_OBJ1} $(CODEBETA) || status=1 ;\
+	$(DORBUILD4FINALIZE)
 
 RBUILD4objNOMPI_C = RBUILD_EXTRA_OBJ=$(RBUILD_EXTRA_OBJ0) ; $(RBUILD4NOMPI_C)
 RBUILD4NOMPI_C = \
 	status=0 ;\
-	.rdemakemodelbidon -c $${MAINSUBNAME} > bidon_$${MAINSUBNAME}_c.c ; \
-	$(CC) bidon_$${MAINSUBNAME}_c.c >/dev/null || status=1 ; \
-	rm -f bidon_$${MAINSUBNAME}_c.c ;\
-	lRBUILD_EXTRA_OBJ="" ;\
-	for item in $${RBUILD_EXTRA_OBJ} ; do \
-	   lRBUILD_EXTRA_OBJ="$${lRBUILD_EXTRA_OBJ} -l$${item}" ;\
-	done ;\
-	lRBUILD_COMM_STUBS="" ;\
-	if [[ x"$${RBUILD_COMM_STUBS}" != x"" ]] ; then \
-	   lRBUILD_COMM_STUBS="-l$${RBUILD_COMM_STUBS}";\
-	fi ;\
+	$(DORBUILD4BIDONC) ;\
+	$(DORBUILD4EXTRAOBJ) ;\
+	$(DORBUILD4COMMSTUBS) ;\
 	$(BUILDCC_NOMPI) -o $@ $${RBUILD_EXTRA_LIB} $(RDEALL_LIBS) $${lRBUILD_COMM_STUBS}\
-	   bidon_$${MAINSUBNAME}.o $${lRBUILD_EXTRA_OBJ} $(CODEBETA) || status=1 ;\
-	rm -f bidon_$${MAINSUBNAME}_c.o 2>/dev/null || true ;\
-	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
+	   .bidon/bidon_$${MAINSUBNAME}.o $${RBUILD_EXTRA_OBJ1} $(CODEBETA) || status=1 ;\
+	$(DORBUILD4FINALIZE)
 
-## ==== Legacy
+# ## ==== Legacy
 
-RBUILD  = s.compile
-RBUILD3MPI = \
-	status=0 ;\
-	.rdemakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
-	$(MAKE) bidon_$${MAINSUBNAME}.o >/dev/null || status=1 ; \
-	rm -f bidon_$${MAINSUBNAME}.f90 ;\
-	$(RBUILD) -obj bidon_$${MAINSUBNAME}.o -o $@ $(OMP) $(MPI) \
-		-libpath $(LIBPATH) \
-		-libappl $(LIBS_PRE) $${LIBLOCAL} $(LIBAPPL) \
-		-librmn $(RMN_VERSION) \
-		-libsys $(LIBSYS) \
-		-codebeta $(CODEBETA) \
-		-optf "=$(RDE_LFLAGS) $(LFLAGS)"  || status=1 ;\
-	rm -f bidon_$${MAINSUBNAME}.o 2>/dev/null || true ;\
-	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
+# RBUILD  = s.compile
+# RBUILD3MPI = \
+# 	status=0 ;\
+# 	.rdemakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
+# 	$(MAKE) bidon_$${MAINSUBNAME}.o >/dev/null || status=1 ; \
+# 	rm -f bidon_$${MAINSUBNAME}.f90 ;\
+# 	$(RBUILD) -obj bidon_$${MAINSUBNAME}.o -o $@ $(OMP) $(MPI) \
+# 		-libpath $(LIBPATH) \
+# 		-libappl $(LIBS_PRE) $${LIBLOCAL} $(LIBAPPL) \
+# 		-librmn $(RMN_VERSION) \
+# 		-libsys $(LIBSYS) \
+# 		-codebeta $(CODEBETA) \
+# 		-optf "=$(RDE_LFLAGS) $(LFLAGS)"  || status=1 ;\
+# 	rm -f bidon_$${MAINSUBNAME}.o 2>/dev/null || true ;\
+# 	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
 
-RBUILD3NOMPI = \
-	status=0 ;\
-	.rdemakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
-	$(MAKE) bidon_$${MAINSUBNAME}.o >/dev/null || status=1 ; \
-	rm -f bidon_$${MAINSUBNAME}.f90 ;\
-	$(RBUILD) -obj bidon_$${MAINSUBNAME}.o -o $@ $(OMP) \
-		-libpath $(LIBPATH) \
-		-libappl $(LIBS_PRE) $${LIBLOCAL} $(LIBAPPL) \
-		-librmn $(RMN_VERSION) \
-		-libsys $${COMM_stubs1} $(LIBSYS) \
-		-codebeta $(CODEBETA) \
-		-optf "=$(RDE_LFLAGS) $(LFLAGS)"  || status=1 ;\
-	rm -f bidon_$${MAINSUBNAME}.o 2>/dev/null || true ;\
-	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
+# RBUILD3NOMPI = \
+# 	status=0 ;\
+# 	.rdemakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
+# 	$(MAKE) bidon_$${MAINSUBNAME}.o >/dev/null || status=1 ; \
+# 	rm -f bidon_$${MAINSUBNAME}.f90 ;\
+# 	$(RBUILD) -obj bidon_$${MAINSUBNAME}.o -o $@ $(OMP) \
+# 		-libpath $(LIBPATH) \
+# 		-libappl $(LIBS_PRE) $${LIBLOCAL} $(LIBAPPL) \
+# 		-librmn $(RMN_VERSION) \
+# 		-libsys $${COMM_stubs1} $(LIBSYS) \
+# 		-codebeta $(CODEBETA) \
+# 		-optf "=$(RDE_LFLAGS) $(LFLAGS)"  || status=1 ;\
+# 	rm -f bidon_$${MAINSUBNAME}.o 2>/dev/null || true ;\
+# 	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
 
 
-RBUILD3NOMPI_C = \
-	status=0 ;\
-	.rdemakemodelbidon -c $${MAINSUBNAME} > bidon_$${MAINSUBNAME}_c.c ; \
-	$(MAKE) bidon_$${MAINSUBNAME}_c.o >/dev/null || status=1 ; \
-	rm -f bidon_$${MAINSUBNAME}_c.c ;\
-	$(RBUILD) -obj bidon_$${MAINSUBNAME}_c.o -o $@ $(OMP) -conly \
-		-libpath $(LIBPATH) \
-		-libappl $(LIBS_PRE) $${LIBLOCAL} $(LIBAPPL) \
-		-librmn $(RMN_VERSION) \
-		-libsys $${COMM_stubs1} $(LIBSYS) \
-		-codebeta $(CODEBETA) \
-		-optc "=$(RDE_LCFLAGS) $(LCFLAGS)"  || status=1 ;\
-	rm -f bidon_$${MAINSUBNAME}_c.o 2>/dev/null || true ;\
-	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
+# RBUILD3NOMPI_C = \
+# 	status=0 ;\
+# 	.rdemakemodelbidon -c $${MAINSUBNAME} > bidon_$${MAINSUBNAME}_c.c ; \
+# 	$(MAKE) bidon_$${MAINSUBNAME}_c.o >/dev/null || status=1 ; \
+# 	rm -f bidon_$${MAINSUBNAME}_c.c ;\
+# 	$(RBUILD) -obj bidon_$${MAINSUBNAME}_c.o -o $@ $(OMP) -conly \
+# 		-libpath $(LIBPATH) \
+# 		-libappl $(LIBS_PRE) $${LIBLOCAL} $(LIBAPPL) \
+# 		-librmn $(RMN_VERSION) \
+# 		-libsys $${COMM_stubs1} $(LIBSYS) \
+# 		-codebeta $(CODEBETA) \
+# 		-optc "=$(RDE_LCFLAGS) $(LCFLAGS)"  || status=1 ;\
+# 	rm -f bidon_$${MAINSUBNAME}_c.o 2>/dev/null || true ;\
+# 	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
 
 ## ==== Implicit Rules
 
