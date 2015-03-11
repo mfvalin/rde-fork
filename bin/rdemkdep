@@ -94,7 +94,7 @@ fi
 mkdepfn() {
    MYARCH=$1
    MYARCH_OLD="$(rdevar --arch $MYARCH -- base_arch)"
-   MAKEFILEDEP="$(rdevar --arch $MYARCH -- Makefile.dep)"
+   MAKEFILEDEP="$(rdevar --arch $MYARCH -- Makefile_dep)"
    SRCPATH="$(rdevar --arch $MYARCH_OLD -- srcpath)"
    SRCPATH_MAXDEPTH="$(rdevar --arch $MYARCH_OLD -- srcpath_maxdepth)"
    TOPDIROPT=""

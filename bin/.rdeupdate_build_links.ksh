@@ -37,7 +37,7 @@ while [[ $# -gt 0 ]] ; do
     shift
 done
 
-MAKEFILEDEP="$(rdevar Makefile.dep)"
+MAKEFILEDEP="$(rdevar Makefile_dep)"
 
 ## ====================================================================
 

@@ -20,7 +20,7 @@ BUILDLIB := $(ROOT)/$(shell rdevar build/lib)
 BUILDBIN := $(ROOT)/$(shell rdevar build/bin)
 BINDIR   := $(BUILDBIN)
 
-MAKEFILEDEP := $(shell rdevar Makefile.dep)
+MAKEFILEDEP := $(shell rdevar Makefile_dep)
 
 INCSUFFIXES := $(shell rdevar rdesuffix/inc)
 SRCSUFFIXES := $(shell rdevar rdesuffix/src)

@@ -1,23 +1,33 @@
 ## ====================================================================
-## File: $(shell rdevar rdeinc)/Makefile.build.mk
+## File: RDEINC/Makefile.build.mk
 ##
 
 SHELL = /bin/bash
 
 ## ==== Basic definitions
 
-BUILD    := $(ROOT)/$(shell rdevar build)
-BUILDMOD := $(ROOT)/$(shell rdevar build/mod)
-BUILDLIB := $(ROOT)/$(shell rdevar build/lib)
-BUILDSRC := $(ROOT)/$(shell rdevar build/src)
-BUILDPRE := $(ROOT)/$(shell rdevar build/pre)
-BUILDBIN := $(ROOT)/$(shell rdevar build/pre)
+RDE_BASE_ARCH := $(shell rdevar rde_base_arch)
+
+ifneq (,$(DEBUGMAKE))
+	$(info $(ROOT)/include Makefile.const.$(RDE_BASE_ARCH).mk)
+endif
+include $(ROOT)/Makefile.const.$(RDE_BASE_ARCH).mk
+
+BUILD    := $(ROOT)/$(CONST_BUILD)
+BUILDPRE := $(ROOT)/$(CONST_BUILDPRE)
+BUILDOBJ := $(ROOT)/$(CONST_BUILDOBJ)
+BUILDMOD := $(ROOT)/$(CONST_BUILDMOD)
+BUILDLIB := $(ROOT)/$(CONST_BUILDLIB)
+BUILDBIN := $(ROOT)/$(CONST_BUILDBIN)
+BINDIR   := $(BUILDBIN)
+
+BUILDSRC := $(ROOT)/$(CONST_BUILDSRC)
+
+VPATH    := $(ROOT)/$(CONST_BUILDSRC)
+SRCPATH  := $(CONST_SRCPATH)
 
 export RDE_EXP_ROOT := $(ROOT)
-MAKEFILEDEP := $(shell export RDE_EXP_ROOT=$(RDE_EXP_ROOT) && rdevar Makefile_dep)
-
-VPATH    := $(ROOT)/$(shell rdevar build/src)
-SRCPATH  := $(shell rdevar srcpath)
+MAKEFILEDEP := $(shell export RDE_EXP_ROOT=$(RDE_EXP_ROOT) && $(CONST_MAKEFILE_DEP))
 
 ifeq (,$(rde))
    $(error FATAL ERROR: rde is not defined)
@@ -52,7 +62,7 @@ AR = r.ar -arch $(ARCH)
 EC_MKL = $(RDE_MKL)
 
 FORCE_RMN_VERSION_RC = 
-RMN_VERSION = rmn_015.1$(FORCE_RMN_VERSION_RC)
+RMN_VERSION = rmn_015.2$(FORCE_RMN_VERSION_RC)
 
 LIBPATH = $(PWD) $(LIBPATH_PRE) $(BUILDLIB) $(LIBPATHEXTRA) $(LIBSYSPATHEXTRA) $(LIBPATHOTHER) $(LIBPATH_POST)
 #LIBAPPL = $(LIBS_PRE) $(LIBLOCAL) $(LIBOTHERS) $(LIBEXTRA) $(LIBS_POST)
@@ -110,7 +120,7 @@ RDEALL_DEFINES       = $(RDE_DEFINES) $(MODEL_DEFINE1) $(DEFINE)
 #MODEL: MODEL_INCLUDE_PRE MODEL_INCLUDE MODEL_INCLUDE_POST
 #USER:  INCLUDES_PRE INCLUDES INCLUDES_POST
 
-RDE_INCLUDE0 := $(shell rdevar rdeinc)
+RDE_INCLUDE0 := $(CONST_RDEINC)
 RDE_INCLUDE_MOD = "$(BUILDMOD)"
 RDE_INCLUDE     = $(RDE_INCLUDE_COMP) $(RDE_INCLUDE_ARCH) $(RDE_INCLUDE0) $(PWD) $(RDE_INCLUDE_MOD)
 

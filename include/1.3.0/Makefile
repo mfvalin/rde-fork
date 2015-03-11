@@ -1,33 +1,46 @@
 ## ====================================================================
-## File: $(shell rdevar rdeinc)/Makefile
+## File: RDEINC/Makefile
 ##
 
 SHELL = /bin/bash
 
 ## ==== Basic definitions
 
-RDE_INCLUDE0 := $(shell rdevar rdeinc)
+ROOT := $(PWD)
+RDE_BASE_ARCH := $(shell rdevar rde_base_arch)
+
+ifeq (,$(wildcard Makefile.const.$(RDE_BASE_ARCH).mk))
+$(info Building Makefile.const.$(RDE_BASE_ARCH).mk)
+$(info $(shell rdevar --mkfile))
+endif
+
+ifneq (,$(DEBUGMAKE))
+	$(info $(ROOT)/include Makefile.const.$(BASE_ARCH).mk)
+endif
+include $(ROOT)/Makefile.const.$(BASE_ARCH).mk
+
 ifeq (,$(RDE_DEP_SUPP_FILE))
 RDE_DEP_SUPP_FILE := $(rde)/etc/rdedep.supp
 endif
 
-ROOT     := $(PWD)
-BUILD    := $(ROOT)/$(shell rdevar build)
-BUILDPRE := $(ROOT)/$(shell rdevar build/pre)
-BUILDOBJ := $(ROOT)/$(shell rdevar build/obj)
-BUILDMOD := $(ROOT)/$(shell rdevar build/mod)
-BUILDLIB := $(ROOT)/$(shell rdevar build/lib)
-BUILDBIN := $(ROOT)/$(shell rdevar build/bin)
+BUILD    := $(ROOT)/$(CONST_BUILD)
+BUILDPRE := $(ROOT)/$(CONST_BUILDPRE)
+BUILDOBJ := $(ROOT)/$(CONST_BUILDOBJ)
+BUILDMOD := $(ROOT)/$(CONST_BUILDMOD)
+BUILDLIB := $(ROOT)/$(CONST_BUILDLIB)
+BUILDBIN := $(ROOT)/$(CONST_BUILDBIN)
 BINDIR   := $(BUILDBIN)
 
-MAKEFILEDEP := $(shell rdevar Makefile_dep)
+MAKEFILEDEP := $(CONST_MAKEFILE_DEP)
 
-INCSUFFIXES := $(shell rdevar rdesuffix/inc)
-SRCSUFFIXES := $(shell rdevar rdesuffix/src)
-RDE_ARCH_LIST := $(shell rdevar rde_linked_arch_list)
+INCSUFFIXES := $(CONST_RDESUFFIXINC)
+SRCSUFFIXES := $(CONST_RDESUFFIXSRC)
+RDE_ARCH_LIST := $(CONST_SRCPATH_ARCH_LIST)
 ifeq (,$(RDE_ARCH_LIST))
-RDE_ARCH_LIST := $(shell rdevar rde_arch)
+RDE_ARCH_LIST := $(CONST_RDE_BASE_ARCH_LIST)
 endif
+
+RDE_INCLUDE0 := $(CONST_RDEINC)
 
 ifeq (,$(rde))
    $(error FATAL ERROR: rde is not defined)
@@ -88,12 +101,10 @@ dep:
 	rm -f Makefile.dep.*.mk 2>/dev/null || true
 	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE) --arch "$(RDE_ARCH_LIST)"
 
-sanity: Makefile $(MAKEFILEDEP) Makefile.build.mk Makefile.rules.mk $(BUILD) $(BUILDOBJ)
+sanity: $(MAKEFILEDEP) Makefile.build.mk Makefile.rules.mk $(BUILD) $(BUILDOBJ)
 links: sanity
 	$(MAKE_LINKS)
 
-Makefile:
-	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
 $(MAKEFILEDEP):
 	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
 Makefile.build.mk:

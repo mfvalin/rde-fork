@@ -15,7 +15,7 @@ VPATH    := $(ROOT)/$(shell rdevar build/src)
 SRCPATH  := $(shell rdevar srcpath)
 
 export RDE_EXP_ROOT := $(ROOT)
-MAKEFILEDEP := $(shell export RDE_EXP_ROOT=$(RDE_EXP_ROOT) && rdevar Makefile.dep)
+MAKEFILEDEP := $(shell export RDE_EXP_ROOT=$(RDE_EXP_ROOT) && rdevar Makefile_dep)
 
 ifeq (,$(rde))
    $(error FATAL ERROR: rde is not defined)
