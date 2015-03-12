@@ -1,9 +1,14 @@
 ## ====================================================================
-## File: $(shell rdevar rdeinc)/Makefile.rules.mk
+## File: RDEINC/Makefile.rules.mk
 ##
 
-INCSUFFIXES = $(shell rdevar rdesuffix/inc)
-SRCSUFFIXES = $(shell rdevar rdesuffix/src)
+ifneq (,$(DEBUGMAKE))
+	$(info $(ROOT)/include Makefile.const.$(BASE_ARCH).mk)
+endif
+include $(ROOT)/Makefile.const.$(BASE_ARCH).mk
+
+INCSUFFIXES = $(CONST_RDESUFFIXINC)
+SRCSUFFIXES = $(CONST_RDESUFFIXSRC)
 
 .SUFFIXES :
 .SUFFIXES : $(INCSUFFIXES) $(SRCSUFFIXES) .o 

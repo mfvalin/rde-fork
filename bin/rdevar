@@ -27,6 +27,8 @@ Options:
 EOF
 }
 
+doshfile=0
+domkfile=0
 dolist=0
 namelist=""
 DEP_ARCH="$EC_ARCH"
@@ -38,12 +40,15 @@ while [[ $# -gt 0 ]] ; do
          if [[ x$2 != x && x$(echo $2 | cut -c1) != x- ]] ; then
             shift ; DEP_ARCH=$1
          fi;;
+      (--mkfile)  domkfile=1; shift ; break;;
+      (--shfile)  doshfile=1; shift ; break;;
       (--) shift ; break;;
       (-*) echo "ERROR: Option Not recognized: $1" 1>&2 ; exit 1;;
       *) namelist="$namelist $1";;
     esac
     shift
 done
+
 namelist="$namelist $@"
 export EC_ARCH=$DEP_ARCH
 export BASE_ARCH=${DEP_ARCH%%/*}
@@ -57,8 +62,12 @@ hostarch=-${BASE_ARCH}
 hostarch2=-${EC_ARCH}
 
 RDE_INC=$rde/include/$RDE_COMPILER_VERSION
-RDE_ARCH_LIST="$(cd $RDE_INC ; find */* -type d)"
-RDE_BASE_ARCH_LIST="$(cd $RDE_INC ; find.py * --type=d --maxdepth=0)"
+RDE_ARCH_LIST() {
+   echo "$(cd $RDE_INC ; find */* -type d)"
+}
+RDE_BASE_ARCH_LIST() {
+   echo "$(cd $RDE_INC ; find.py * --type=d --maxdepth=0)"
+}
 SRC_PATH_FILE=.rdesrcpath
 mysrcpath0() {
    if [[ -r $SRC_PATH_FILE ]] ; then
@@ -91,8 +100,8 @@ myvars="
  rdesuffix=       \$INCSUFFIXES \$SRCSUFFIXES;
  rdesuffix/inc=   \$INCSUFFIXES;
  rdesuffix/src=   \$SRCSUFFIXES;
- rde_arch_list=   \$RDE_ARCH_LIST;
- rde_base_arch_list= \$RDE_BASE_ARCH_LIST;
+ rde_arch_list=   \$(RDE_ARCH_LIST);
+ rde_base_arch_list= \$(RDE_BASE_ARCH_LIST);
  build=           build\${hostarch};
  build/src=       build\${hostarch2};
  build/pre=       build\${hostarch2};
@@ -112,6 +121,39 @@ myvars="
  srcpath_arch_list= \$(mysrcpath0_archlist);
  storage=         \$(rdemodel_path -l storage);
 "
+
+
+if [[ $domkfile == 1 ]] ; then
+   filename=Makefile.const.${BASE_ARCH}.mk
+   echo > $filename
+   #echo $eval $(echo $myvars | sed 's/;[ ]/;/g' | sed 's/=[ ]/ = /g') | tr ';' '\n'
+   knownnames="$(echo $myvars | tr ';' '\n' | sed 's/=.*$//g' )"
+   for myname in $knownnames ; do
+      myvar="$(echo $myvars | tr ';' '\n' | grep "^ ${myname}=")"
+      if [[ ! -n $myvar ]] ; then
+         myvar="$(echo $myvars | tr ';' '\n' | grep "^${myname}=")"
+      fi
+      myname2=CONST_$(echo $myname | tr 'a-z' 'A-Z' | sed 's/\///g')
+      echo "$myname2 := $(eval echo $(echo $myvar | cut -d= -f2))" >> $filename
+   done
+fi
+
+
+if [[ $doshfile == 1 ]] ; then
+   filename=.rde.const.${BASE_ARCH}.dot
+   echo > $filename
+   #echo $eval $(echo $myvars | sed 's/;[ ]/;/g' | sed 's/=[ ]/ = /g') | tr ';' '\n'
+   knownnames="$(echo $myvars | tr ';' '\n' | sed 's/=.*$//g' )"
+   for myname in $knownnames ; do
+      myvar="$(echo $myvars | tr ';' '\n' | grep "^ ${myname}=")"
+      if [[ ! -n $myvar ]] ; then
+         myvar="$(echo $myvars | tr ';' '\n' | grep "^${myname}=")"
+      fi
+      myname2=CONST_$(echo $myname | tr 'a-z' 'A-Z' | sed 's/\///g')
+      echo "$myname2='$(eval echo $(echo $myvar | cut -d= -f2))'" >> $filename
+   done
+fi
+
 
 if [[ $dolist == 1 ]] ; then
    knownnames="$(echo $myvars | tr ';' '\n' | sed 's/=.*$//g' )"

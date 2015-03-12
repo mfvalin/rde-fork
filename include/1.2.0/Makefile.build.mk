@@ -1,20 +1,28 @@
 ## ====================================================================
-## File: $(shell rdevar rdeinc)/Makefile.build.mk
+## File: RDEINC/Makefile.build.mk
 ##
 
 SHELL = /bin/bash
 
 ## ==== Basic definitions
 
-BUILD    := $(ROOT)/$(shell rdevar build)
-BUILDMOD := $(ROOT)/$(shell rdevar build/mod)
-BUILDLIB := $(ROOT)/$(shell rdevar build/lib)
-BUILDSRC := $(ROOT)/$(shell rdevar build/src)
-BUILDPRE := $(ROOT)/$(shell rdevar build/pre)
-BUILDBIN := $(ROOT)/$(shell rdevar build/pre)
+ifneq (,$(DEBUGMAKE))
+	$(info $(ROOT)/include Makefile.const.$(BASE_ARCH).mk)
+endif
+include $(ROOT)/Makefile.const.$(BASE_ARCH).mk
 
-VPATH    := $(ROOT)/$(shell rdevar build/src)
-SRCPATH  := $(shell rdevar srcpath)
+BUILD    := $(ROOT)/$(CONST_BUILD)
+BUILDPRE := $(ROOT)/$(CONST_BUILDPRE)
+BUILDOBJ := $(ROOT)/$(CONST_BUILDOBJ)
+BUILDMOD := $(ROOT)/$(CONST_BUILDMOD)
+BUILDLIB := $(ROOT)/$(CONST_BUILDLIB)
+BUILDBIN := $(ROOT)/$(CONST_BUILDBIN)
+BINDIR   := $(BUILDBIN)
+
+BUILDSRC := $(ROOT)/$(CONST_BUILDSRC)
+
+VPATH    := $(ROOT)/$(CONST_BUILDSRC)
+SRCPATH  := $(CONST_SRCPATH)
 
 ifeq (,$(rde))
    $(error FATAL ERROR: rde is not defined)
@@ -107,7 +115,7 @@ RDEALL_DEFINES       = $(RDE_DEFINES) $(MODEL_DEFINE1) $(DEFINE)
 #MODEL: MODEL_INCLUDE_PRE MODEL_INCLUDE MODEL_INCLUDE_POST
 #USER:  INCLUDES_PRE INCLUDES INCLUDES_POST
 
-RDE_INCLUDE0 := $(shell rdevar rdeinc)
+RDE_INCLUDE0 := $(CONST_RDEINC)
 RDE_INCLUDE_MOD = "$(BUILDMOD)"
 RDE_INCLUDE     = $(RDE_INCLUDE_COMP) $(RDE_INCLUDE_ARCH) $(RDE_INCLUDE0) $(PWD) $(RDE_INCLUDE_MOD)
 
