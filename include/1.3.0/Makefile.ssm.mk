@@ -1,11 +1,13 @@
 ## ====================================================================
-## File: $(shell rdevar rdeinc)/Makefile.ssm.mk
+## File: RDEINC/Makefile.ssm.mk
 ##
 
 ## ==== Pkg Building Macros
 
-SSMARCH = $(shell .rdessmarch)
+SSMARCH_OLD = $(shell .rdessmarch)
 SSMORDARCH = $(shell .rdessmarch --ord)
+SSMARCH = $(SSMORDARCH)
+
 SSMDEPOTDIR = $(HOME)/SsmDepot
 # export SSMTMPLDIR = $(rde)/share/ssm_tmpl
 # export SSMTMPLNAMEARCH  := PKG_V998V_ARCH
@@ -22,7 +24,7 @@ rsync -av $$(wildcard lib$(1)*.a lib$(1)*.a.fl lib$(1)*.so) $$@/lib/$$(EC_ARCH)/
 cd $$(BINDIR) ; \
 cp $$($(2)_ABS_FILES) $$@/bin/$$(BASE_ARCH) ; \
 cp -R $$(DIRORIG_$(1))/.ssm.d $$@/ ; \
-.rdemk_ssm_control modelutils $$($(2)_VERSION) "$$(SSMORDARCH) ; $$(SSMARCH) ; $$(BASE_ARCH)" $$@/BUILDINFO $$@/DESCRIPTION > $$@/.ssm.d/control ; \
+.rdemk_ssm_control modelutils $$($(2)_VERSION) "$$(SSMORDARCH) ; $$(SSMARCH_OLD) ; $$(BASE_ARCH)" $$@/BUILDINFO $$@/DESCRIPTION > $$@/.ssm.d/control ; \
 
 ## e.g: $(eval $(call SSMALL_template,modelutils,MODELUTILS,modelutils_$(MODELUTILS_VERSION)_all))
 SSMALL_template = \

@@ -20,6 +20,7 @@ Options:
     -q, --quiet        : silence every comment and errors
     -t, --touch        : touch file even if already checked out
     -f, --force        : force replace existing file
+        --ext          : No error if file.ext not in ext list
     FILES              : space separated list of src files or dir
 
 EOF
@@ -30,6 +31,7 @@ verbose=1
 myquiet=''
 myforce=0
 mytouch=0
+myextlist=""
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
@@ -37,9 +39,15 @@ while [[ $# -gt 0 ]] ; do
       (-q|--quiet) ((quiet=1));;
       (-f|--force) myforce=1;;
       (-t|--touch) mytouch=1;;
+      (--ext=*) myextlist="$myextlist ${1#*=}";;
+      (--ext) ;;
       (--) shift ; break;;
       (-*) myerror "Option Not recognized: $1";;
-        *) PATHLIST="$PATHLIST $1";;
+      *)
+         case $previous in
+            (--ext) myextlist="$myextlist $1";;
+            *) PATHLIST="$PATHLIST $1";;
+         esac ;;
     esac
 	 previous=$1
     shift
@@ -67,6 +75,14 @@ find_src() {
 }
 
 for myfile in $PATHLIST ; do
+   if [[ x"$myextlist" != x"" ]] ; then
+      ext=${myfile##*.} 
+      if [[ x$ext == x$myfile ]] ; then ext="" ; fi
+      isSrc="$(echo $myextlist | grep -F .${ext:-_______})"
+      if [[ x"$isSrc" == x ]] ; then
+         exit 0
+      fi
+   fi
    mypathlist="$(find_src $myfile -L 2>/dev/null)"
    if [[ x${mypathlist} == x ]] ; then
       mysimfile="$(.rdesimilnames $myquiet $myfile)"

@@ -6,12 +6,12 @@ SHELL = /bin/bash
 
 ## ==== Basic definitions
 
-RDE_BASE_ARCH := $(shell rdevar rde_base_arch)
-
-ifneq (,$(DEBUGMAKE))
-	$(info $(ROOT)/include Makefile.const.$(RDE_BASE_ARCH).mk)
+ifeq (,$(CONST_BUILD))
+   ifneq (,$(DEBUGMAKE))
+      $(info include $(ROOT)/include Makefile.const.$(RDE_BASE_ARCH).mk)
+   endif
+   include $(ROOT)/Makefile.const.$(RDE_BASE_ARCH).mk
 endif
-include $(ROOT)/Makefile.const.$(RDE_BASE_ARCH).mk
 
 BUILD    := $(ROOT)/$(CONST_BUILD)
 BUILDPRE := $(ROOT)/$(CONST_BUILDPRE)
@@ -27,7 +27,8 @@ VPATH    := $(ROOT)/$(CONST_BUILDSRC)
 SRCPATH  := $(CONST_SRCPATH)
 
 export RDE_EXP_ROOT := $(ROOT)
-MAKEFILEDEP := $(shell export RDE_EXP_ROOT=$(RDE_EXP_ROOT) && $(CONST_MAKEFILE_DEP))
+#MAKEFILEDEP := $(shell export RDE_EXP_ROOT=$(RDE_EXP_ROOT) && $(rdevar Makefile_dep))
+MAKEFILEDEP := $(CONST_MAKEFILE_DEP)
 
 ifeq (,$(rde))
    $(error FATAL ERROR: rde is not defined)
@@ -42,16 +43,13 @@ endif
 #    $(error FATAL ERROR: VPATH is not defined)
 # endif
 
-VERBOSE := -v
-ifneq (,$(findstring s,$(MAKEFLAGS)))
-VERBOSE := 
-endif
+#VERBOSE := -v
 #ifneq (,$(findstring d,$(MAKEFLAGS)))
 #DEBUGMAKE := --debug
 #endif
-ifeq (,$(VERBOSE))
-.SILENT:
-endif
+# ifeq (,$(VERBOSE))
+# .SILENT:
+# endif
 
 CPP = /lib/cpp
 # ASFLAGS =  
@@ -62,7 +60,8 @@ AR = r.ar -arch $(ARCH)
 EC_MKL = $(RDE_MKL)
 
 FORCE_RMN_VERSION_RC = 
-RMN_VERSION = rmn_015.2$(FORCE_RMN_VERSION_RC)
+#RMN_VERSION = rmn_015.2$(FORCE_RMN_VERSION_RC)
+RMN_VERSION = rmn$(FORCE_RMN_VERSION_RC)
 
 LIBPATH = $(PWD) $(LIBPATH_PRE) $(BUILDLIB) $(LIBPATHEXTRA) $(LIBSYSPATHEXTRA) $(LIBPATHOTHER) $(LIBPATH_POST)
 #LIBAPPL = $(LIBS_PRE) $(LIBLOCAL) $(LIBOTHERS) $(LIBEXTRA) $(LIBS_POST)
@@ -211,12 +210,20 @@ ifneq (,$(wildcard $(ROOT)/Makefile.rules.mk))
    include $(ROOT)/Makefile.rules.mk
 endif
 
+ifneq (,$(wildcard $(RDE_INCLUDE0)/Makefile.ssm.mk))
+   ifneq (,$(DEBUGMAKE))
+      $(info include $(RDE_INCLUDE0)/Makefile.ssm.mk)
+   endif
+   include $(RDE_INCLUDE0)/Makefile.ssm.mk
+endif
+
 ifneq (,$(wildcard $(RDE_INCLUDE0)/$(BASE_ARCH)/Makefile.arch.mk))
    ifneq (,$(DEBUGMAKE))
       $(info include $(RDE_INCLUDE0)/$(BASE_ARCH)/Makefile.arch.mk)
    endif
    include $(RDE_INCLUDE0)/$(BASE_ARCH)/Makefile.arch.mk
 endif
+
 ifneq (,$(wildcard $(RDE_INCLUDE0)/$(EC_ARCH)/Makefile.arch.mk))
    ifneq (,$(DEBUGMAKE))
       $(info include $(RDE_INCLUDE0)/$(EC_ARCH)/Makefile.arch.mk)
@@ -257,10 +264,25 @@ ifneq (,$(wildcard $(ROOT)/Makefile.user.$(COMP_ARCH).mk))
    include $(ROOT)/Makefile.user.$(COMP_ARCH).mk
 endif
 
+ifneq (,$(findstring s,$(MAKEFLAGS)))
+   VERBOSE := 
+endif
+ifneq (,$(VERBOSE))
+	VERBOSE  := -v
+	VERBOSE2 := -verbose
+endif
+
 ## ==== Targets
+ifneq (,$(DEBUGMAKE))
+   $(info Definitions done, Starting Targets section)
+endif
+
+#.DEFAULT: 
+#	@rdeco -q $@ || true \;
 
 .DEFAULT: 
-	@rdeco -q $@ || true
+	@if [[ x"$$(.rdeisext --ext="$(CONST_RDESUFFIX) .mk" $@)" == x1 ]] ; then rdeco -q $@  && echo "Checking out: $@" || (echo "ERROR: File Not found: $@" && exit 1);\
+	else echo "ERROR: No such target: $@" 1>&2 ; exit 1 ; fi
 
 .PHONY: objexp #TODO
 

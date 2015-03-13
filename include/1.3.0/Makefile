@@ -4,23 +4,28 @@
 
 SHELL = /bin/bash
 
-## ==== Basic definitions
+ifneq (,$(DEBUGMAKE))
+   MYTIME = time
+endif
 
 ROOT := $(PWD)
 RDE_BASE_ARCH := $(shell rdevar rde_base_arch)
 
-ifeq (,$(wildcard Makefile.const.$(RDE_BASE_ARCH).mk))
-$(info Building Makefile.const.$(RDE_BASE_ARCH).mk)
-$(info $(shell rdevar --mkfile))
-endif
+## ==== Basic definitions
 
-ifneq (,$(DEBUGMAKE))
-	$(info $(ROOT)/include Makefile.const.$(BASE_ARCH).mk)
+ifeq (,$(wildcard Makefile.const.$(RDE_BASE_ARCH).mk))
+   $(info Building Makefile.const.$(RDE_BASE_ARCH).mk)
+   $(info $(shell $(MYTIME) rdevar --mkfile))
 endif
-include $(ROOT)/Makefile.const.$(BASE_ARCH).mk
+ifeq (,$(CONST_BUILD))
+   ifneq (,$(DEBUGMAKE))
+      $(info include $(ROOT)/include Makefile.const.$(RDE_BASE_ARCH).mk)
+   endif
+   include $(ROOT)/Makefile.const.$(RDE_BASE_ARCH).mk
+endif
 
 ifeq (,$(RDE_DEP_SUPP_FILE))
-RDE_DEP_SUPP_FILE := $(rde)/etc/rdedep.supp
+   RDE_DEP_SUPP_FILE := $(rde)/etc/rdedep.supp
 endif
 
 BUILD    := $(ROOT)/$(CONST_BUILD)
@@ -35,10 +40,10 @@ MAKEFILEDEP := $(CONST_MAKEFILE_DEP)
 
 INCSUFFIXES := $(CONST_RDESUFFIXINC)
 SRCSUFFIXES := $(CONST_RDESUFFIXSRC)
-RDE_ARCH_LIST := $(CONST_SRCPATH_ARCH_LIST)
-ifeq (,$(RDE_ARCH_LIST))
-RDE_ARCH_LIST := $(CONST_RDE_BASE_ARCH_LIST)
-endif
+#RDE_ARCH_LIST := $(CONST_SRCPATH_ARCH_LIST)
+#ifeq (,$(RDE_ARCH_LIST))
+RDE_ARCH_LIST := $(CONST_RDE_KNOWN_BASE_ARCH_LIST)
+#endif
 
 RDE_INCLUDE0 := $(CONST_RDEINC)
 
@@ -52,19 +57,23 @@ ifeq ($(ROOT),$(BUILD))
    $(error FATAL ERROR: BUILD == ROOT)
 endif
 
-VERBOSE = -v
+#VERBOSE = -v
 ifneq (,$(findstring s,$(MAKEFLAGS)))
-VERBOSE = 
+   VERBOSE = 
 endif
-ifeq (,$(VERBOSE))
-.SILENT:
+ifneq (,$(VERBOSE))
+	VERBOSE := -v
 endif
+# ifeq (,$(VERBOSE))
+# .SILENT:
+# endif
 NOPRINTDIR := --no-print-directory
 
 #MYTIME = time
 
 MAKE_LINKS := $(MYTIME) .rdeupdate_build_links.ksh
-MYMAKE_VARS = ROOT=$(ROOT) BINDIR=$(BINDIR)
+MYMAKE_VARS = ROOT=$(ROOT) RDE_BASE_ARCH=$(RDE_BASE_ARCH) BINDIR=$(BINDIR) DEBUGMAKE=$(DEBUGMAKE) MYTIME=$(MYTIME)
+# VERBOSE=$(VERBOSE)
 
 ifneq (,$(wildcard $(ROOT)/Makefile.user.root.mk))
    ifneq (,$(DEBUGMAKE))
@@ -83,7 +92,7 @@ all: obj
 	$(MAKE) $(NOPRINTDIR) sanity
 	$(MAKE_LINKS) ;\
 	cd $(BUILDOBJ) ;\
-	$(MAKE) $(NOPRINTDIR) $@ $(MYMAKE_VARS)
+	$(MYTIME) $(MAKE) $(NOPRINTDIR) $@ $(MYMAKE_VARS)
 
 .PHONY: help sanity links dep deplocal objloc obj_forced obj_touch qclean clean rmpo distclean
 
@@ -96,25 +105,30 @@ help:
 
 deplocal: 
 	rm -f $(MAKEFILEDEP) 2>/dev/null || true
-	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
+	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
 dep: 
 	rm -f Makefile.dep.*.mk 2>/dev/null || true
-	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE) --arch "$(RDE_ARCH_LIST)"
+	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE) --arch "$(RDE_ARCH_LIST)"
 
 sanity: $(MAKEFILEDEP) Makefile.build.mk Makefile.rules.mk $(BUILD) $(BUILDOBJ)
 links: sanity
 	$(MAKE_LINKS)
 
+.PHONY: Makefile.const
+Makefile.const:
+	$(info Building Makefile.const.$(RDE_BASE_ARCH).mk)
+	$(MYTIME) rdevar --mkfile
+
 $(MAKEFILEDEP):
-	rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
+	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
 Makefile.build.mk:
-	rdemklink $(VERBOSE)
+	$(MYTIME) rdemklink $(VERBOSE)
 Makefile.rules.mk:
-	rdemklink $(VERBOSE)
+	$(MYTIME) rdemklink $(VERBOSE)
 $(BUILD):
-	rdemklink $(VERBOSE)
+	$(MYTIME) rdemklink $(VERBOSE)
 $(BUILDOBJ):
-	rdemklink $(VERBOSE)
+	$(MYTIME) rdemklink $(VERBOSE)
 
 #Compiler uniquement les fichiers  modifies.
 qobj: obj
@@ -123,13 +137,13 @@ obj:  sanity
 	cd $(BUILDOBJ) ;\
 	for myfile in $(foreach exte,$(SRCSUFFIXES),$(wildcard *$(exte))) ; do \
 		if [[ -L $${myfile} ]] ; then \
-			$(MAKE) $(NOPRINTDIR) $${myfile%.*}.o $(MYMAKE_VARS) ;\
+			$(MYTIME) $(MAKE) $(NOPRINTDIR) $${myfile%.*}.o $(MYMAKE_VARS) ;\
 			if [[ $${?} != 0 ]] ; then exit 1 ; fi ;\
 		fi ;\
 	done ;\
 	for myfile in $(foreach exte,$(INCSUFFIXES) $(SRCSUFFIXES),$(wildcard *$(exte))) ; do \
 		if [[ -L $${myfile} ]] ; then \
-			$(MAKE) $(NOPRINTDIR) _invdep_.$${myfile} $(MYMAKE_VARS) ;\
+			$(MYTIME) $(MAKE) $(NOPRINTDIR) _invdep_.$${myfile} $(MYMAKE_VARS) ;\
 			if [[ $${?} != 0 ]] ; then exit 1 ; fi ;\
 		fi ;\
 	done

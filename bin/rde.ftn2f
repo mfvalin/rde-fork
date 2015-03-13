@@ -1,11 +1,4 @@
 #!/bin/ksh
-#
-# s.ftn2f
-
-# set EC_LD_LIBRARY_PATH and EC_INCLUDE_PATH using LD_LIBRARY_PATH
-#export EC_LD_LIBRARY_PATH=`s.generate_ec_path --lib`
-#export EC_INCLUDE_PATH=`s.generate_ec_path --include`
-
 Prefixlang=""
 Suffixlang="f"
 
@@ -29,7 +22,16 @@ r.gppf "$Prefixlang" -chop_bang -gpp -F  \\
 EOF
 fi
 
-r.gppf "$Prefixlang" -chop_bang -gpp -F  \
-	$(s.prefix -I ${INCLUDES} ${EC_INCLUDE_PATH}) \
-	-D__FILE__="#file" -D__LINE__="#line" ${DEFINES} \
-	"$SourceFile" > ${DestFile}.${Suffixlang}  || { rm -f ${DestFile}.${Suffixlang} ; exit 1 ; }
+doit() {
+   status=0
+   r.gppf "$Prefixlang" -chop_bang -gpp -F  \
+	   $(s.prefix -I ${INCLUDES} ${EC_INCLUDE_PATH}) \
+	   -D__FILE__="#file" -D__LINE__="#line" ${DEFINES} \
+ 	   "$SourceFile" 2>&1 > ${DestFile}.${Suffixlang} || { rm -f ${DestFile}.${Suffixlang} ; status=1 ;} 
+   return $status
+}
+
+toto="$(doit)"
+status=$?
+if [[ x$status != x0 ]] ; then echo $toto ; fi
+exit $status

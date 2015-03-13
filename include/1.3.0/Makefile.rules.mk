@@ -2,22 +2,18 @@
 ## File: RDEINC/Makefile.rules.mk
 ##
 
-RDE_BASE_ARCH := $(shell rdevar rde_base_arch)
-
-ifneq (,$(DEBUGMAKE))
-	$(info $(ROOT)/include Makefile.const.$(RDE_BASE_ARCH).mk)
+ifeq (,$(CONST_BUILD))
+   ifneq (,$(DEBUGMAKE))
+      $(info include $(ROOT)/include Makefile.const.$(RDE_BASE_ARCH).mk)
+   endif
+   include $(ROOT)/Makefile.const.$(RDE_BASE_ARCH).mk
 endif
-include $(ROOT)/Makefile.const.$(RDE_BASE_ARCH).mk
 
 INCSUFFIXES = $(CONST_RDESUFFIXINC)
 SRCSUFFIXES = $(CONST_RDESUFFIXSRC)
 
 .SUFFIXES :
 .SUFFIXES : $(INCSUFFIXES) $(SRCSUFFIXES) .o 
-
-ifneq (,$(VERBOSE))
-VERBOSE2 = -verbose
-endif
 
 ## ==== compilation / load macros
 
@@ -70,6 +66,13 @@ DORBUILD4COMMSTUBS = \
 	if [[ x"$${RBUILD_COMM_STUBS}" != x"" ]] ; then \
 	   lRBUILD_COMM_STUBS="-l$${RBUILD_COMM_STUBS}";\
 	fi
+DORBUILDEXTRALIBS = \
+	lRBUILD_EXTRA_LIB="" ;\
+	if [[ x"$${RBUILD_EXTRA_LIB}" != x"" ]] ; then \
+		for mylib in $${RBUILD_EXTRA_LIB} ; do \
+	   	lRBUILD_EXTRA_LIB="$${RBUILD_EXTRA_LIB} -l$${mylib}";\
+		done ;\
+	fi
 DORBUILD4FINALIZE = \
 	rm -f .bidon/bidon_$${MAINSUBNAME}.o 2>/dev/null || true ;\
 	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
@@ -81,7 +84,8 @@ RBUILD4MPI = \
 	status=0 ;\
 	$(DORBUILD4BIDONF) ;\
 	$(DORBUILD4EXTRAOBJ) ;\
-	$(BUILDFC) -mpi -o $@ $${RBUILD_EXTRA_LIB} $(RDEALL_LIBS) \
+	$(DORBUILDEXTRALIBS) ;\
+	$(BUILDFC) -mpi -o $@ $${lRBUILD_EXTRA_LIB} $(RDEALL_LIBS) \
 	   .bidon/bidon_$${MAINSUBNAME}.o $${RBUILD_EXTRA_OBJ1} $(CODEBETA) || status=1 ;\
 	$(DORBUILD4FINALIZE)
 
@@ -91,7 +95,8 @@ RBUILD4NOMPI = \
 	$(DORBUILD4BIDONF) ;\
 	$(DORBUILD4EXTRAOBJ) ;\
 	$(DORBUILD4COMMSTUBS) ;\
-	$(BUILDFC_NOMPI) -o $@ $${RBUILD_EXTRA_LIB} $(RDEALL_LIBS) $${lRBUILD_COMM_STUBS}\
+	$(DORBUILDEXTRALIBS) ;\
+	$(BUILDFC_NOMPI) -o $@ $${lRBUILD_EXTRA_LIB} $(RDEALL_LIBS) $${lRBUILD_COMM_STUBS}\
 	   .bidon/bidon_$${MAINSUBNAME}.o $${RBUILD_EXTRA_OBJ1} $(CODEBETA) || status=1 ;\
 	$(DORBUILD4FINALIZE)
 
@@ -100,7 +105,8 @@ RBUILD4MPI_C = \
 	status=0 ;\
 	$(DORBUILD4BIDONC) ;\
 	$(DORBUILD4EXTRAOBJ) ;\
-	$(BUILDCC)  -mpi -o $@ $${RBUILD_EXTRA_LIB} $(RDEALL_LIBS) \
+	$(DORBUILDEXTRALIBS) ;\
+	$(BUILDCC)  -mpi -o $@ $${lRBUILD_EXTRA_LIB} $(RDEALL_LIBS) \
 	   .bidon/bidon_$${MAINSUBNAME}.o $${RBUILD_EXTRA_OBJ1} $(CODEBETA) || status=1 ;\
 	$(DORBUILD4FINALIZE)
 
@@ -110,7 +116,8 @@ RBUILD4NOMPI_C = \
 	$(DORBUILD4BIDONC) ;\
 	$(DORBUILD4EXTRAOBJ) ;\
 	$(DORBUILD4COMMSTUBS) ;\
-	$(BUILDCC_NOMPI) -o $@ $${RBUILD_EXTRA_LIB} $(RDEALL_LIBS) $${lRBUILD_COMM_STUBS}\
+	$(DORBUILDEXTRALIBS) ;\
+	$(BUILDCC_NOMPI) -o $@ $${lRBUILD_EXTRA_LIB} $(RDEALL_LIBS) $${lRBUILD_COMM_STUBS}\
 	   .bidon/bidon_$${MAINSUBNAME}.o $${RBUILD_EXTRA_OBJ1} $(CODEBETA) || status=1 ;\
 	$(DORBUILD4FINALIZE)
 

@@ -144,8 +144,9 @@ myvars="
  srcpath_arch_list= \$(mysrcpathvar SRCPATH_ARCH_LIST);
  srcpath_topdirs= \$(mysrcpathvar SRCPATH_TOPDIRS);
  storage=         \$(rdemodel_path -l storage);
- Makefile_dep=    Makefile.dep.\${RDE_ARCH_FLAT}.mk;
+ Makefile_dep=    Makefile.dep.\${RDE_BASE_ARCH}.mk;
 "
+# Makefile_dep=    Makefile.dep.\${RDE_ARCH_FLAT}.mk;
 
 
 if [[ $domkfile == 1 ]] ; then
