@@ -7,4 +7,5 @@ export RDE_COMPILER_VERSION=1.3.0
 export PATH=.:$rde/bin:$PATH
 if [[ x$BASE_ARCH == xAIX-powerpc7 ]] ; then
    s.use gmake as make
+   s.use gtar as tar
 fi

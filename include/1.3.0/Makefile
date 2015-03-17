@@ -107,6 +107,7 @@ deplocal:
 	rm -f $(MAKEFILEDEP) 2>/dev/null || true
 	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
 dep: 
+	#TODO: use RDE_LINKED_ARCH_LIST if defined
 	rm -f Makefile.dep.*.mk 2>/dev/null || true
 	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE) --arch "$(RDE_ARCH_LIST)"
 
