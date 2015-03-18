@@ -145,6 +145,10 @@ myvars="
  srcpath_topdirs= \$(mysrcpathvar SRCPATH_TOPDIRS);
  storage=         \$(rdemodel_path -l storage);
  Makefile_dep=    Makefile.dep.\${RDE_BASE_ARCH}.mk;
+ Makefile_const=  Makefile.const.\${RDE_BASE_ARCH}.mk;
+ RDEROOTLINKS=    Makefile Makefile.build.mk Makefile.rules.mk build\${hostarch};
+ RDEROOTFILES=    Makefile.dep.\${RDE_BASE_ARCH}.mk Makefile.const.\${RDE_BASE_ARCH}.mk \${RDE_CONFIG_FILE} \${SRC_PATH_FILE};
+ RDEDIRS=         \$(rdemodel_path -l storage);
 "
 # Makefile_dep=    Makefile.dep.\${RDE_ARCH_FLAT}.mk;
 

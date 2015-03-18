@@ -8,9 +8,9 @@ SHELL = /bin/bash
 
 ifeq (,$(CONST_BUILD))
    ifneq (,$(DEBUGMAKE))
-      $(info include $(ROOT)/include Makefile.const.$(RDE_BASE_ARCH).mk)
+      $(info include $(ROOT)/include $(MAKEFILE_CONST))
    endif
-   include $(ROOT)/Makefile.const.$(RDE_BASE_ARCH).mk
+   include $(ROOT)/$(MAKEFILE_CONST)
 endif
 
 BUILD    := $(ROOT)/$(CONST_BUILD)
@@ -280,10 +280,6 @@ endif
 #.DEFAULT: 
 #	@rdeco -q $@ || true \;
 
-#.DEFAULT: 
-#	@if [[ x"$$(.rdeisext --ext="$(CONST_RDESUFFIX) .mk" $@)" == x1 ]] ; then rdeco -q $@  && echo "Checking out: $@" || (echo "ERROR: File Not found: $@" && exit 1);\
-#	elif [[ x$$(echo $@ | cut -c1-9) != x_invdep_. ]] ; then echo "ERROR: No such target: $@" 1>&2 ; exit 1 ; fi
-
 .DEFAULT: 
 	@if [[ x$$(echo $@ | cut -c1-9) == x_invdep_. ]] ; then \
 	   echo > /dev/null ;\
@@ -299,35 +295,6 @@ endif
 #Produire les objets de tous les fichiers de l'experience qu'ils soient checkout ou non
 objexp: objects
 objects: $(OBJECTS)
-
-# genlib: $(OBJECTS)
-# #Creer une programmatheque ayant pour nom $MALIB et incluant TOUS les fichiers objets
-# majlib: objloc
-# #Mise a jour de la programmatheque $MALIB a partir de tous les fichers .o affectes par les dernieres modifications
-# qmajlib: qobj
-# #Mise a jour de la programmatheque $MALIB a partir de tous les fichers .o presents dans le repertoire courant
-# libexp: sortirtout objexp
-# #Mettre tous les objets de l experience en cours dans la programmatheque $MALIB
-# extractall:
-
-# lib: $(MAKEFILEDEP) $(OBJECTS) $(ALL_LIBS)
-
-# all: $(MAKEFILEDEP) $(OBJECTS) $(ALL_LIBS) $(ALL_BINS)
-# bin: all
-# bin_check: $(ALL_BINS_CHECK)
-
-# clean0:
-# 	chmod -R u+w . 2> /dev/null || true  ;\
-# 	for mydir in `find . -type d` ; do \
-# 		for ext in $(INCSUFFIXES) $(SRCSUFFIXES) .o .[mM][oO][dD]; do \
-# 			rm -f $${mydir}/*$${ext} 2>/dev/null ;\
-# 		done ;\
-# 	done ;\
-# 	for mydir in $(BUILDMOD) $(BUILDPRE) ; do \
-# 		cd $${mydir} ;\
-# 		chmod -R u+w . 2> /dev/null || true ;\
-# 		`find . -type f -exec rm -f {} \; ` ;\
-# 	done
 
 # #TODO: get .o .mod from lib again after make clean?
 # #TODO: should we keep .mod after make clean?

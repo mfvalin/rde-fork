@@ -9,19 +9,19 @@ ifneq (,$(DEBUGMAKE))
 endif
 
 ROOT := $(PWD)
-RDE_BASE_ARCH := $(shell rdevar rde_base_arch)
+MAKEFILE_CONST := $(shell Makefile_const)
 
 ## ==== Basic definitions
 
-ifeq (,$(wildcard Makefile.const.$(RDE_BASE_ARCH).mk))
-   $(info Building Makefile.const.$(RDE_BASE_ARCH).mk)
+ifeq (,$(wildcard $(MAKEFILE_CONST)))
+   $(info Building $(MAKEFILE_CONST))
    $(info $(shell $(MYTIME) rdevar --mkfile))
 endif
 ifeq (,$(CONST_BUILD))
    ifneq (,$(DEBUGMAKE))
-      $(info include $(ROOT)/include Makefile.const.$(RDE_BASE_ARCH).mk)
+      $(info include $(ROOT)/include $(MAKEFILE_CONST))
    endif
-   include $(ROOT)/Makefile.const.$(RDE_BASE_ARCH).mk
+   include $(ROOT)/$(MAKEFILE_CONST)
 endif
 
 ifeq (,$(RDE_DEP_SUPP_FILE))
@@ -40,6 +40,7 @@ MAKEFILEDEP := $(CONST_MAKEFILE_DEP)
 
 INCSUFFIXES := $(CONST_RDESUFFIXINC)
 SRCSUFFIXES := $(CONST_RDESUFFIXSRC)
+RDE_BASE_ARCH  := $(CONST_RDE_BASE_ARCH)
 #RDE_ARCH_LIST := $(CONST_SRCPATH_ARCH_LIST)
 #ifeq (,$(RDE_ARCH_LIST))
 RDE_ARCH_LIST := $(CONST_RDE_KNOWN_BASE_ARCH_LIST)
@@ -64,15 +65,12 @@ endif
 ifneq (,$(VERBOSE))
 	VERBOSE := -v
 endif
-# ifeq (,$(VERBOSE))
-# .SILENT:
-# endif
 NOPRINTDIR := --no-print-directory
 
 #MYTIME = time
 
 MAKE_LINKS := $(MYTIME) .rdeupdate_build_links.ksh
-MYMAKE_VARS = ROOT=$(ROOT) RDE_BASE_ARCH=$(RDE_BASE_ARCH) BINDIR=$(BINDIR) DEBUGMAKE=$(DEBUGMAKE) MYTIME=$(MYTIME)
+MYMAKE_VARS = ROOT=$(ROOT) RDE_BASE_ARCH=$(RDE_BASE_ARCH) BINDIR=$(BINDIR) DEBUGMAKE=$(DEBUGMAKE) MYTIME=$(MYTIME) MAKEFILE_CONST=$(MAKEFILE_CONST)
 # VERBOSE=$(VERBOSE)
 
 ifneq (,$(wildcard $(ROOT)/Makefile.user.root.mk))
@@ -117,7 +115,7 @@ links: sanity
 
 .PHONY: Makefile.const
 Makefile.const:
-	$(info Building Makefile.const.$(RDE_BASE_ARCH).mk)
+	$(info Building $(MAKEFILE_CONST))
 	$(MYTIME) rdevar --mkfile
 
 $(MAKEFILEDEP):
@@ -136,22 +134,6 @@ qobj: obj
 obj:  sanity
 	$(MAKE_LINKS) ;\
 	cd $(BUILDOBJ) ;\
-	for myfile in $(foreach exte,$(SRCSUFFIXES),$(wildcard *$(exte))) ; do \
-		if [[ -L $${myfile} ]] ; then \
-			$(MYTIME) $(MAKE) $(NOPRINTDIR) $${myfile%.*}.o $(MYMAKE_VARS) ;\
-			if [[ $${?} != 0 ]] ; then exit 1 ; fi ;\
-		fi ;\
-	done ;\
-	for myfile in $(foreach exte,$(INCSUFFIXES) $(SRCSUFFIXES),$(wildcard *$(exte))) ; do \
-		if [[ -L $${myfile} ]] ; then \
-			$(MYTIME) $(MAKE) $(NOPRINTDIR) _invdep_.$${myfile} $(MYMAKE_VARS) ;\
-			if [[ $${?} != 0 ]] ; then exit 1 ; fi ;\
-		fi ;\
-	done
-
-obj2:  sanity
-	$(MAKE_LINKS) ;\
-	cd $(BUILDOBJ) ;\
 	localfiles="" ;\
 	for myfile in $(foreach exte,$(SRCSUFFIXES),$(wildcard *$(exte))) ; do \
 		if [[ -L $${myfile} ]] ; then \
@@ -165,6 +147,8 @@ obj2:  sanity
 	done ;\
 	$(MYTIME) $(MAKE) $(NOPRINTDIR) $${localfiles} $(MYMAKE_VARS)
 
+obj2: obj
+
 objloc:
 	@echo
 	@echo "WARNING, objloc is deprecated, use: make obj"
@@ -174,19 +158,27 @@ obj_touch:
 	touch $(wildcard *.f* *.c* *.h* *.F* *.t*) 2>/dev/null || true
 
 qclean: clean
-clean: sanity
-	@echo
-	@echo "WARNING, To remove *.o *.mod               use: make rmpo"
-	@echo "........ To remove the whole build content use: make distclean"
-	@echo "........ For more details                  use: make help"
-	@echo
 rmpo: sanity
 	chmod -R u+w $(BUILDOBJ)/*.o $(BUILDMOD)/*.[Mm][Oo][Dd] 2>/dev/null || true ;\
 	rm -rf       $(BUILDOBJ)/*.o $(BUILDMOD)/*.[Mm][Oo][Dd] 2>/dev/null || true
-distclean: sanity
+
+cleanbuild: sanity
+	chmod u+w -R $(BUILD) $(BUILDPRE) $(BUILDOBJ) $(BUILDMOD) $(BUILDLIB) $(BUILDBIN) 2>/dev/null || true
+	rm -rf $(BUILD)/* $(BUILDPRE)/* $(BUILDOBJ)/* $(BUILDMOD)/* $(BUILDLIB)/* $(BUILDBIN)/* 2>/dev/null || true
+	mkdir -p $(BUILD) $(BUILDPRE) $(BUILDOBJ) $(BUILDMOD) $(BUILDLIB) $(BUILDBIN) 2>/dev/null || true
+cleanbuild0: sanity
 	for mydir in $(BUILDPRE) $(BUILDOBJ) $(BUILDMOD) $(BUILDLIB) $(BUILDBIN) ;do\
 	   chmod u+w $${mydir}/* $${mydir}/.[a-zA-Z0-9_-]* 2>/dev/null || true ;\
 		rm -f     $${mydir}/* $${mydir}/.[a-zA-Z0-9_-]* 2>/dev/null || true ;\
 	done
+
+cleanall: cleanbuild
+	for item in $(CONST_RDEROOTLINKS) ; do\
+		if [[ -l $${item} ]] ; then rm -f $${item} 2>/dev/null || true; done \
+	done	
+	chmod u+w . $(CONST_RDEROOTFILES) 2>/dev/null || true
+	rm -f $(CONST_RDEROOTFILES) 2>/dev/null || true
+	chmod -R u+w $(CONST_RDEDIRS) 2>/dev/null || true
+	rm -rf $(CONST_RDEDIRS) 2>/dev/null || true
 
 ## ====================================================================

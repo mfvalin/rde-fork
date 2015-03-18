@@ -48,6 +48,7 @@ if [[ $verbose -gt 0 ]] ; then
 fi
 
 mkdir -p $STORAGE
+touch $STORAGE/.restricted
 if [[ $myforce == 1 ]] ; then 
    rm -rf $BUILD
 fi

@@ -4,9 +4,9 @@
 
 ifeq (,$(CONST_BUILD))
    ifneq (,$(DEBUGMAKE))
-      $(info include $(ROOT)/include Makefile.const.$(RDE_BASE_ARCH).mk)
+      $(info include $(ROOT)/include $(MAKEFILE_CONST))
    endif
-   include $(ROOT)/Makefile.const.$(RDE_BASE_ARCH).mk
+   include $(ROOT)/$(MAKEFILE_CONST)
 endif
 
 INCSUFFIXES = $(CONST_RDESUFFIXINC)
@@ -73,6 +73,13 @@ DORBUILDEXTRALIBS = \
 	   	lRBUILD_EXTRA_LIB="$${RBUILD_EXTRA_LIB} -l$${mylib}";\
 		done ;\
 	fi
+DORBUILDLIBSAPPL = \
+	lRBUILD_LIBAPPL="" ;\
+	if [[ x"$${RBUILD_LIBAPPL}" != x"" ]] ; then \
+		for mylib in $${RBUILD_LIBAPPL} ; do \
+	   	lRBUILD_LIBAPPL="$${RBUILD_LIBAPPL} -l$${mylib}";\
+		done ;\
+	fi
 DORBUILD4FINALIZE = \
 	rm -f .bidon/bidon_$${MAINSUBNAME}.o 2>/dev/null || true ;\
 	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
@@ -84,8 +91,8 @@ RBUILD4MPI = \
 	status=0 ;\
 	$(DORBUILD4BIDONF) ;\
 	$(DORBUILD4EXTRAOBJ) ;\
-	$(DORBUILDEXTRALIBS) ;\
-	$(BUILDFC) -mpi -o $@ $${lRBUILD_EXTRA_LIB} $(RDEALL_LIBS) \
+	$(DORBUILDLIBSAPPL) ; $(DORBUILDEXTRALIBS) ;\
+	$(BUILDFC) -mpi -o $@ $${lRBUILD_EXTRA_LIB} $${lRBUILD_LIBAPPL} $(RDEALL_LIBS) \
 	   .bidon/bidon_$${MAINSUBNAME}.o $${RBUILD_EXTRA_OBJ1} $(CODEBETA) || status=1 ;\
 	$(DORBUILD4FINALIZE)
 
@@ -95,8 +102,8 @@ RBUILD4NOMPI = \
 	$(DORBUILD4BIDONF) ;\
 	$(DORBUILD4EXTRAOBJ) ;\
 	$(DORBUILD4COMMSTUBS) ;\
-	$(DORBUILDEXTRALIBS) ;\
-	$(BUILDFC_NOMPI) -o $@ $${lRBUILD_EXTRA_LIB} $(RDEALL_LIBS) $${lRBUILD_COMM_STUBS}\
+	$(DORBUILDLIBSAPPL) ; $(DORBUILDEXTRALIBS) ;\
+	$(BUILDFC_NOMPI) -o $@ $${lRBUILD_EXTRA_LIB} $${lRBUILD_LIBAPPL} $(RDEALL_LIBS) $${lRBUILD_COMM_STUBS}\
 	   .bidon/bidon_$${MAINSUBNAME}.o $${RBUILD_EXTRA_OBJ1} $(CODEBETA) || status=1 ;\
 	$(DORBUILD4FINALIZE)
 
@@ -105,8 +112,8 @@ RBUILD4MPI_C = \
 	status=0 ;\
 	$(DORBUILD4BIDONC) ;\
 	$(DORBUILD4EXTRAOBJ) ;\
-	$(DORBUILDEXTRALIBS) ;\
-	$(BUILDCC)  -mpi -o $@ $${lRBUILD_EXTRA_LIB} $(RDEALL_LIBS) \
+	$(DORBUILDLIBSAPPL) ; $(DORBUILDEXTRALIBS) ;\
+	$(BUILDCC)  -mpi -o $@ $${lRBUILD_EXTRA_LIB} $${lRBUILD_LIBAPPL} $(RDEALL_LIBS) \
 	   .bidon/bidon_$${MAINSUBNAME}.o $${RBUILD_EXTRA_OBJ1} $(CODEBETA) || status=1 ;\
 	$(DORBUILD4FINALIZE)
 
@@ -116,59 +123,11 @@ RBUILD4NOMPI_C = \
 	$(DORBUILD4BIDONC) ;\
 	$(DORBUILD4EXTRAOBJ) ;\
 	$(DORBUILD4COMMSTUBS) ;\
-	$(DORBUILDEXTRALIBS) ;\
-	$(BUILDCC_NOMPI) -o $@ $${lRBUILD_EXTRA_LIB} $(RDEALL_LIBS) $${lRBUILD_COMM_STUBS}\
+	$(DORBUILDLIBSAPPL) ; $(DORBUILDEXTRALIBS) ;\
+	$(BUILDCC_NOMPI) -o $@ $${lRBUILD_EXTRA_LIB} $${lRBUILD_LIBAPPL} $(RDEALL_LIBS) $${lRBUILD_COMM_STUBS}\
 	   .bidon/bidon_$${MAINSUBNAME}.o $${RBUILD_EXTRA_OBJ1} $(CODEBETA) || status=1 ;\
 	$(DORBUILD4FINALIZE)
 
-# ## ==== Legacy
-
-# RBUILD  = s.compile
-# RBUILD3MPI = \
-# 	status=0 ;\
-# 	.rdemakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
-# 	$(MAKE) bidon_$${MAINSUBNAME}.o >/dev/null || status=1 ; \
-# 	rm -f bidon_$${MAINSUBNAME}.f90 ;\
-# 	$(RBUILD) -obj bidon_$${MAINSUBNAME}.o -o $@ $(OMP) $(MPI) \
-# 		-libpath $(LIBPATH) \
-# 		-libappl $(LIBS_PRE) $${LIBLOCAL} $(LIBAPPL) \
-# 		-librmn $(RMN_VERSION) \
-# 		-libsys $(LIBSYS) \
-# 		-codebeta $(CODEBETA) \
-# 		-optf "=$(RDE_LFLAGS) $(LFLAGS)"  || status=1 ;\
-# 	rm -f bidon_$${MAINSUBNAME}.o 2>/dev/null || true ;\
-# 	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
-
-# RBUILD3NOMPI = \
-# 	status=0 ;\
-# 	.rdemakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ; \
-# 	$(MAKE) bidon_$${MAINSUBNAME}.o >/dev/null || status=1 ; \
-# 	rm -f bidon_$${MAINSUBNAME}.f90 ;\
-# 	$(RBUILD) -obj bidon_$${MAINSUBNAME}.o -o $@ $(OMP) \
-# 		-libpath $(LIBPATH) \
-# 		-libappl $(LIBS_PRE) $${LIBLOCAL} $(LIBAPPL) \
-# 		-librmn $(RMN_VERSION) \
-# 		-libsys $${COMM_stubs1} $(LIBSYS) \
-# 		-codebeta $(CODEBETA) \
-# 		-optf "=$(RDE_LFLAGS) $(LFLAGS)"  || status=1 ;\
-# 	rm -f bidon_$${MAINSUBNAME}.o 2>/dev/null || true ;\
-# 	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
-
-
-# RBUILD3NOMPI_C = \
-# 	status=0 ;\
-# 	.rdemakemodelbidon -c $${MAINSUBNAME} > bidon_$${MAINSUBNAME}_c.c ; \
-# 	$(MAKE) bidon_$${MAINSUBNAME}_c.o >/dev/null || status=1 ; \
-# 	rm -f bidon_$${MAINSUBNAME}_c.c ;\
-# 	$(RBUILD) -obj bidon_$${MAINSUBNAME}_c.o -o $@ $(OMP) -conly \
-# 		-libpath $(LIBPATH) \
-# 		-libappl $(LIBS_PRE) $${LIBLOCAL} $(LIBAPPL) \
-# 		-librmn $(RMN_VERSION) \
-# 		-libsys $${COMM_stubs1} $(LIBSYS) \
-# 		-codebeta $(CODEBETA) \
-# 		-optc "=$(RDE_LCFLAGS) $(LCFLAGS)"  || status=1 ;\
-# 	rm -f bidon_$${MAINSUBNAME}_c.o 2>/dev/null || true ;\
-# 	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
 
 ## ==== Implicit Rules
 
