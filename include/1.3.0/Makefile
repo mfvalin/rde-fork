@@ -149,6 +149,22 @@ obj:  sanity
 		fi ;\
 	done
 
+obj2:  sanity
+	$(MAKE_LINKS) ;\
+	cd $(BUILDOBJ) ;\
+	localfiles="" ;\
+	for myfile in $(foreach exte,$(SRCSUFFIXES),$(wildcard *$(exte))) ; do \
+		if [[ -L $${myfile} ]] ; then \
+			localfiles="$${localfiles} $${myfile%.*}.o _invdep_.$${myfile}" ;\
+		fi ;\
+	done ;\
+	for myfile in $(foreach exte,$(INCSUFFIXES),$(wildcard *$(exte))) ; do \
+		if [[ -L $${myfile} ]] ; then \
+			localfiles="$${localfiles} _invdep_.$${myfile}" ;\
+		fi ;\
+	done ;\
+	$(MYTIME) $(MAKE) $(NOPRINTDIR) $${localfiles} $(MYMAKE_VARS)
+
 objloc:
 	@echo
 	@echo "WARNING, objloc is deprecated, use: make obj"

@@ -280,9 +280,19 @@ endif
 #.DEFAULT: 
 #	@rdeco -q $@ || true \;
 
+#.DEFAULT: 
+#	@if [[ x"$$(.rdeisext --ext="$(CONST_RDESUFFIX) .mk" $@)" == x1 ]] ; then rdeco -q $@  && echo "Checking out: $@" || (echo "ERROR: File Not found: $@" && exit 1);\
+#	elif [[ x$$(echo $@ | cut -c1-9) != x_invdep_. ]] ; then echo "ERROR: No such target: $@" 1>&2 ; exit 1 ; fi
+
 .DEFAULT: 
-	@if [[ x"$$(.rdeisext --ext="$(CONST_RDESUFFIX) .mk" $@)" == x1 ]] ; then rdeco -q $@  && echo "Checking out: $@" || (echo "ERROR: File Not found: $@" && exit 1);\
-	else echo "ERROR: No such target: $@" 1>&2 ; exit 1 ; fi
+	@if [[ x$$(echo $@ | cut -c1-9) == x_invdep_. ]] ; then \
+	   echo > /dev/null ;\
+	elif [[ x"$$(.rdeisext --ext="$(CONST_RDESUFFIX) .mk" $@)" == x1 ]] ; then \
+	   rdeco -q $@  && echo "Checking out: $@" || (echo "ERROR: File Not found: $@" && exit 1);\
+	else \
+	   echo "ERROR: No such target: $@" 1>&2 ; \
+	   exit 1 ; \
+	fi
 
 .PHONY: objexp #TODO
 
