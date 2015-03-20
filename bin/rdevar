@@ -32,7 +32,7 @@ domkfile=0
 dolist=0
 namelist=""
 if [[ x$RDE_USE_OLD_ARCH != x1 ]] ; then
-   export RDE_KNOWN_BASE_ARCH="ubuntu-10.04-amd64-64 ubuntu-12.04-amd64-64 aix-7.1-ppc7-64"
+   export RDE_KNOWN_BASE_ARCH="ubuntu-10.04-amd64-64 ubuntu-12.04-amd64-64 aix-7.1-ppc7-64 ubuntu-14.04-amd64-64 aix-7.1-ppc7-64"
    export RDE_KNOWN_BASE_ARCH_OLD="ubuntu-10.04-amd64-64:Linux_x86-64 ubuntu-12.04-amd64-64:Linux_x86-64 aix-7.1-ppc7-64:AIX-powerpc7"
    #TODO: export RDE_KNOWN_ARCH=
    export RDE_BASE_ARCH=$ORDENV_PLAT
@@ -40,9 +40,9 @@ else
    export RDE_KNOWN_BASE_ARCH="Linux_x86-64 AIX-powerpc7"
    export RDE_KNOWN_BASE_ARCH_OLD="Linux_x86-64:Linux_x86-64 AIX-powerpc7:Linux_x86-64"
    #TODO: export RDE_KNOWN_ARCH=
-   export RDE_BASE_ARCH=${EC_ARCH%%/*}
+   export RDE_BASE_ARCH=${BASE_ARCH:-${EC_ARCH%%/*}}
 fi
-export RDE_COMP_ARCH=${EC_ARCH#*/}
+export RDE_COMP_ARCH=${COMP_ARCH:-${EC_ARCH#*/}}
 DEP_ARCH=${RDE_BASE_ARCH}/${RDE_COMP_ARCH}
 while [[ $# -gt 0 ]] ; do
    case $1 in
@@ -79,6 +79,14 @@ RDE_CONFIG_FILE=${RDE_EXP_ROOT}/.rde.config.dot
 RDE_INC=$rde/include/$RDE_COMPILER_VERSION
 SRC_PATH_FILE=${RDE_EXP_ROOT}/.rde.srcpath.dot
 
+RDE_CONST_SH=${RDE_EXP_ROOT}/.rde.const.${RDE_BASE_ARCH}.dot
+RDE_CONST_SH_WILD=${RDE_EXP_ROOT}/.rde.const.*.dot
+RDE_CONST_MK=${RDE_EXP_ROOT}/.rde.const.${RDE_BASE_ARCH}.mk
+RDE_CONST_MK_WILD=${RDE_EXP_ROOT}/.rde.const.*.mk
+#RDE_DEP_MK=${RDE_EXP_ROOT}/Makefile.dep.${RDE_BASE_ARCH}.mk
+RDE_DEP_MK=${RDE_EXP_ROOT}/Makefile.dep.${RDE_BASE_ARCH}.mk
+RDE_DEP_MK_WILD=${RDE_EXP_ROOT}/Makefile.dep.*.mk
+# Makefile_dep=    Makefile.dep.${RDE_ARCH_FLAT}.mk;
 
 myrde_arch_list() {
    echo "$(cd $RDE_INC ; find */* -type d)"
@@ -100,7 +108,7 @@ mysrcpathvar() {
    echo $(eval "echo $(echo \${$1})")
 }
 
-mybasearch() {
+mybasearchold() {
    for item in $RDE_KNOWN_BASE_ARCH_OLD ; do
       if [[ x${item%:*} == x$RDE_BASE_ARCH ]] ; then
          echo ${item#*:}
@@ -110,7 +118,8 @@ mybasearch() {
 }
 
 myvars="
- base_arch=       \$(mybasearch);
+ base_arch_old=   \$(mybasearchold);
+ base_arch=       \${RDE_BASE_ARCH};
  rdeinc=          \$RDE_INC;
  rdesuffix=       \$INCSUFFIXES \$SRCSUFFIXES;
  rdesuffix/inc=   \$INCSUFFIXES;
@@ -144,17 +153,17 @@ myvars="
  srcpath_arch_list= \$(mysrcpathvar SRCPATH_ARCH_LIST);
  srcpath_topdirs= \$(mysrcpathvar SRCPATH_TOPDIRS);
  storage=         \$(rdemodel_path -l storage);
- Makefile_dep=    Makefile.dep.\${RDE_BASE_ARCH}.mk;
- Makefile_const=  Makefile.const.\${RDE_BASE_ARCH}.mk;
+ Makefile_dep=    \${RDE_DEP_MK};
+ Makefile_const=  \${RDE_CONST_MK};
+ Makefile_const_wild=  \${RDE_CONST_MK_WILD};
  RDEROOTLINKS=    Makefile Makefile.build.mk Makefile.rules.mk build\${hostarch};
- RDEROOTFILES=    Makefile.dep.\${RDE_BASE_ARCH}.mk Makefile.const.\${RDE_BASE_ARCH}.mk \${RDE_CONFIG_FILE} \${SRC_PATH_FILE};
+ RDEROOTFILES=    \${RDE_DEP_MK_WILD} \${RDE_CONST_MK_WILD} \${RDE_CONFIG_FILE} \${SRC_PATH_FILE};
  RDEDIRS=         \$(rdemodel_path -l storage);
 "
-# Makefile_dep=    Makefile.dep.\${RDE_ARCH_FLAT}.mk;
 
 
 if [[ $domkfile == 1 ]] ; then
-   filename=Makefile.const.${RDE_BASE_ARCH}.mk
+   filename=${RDE_CONST_MK}
    echo > $filename
    #echo $eval $(echo $myvars | sed 's/;[ ]/;/g' | sed 's/=[ ]/ = /g') | tr ';' '\n'
    knownnames="$(echo $myvars | tr ';' '\n' | sed 's/=.*$//g' )"
@@ -170,7 +179,7 @@ fi
 
 
 if [[ $doshfile == 1 ]] ; then
-   filename=.rde.const.${RDE_BASE_ARCH}.dot
+   filename=${RDE_CONST_SH}
    echo > $filename
    #echo $eval $(echo $myvars | sed 's/;[ ]/;/g' | sed 's/=[ ]/ = /g') | tr ';' '\n'
    knownnames="$(echo $myvars | tr ';' '\n' | sed 's/=.*$//g' )"

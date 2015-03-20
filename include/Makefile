@@ -4,18 +4,22 @@
 
 SHELL = /bin/bash
 
+## ==== Basic definitions
+
 ifneq (,$(DEBUGMAKE))
-   MYTIME = time
+	VERBOSE = 1
+   MYTIME  = time
+endif
+ifneq (,$(MYTIME))
+   MYTIMEX = set -x ; time
 endif
 
 ROOT := $(PWD)
-MAKEFILE_CONST := $(shell Makefile_const)
-
-## ==== Basic definitions
+MAKEFILE_CONST := $(shell rdevar Makefile_const)
 
 ifeq (,$(wildcard $(MAKEFILE_CONST)))
    $(info Building $(MAKEFILE_CONST))
-   $(info $(shell $(MYTIME) rdevar --mkfile))
+   $(info $(shell $(MYTIMEX) rdevar --mkfile))
 endif
 ifeq (,$(CONST_BUILD))
    ifneq (,$(DEBUGMAKE))
@@ -41,10 +45,10 @@ MAKEFILEDEP := $(CONST_MAKEFILE_DEP)
 INCSUFFIXES := $(CONST_RDESUFFIXINC)
 SRCSUFFIXES := $(CONST_RDESUFFIXSRC)
 RDE_BASE_ARCH  := $(CONST_RDE_BASE_ARCH)
-#RDE_ARCH_LIST := $(CONST_SRCPATH_ARCH_LIST)
-#ifeq (,$(RDE_ARCH_LIST))
+RDE_ARCH_LIST := $(CONST_RDE_LINKED_ARCH_LIST)
+ifeq (,$(RDE_ARCH_LIST))
 RDE_ARCH_LIST := $(CONST_RDE_KNOWN_BASE_ARCH_LIST)
-#endif
+endif
 
 RDE_INCLUDE0 := $(CONST_RDEINC)
 
@@ -58,20 +62,19 @@ ifeq ($(ROOT),$(BUILD))
    $(error FATAL ERROR: BUILD == ROOT)
 endif
 
-#VERBOSE = -v
 ifneq (,$(findstring s,$(MAKEFLAGS)))
    VERBOSE = 
 endif
 ifneq (,$(VERBOSE))
-	VERBOSE := -v
+   VERBOSEV  := -v
+   VERBOSEVV := -v -v -v -v
 endif
-NOPRINTDIR := --no-print-directory
+ifeq (,$(DEBUGMAKE))
+   NOPRINTDIR := --no-print-directory
+endif
 
-#MYTIME = time
-
-MAKE_LINKS := $(MYTIME) .rdeupdate_build_links.ksh
-MYMAKE_VARS = ROOT=$(ROOT) RDE_BASE_ARCH=$(RDE_BASE_ARCH) BINDIR=$(BINDIR) DEBUGMAKE=$(DEBUGMAKE) MYTIME=$(MYTIME) MAKEFILE_CONST=$(MAKEFILE_CONST)
-# VERBOSE=$(VERBOSE)
+MAKE_LINKS = $(MYTIMEX) .rdeupdate_build_links.ksh $(VERBOSEVV)
+MYMAKE_VARS = ROOT=$(ROOT) RDE_BASE_ARCH=$(RDE_BASE_ARCH) BINDIR=$(BINDIR) DEBUGMAKE=$(DEBUGMAKE) MYTIME="$(MYTIME)" MAKEFILE_CONST=$(MAKEFILE_CONST)
 
 ifneq (,$(wildcard $(ROOT)/Makefile.user.root.mk))
    ifneq (,$(DEBUGMAKE))
@@ -105,7 +108,6 @@ deplocal:
 	rm -f $(MAKEFILEDEP) 2>/dev/null || true
 	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
 dep: 
-	#TODO: use RDE_LINKED_ARCH_LIST if defined
 	rm -f Makefile.dep.*.mk 2>/dev/null || true
 	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE) --arch "$(RDE_ARCH_LIST)"
 
@@ -121,13 +123,13 @@ Makefile.const:
 $(MAKEFILEDEP):
 	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
 Makefile.build.mk:
-	$(MYTIME) rdemklink $(VERBOSE)
+	$(MYTIME) rdemklink $(VERBOSEV)
 Makefile.rules.mk:
-	$(MYTIME) rdemklink $(VERBOSE)
+	$(MYTIME) rdemklink $(VERBOSEV)
 $(BUILD):
-	$(MYTIME) rdemklink $(VERBOSE)
+	$(MYTIME) rdemklink $(VERBOSEV)
 $(BUILDOBJ):
-	$(MYTIME) rdemklink $(VERBOSE)
+	$(MYTIME) rdemklink $(VERBOSEV)
 
 #Compiler uniquement les fichiers  modifies.
 qobj: obj
@@ -146,8 +148,6 @@ obj:  sanity
 		fi ;\
 	done ;\
 	$(MYTIME) $(MAKE) $(NOPRINTDIR) $${localfiles} $(MYMAKE_VARS)
-
-obj2: obj
 
 objloc:
 	@echo

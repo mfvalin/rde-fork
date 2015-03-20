@@ -19,9 +19,10 @@ Options:
     -R  --recurse      : recursively include dirs
         --reset        : replace existing SRCPATH if any
     -k, --keep         : keep existing SRCPATHFILE as backup if any
-        --arch [ARCH]  : restrict SRCPATH to BASE_ARCH=ARCH or EC_ARCH=ARCH
+        --arch [ARCH]  : restrict SRCPATH to 
+                         BASE_ARCH, EC_ARCH or ORDENV_PLAT == ARCH
                          default: no restriction
-                         default ARCH=BASE_ARCH
+                         default ARCH=ORDENV_PLAT
         --topdirs      : list of top dirs, used for grouping
 
     DIRLIST: space separated

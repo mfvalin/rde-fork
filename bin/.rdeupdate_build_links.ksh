@@ -149,18 +149,19 @@ mylist="$(ls $SRC_PATH_FILE Makefile.build.mk Makefile.rules.mk ${MAKEFILEDEP} M
 BUILDSRC=$(rdevar build/src)
 cd ${BUILDSRC}
 
-mylist2="$(ls $SRC_PATH_FILE Makefile.build.mk Makefile.rules.mk ${MAKEFILEDEP} Makefile.user.mk $VALIDEXTWILD 2>/dev/null | sort)"
+#mylist2="$(ls $SRC_PATH_FILE Makefile.build.mk Makefile.rules.mk ${MAKEFILEDEP} Makefile.user.mk $VALIDEXTWILD 2>/dev/null | sort)"
 
 ## Checking changes status
 echo $mylist > $TMPDIR/.rdesrcusrls
-echo $mylist2 > $TMPDIR/.rdesrcusrls2
-diff $TMPDIR/.rdesrcusrls2 .rdesrcusrls > /dev/null 2>&1 \
-&& \
+#echo $mylist2 > $TMPDIR/.rdesrcusrls2
+# diff $TMPDIR/.rdesrcusrls2 .rdesrcusrls > /dev/null 2>&1 \
+# && \
+# diff $TMPDIR/.rdesrcusrls .rdesrcusrls > /dev/null 2>&1
 diff $TMPDIR/.rdesrcusrls .rdesrcusrls > /dev/null 2>&1
 if [[ x$? == x0 && $myforce == 0 ]] ; then
    /bin/rm -f Makefile
    ln -s Makefile.build.mk Makefile
-   myecho 1 "++ Nothing changed since last rdeupdate"
+   myecho 1 "++ rdeupdate_build_links: Nothing changed since last rdeupdate"
    exit 0
 fi
 myecho 2 "++ Updating build links"

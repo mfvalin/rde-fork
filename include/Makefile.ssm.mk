@@ -1,6 +1,8 @@
-## ====================================================================
-## File: RDEINC/Makefile.ssm.mk
-##
+ifneq (,$(DEBUGMAKE))
+$(info ## ====================================================================)
+$(info ## File: Makefile.ssm.mk
+$(info ## )
+endif
 
 ## ==== Pkg Building Macros
 
@@ -75,4 +77,6 @@ cat $$@/ssmusedep.bndl >> $$@/BUILDINFO ; \
 # 	rsync -a $(BUILDDIRARCH)/lib*.a $(BUILDDIRARCH)/*/lib*.a $(BUILDDIRARCH)/lib*.a.fl $(BUILDDIRARCH)/*/lib*.a.fl $(BUILDDIRARCH)/lib*.so $(BUILDDIRARCH)/*/lib*.so $@/ 2>/dev/null || true ;\
 # 	cp $(BUILDDIRARCH)/.VERSION $@/ 2>/dev/null || true
 
-## ====================================================================
+ifneq (,$(DEBUGMAKE))
+$(info ## ==== Makefile.ssm.mk [END] =========================================)
+endif

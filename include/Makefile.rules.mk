@@ -1,6 +1,8 @@
-## ====================================================================
-## File: RDEINC/Makefile.rules.mk
-##
+ifneq (,$(DEBUGMAKE))
+$(info ## ====================================================================)
+$(info ## File: Makefile.rules.mk
+$(info ## )
+endif
 
 ifeq (,$(CONST_BUILD))
    ifneq (,$(DEBUGMAKE))
@@ -17,14 +19,14 @@ SRCSUFFIXES = $(CONST_RDESUFFIXSRC)
 
 ## ==== compilation / load macros
 
-RDEFTN2F = rde.ftn2f $(VERBOSE2) $(OMP)
-RDEFTN902F90 = rde.ftn2f -f90 $(VERBOSE2) $(OMP)
-RDEF77 = rde.f77 $(VERBOSE2)
-RDEF90 = rde.f90 $(VERBOSE2)
-RDEF90_LD = rde.f90_ld $(VERBOSE2)
-RDEFTN77 = rde.ftn77 $(VERBOSE2)
-RDEFTN90 = rde.ftn90 $(VERBOSE2)
-RDECC = rde.cc $(VERBOSE2)
+RDEFTN2F = rde.ftn2f $(VERBOSEV2) $(OMP)
+RDEFTN902F90 = rde.ftn2f -f90 $(VERBOSEV2) $(OMP)
+RDEF77 = rde.f77 $(VERBOSEV2)
+RDEF90 = rde.f90 $(VERBOSEV2)
+RDEF90_LD = rde.f90_ld $(VERBOSEV2)
+RDEFTN77 = rde.ftn77 $(VERBOSEV2)
+RDEFTN90 = rde.ftn90 $(VERBOSEV2)
+RDECC = rde.cc $(VERBOSEV2)
 
 FTNC77 = export EC_LD_LIBRARY_PATH="" ; $(RDEFTN2F) $(RDEALL_DEFINES) $(RDEALL_INCLUDES) -src
 FTNC90 = export EC_LD_LIBRARY_PATH="" ; $(RDEFTN902F90) $(RDEALL_DEFINES) $(RDEALL_INCLUDES) -src
@@ -70,14 +72,14 @@ DORBUILDEXTRALIBS = \
 	lRBUILD_EXTRA_LIB="" ;\
 	if [[ x"$${RBUILD_EXTRA_LIB}" != x"" ]] ; then \
 		for mylib in $${RBUILD_EXTRA_LIB} ; do \
-	   	lRBUILD_EXTRA_LIB="$${RBUILD_EXTRA_LIB} -l$${mylib}";\
+	   	lRBUILD_EXTRA_LIB="$${lRBUILD_EXTRA_LIB} -l$${mylib}";\
 		done ;\
 	fi
 DORBUILDLIBSAPPL = \
 	lRBUILD_LIBAPPL="" ;\
 	if [[ x"$${RBUILD_LIBAPPL}" != x"" ]] ; then \
 		for mylib in $${RBUILD_LIBAPPL} ; do \
-	   	lRBUILD_LIBAPPL="$${RBUILD_LIBAPPL} -l$${mylib}";\
+	   	lRBUILD_LIBAPPL="$${lRBUILD_LIBAPPL} -l$${mylib}";\
 		done ;\
 	fi
 DORBUILD4FINALIZE = \
@@ -191,4 +193,6 @@ RBUILD4NOMPI_C = \
 # 	#.s.o:
 # 	$(AS) -c $(CPPFLAGS) $(ASFLAGS) $<
 
-## ====================================================================
+ifneq (,$(DEBUGMAKE))
+$(info ## ==== Makefile.rules.mk [END] =======================================)
+endif

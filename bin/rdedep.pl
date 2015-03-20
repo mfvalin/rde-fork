@@ -1326,6 +1326,12 @@ while(my $filename = search_undone_file()) {
 print STDERR "\n" if ($msg>=3);
 check_circular_dep();
 
+print 'ifneq (,$(DEBUGMAKE))',"\n";
+print '$(info ## ====================================================================)',"\n";
+print '$(info ## File:',$output_file,")\n";
+print '$(info ## )',"\n";
+print 'endif',"\n";
+
 print_files_list();
 print_object_list();
 print_module_list();
@@ -1335,6 +1341,10 @@ print_dep_rules_inv2();
 
 print_missing();
 print_unknown();
+
+print 'ifneq (,$(DEBUGMAKE))',"\n";
+print '$(info ## ==== ',$output_file,' [END] =========================================)',"\n";
+print 'endif',"\n";
 
 export_obj_list() if ($export_list);
 

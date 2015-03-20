@@ -1,10 +1,16 @@
-## ====================================================================
-## File: RDEINC/Makefile.build.mk
-##
+ifneq (,$(DEBUGMAKE))
+$(info ## ====================================================================)
+$(info ## File: Makefile.build.mk
+$(info ## )
+endif
 
 SHELL = /bin/bash
 
 ## ==== Basic definitions
+
+ifneq (,$(MYTIME))
+   MYTIMEX = set -x ; time
+endif
 
 ifeq (,$(CONST_BUILD))
    ifneq (,$(DEBUGMAKE))
@@ -27,7 +33,6 @@ VPATH    := $(ROOT)/$(CONST_BUILDSRC)
 SRCPATH  := $(CONST_SRCPATH)
 
 export RDE_EXP_ROOT := $(ROOT)
-#MAKEFILEDEP := $(shell export RDE_EXP_ROOT=$(RDE_EXP_ROOT) && $(rdevar Makefile_dep))
 MAKEFILEDEP := $(CONST_MAKEFILE_DEP)
 
 ifeq (,$(rde))
@@ -43,14 +48,6 @@ endif
 #    $(error FATAL ERROR: VPATH is not defined)
 # endif
 
-#VERBOSE := -v
-#ifneq (,$(findstring d,$(MAKEFLAGS)))
-#DEBUGMAKE := --debug
-#endif
-# ifeq (,$(VERBOSE))
-# .SILENT:
-# endif
-
 CPP = /lib/cpp
 # ASFLAGS =  
 # DOC =
@@ -59,9 +56,9 @@ AR = r.ar -arch $(ARCH)
 ## ==== Legacy
 EC_MKL = $(RDE_MKL)
 
-FORCE_RMN_VERSION_RC = 
-#RMN_VERSION = rmn_015.2$(FORCE_RMN_VERSION_RC)
-RMN_VERSION = rmn$(FORCE_RMN_VERSION_RC)
+# FORCE_RMN_VERSION_RC = 
+# #RMN_VERSION = rmn_015.2$(FORCE_RMN_VERSION_RC)
+# RMN_VERSION = rmn$(FORCE_RMN_VERSION_RC)
 
 LIBPATH = $(PWD) $(LIBPATH_PRE) $(BUILDLIB) $(LIBPATHEXTRA) $(LIBSYSPATHEXTRA) $(LIBPATHOTHER) $(LIBPATH_POST)
 #LIBAPPL = $(LIBS_PRE) $(LIBLOCAL) $(LIBOTHERS) $(LIBEXTRA) $(LIBS_POST)
@@ -154,12 +151,12 @@ RDEALL_LIBPATH       = $(foreach item,$(RDEALL_LIBPATH_NAMES),-L$(item))
 #       LIBMASS LAPACK BLAS RTOOLS BINDCPU LIBHPCSPERF LLAPI IBM_LD
 #       LIBHPC LIBPMAPI
 
-LIBOTHERS          = $(LIBCOMM) $(LIBVGRID) $(LIBEZSCINT) $(LIBUTIL)
+#LIBOTHERS          = $(LIBCOMM) $(LIBVGRID) $(LIBEZSCINT) $(LIBUTIL)
 RDE_LIBAPPL_LEGACY = $(LIBOTHERS)
 RDE_LIBAPPL1       = $(RDE_LIBAPPL) $(RDE_LIBAPPL_LEGACY)
 
-LIBSYSUTIL         = $(LIBMASS) $(LAPACK) $(BLAS) $(RTOOLS) $(BINDCPU)  $(LIBHPCSPERF) $(LLAPI) $(IBM_LD)
-LIBSYSEXTRA        = $(LIBHPC) $(LIBPMAPI)
+#LIBSYSUTIL         = $(LIBMASS) $(LAPACK) $(BLAS) $(RTOOLS) $(BINDCPU)  $(LIBHPCSPERF) $(LLAPI) $(IBM_LD)
+#LIBSYSEXTRA        = $(LIBHPC) $(LIBPMAPI)
 RDE_LIBSYS_LEGACY  = $(LIBSYSUTIL) $(LIBSYSEXTRA)
 RDE_LIBSYS         = $(RDE_LIBSYS_LEGACY) $(LIBSYSUTIL) 
 
@@ -167,13 +164,14 @@ RDEALL_LIBAPPL_PRE  = $(LIBS_PRE) $(MODEL_LIBPRE) $(RDE_LIBPRE)
 RDEALL_LIBAPPL_POST = $(LIBS_POST) $(MODEL_LIBPOST) $(RDE_LIBPOST)
 RDEALL_LIBAPPL      =  $(RDEALL_LIBAPPL_PRE) $(LIBAPPL) $(MODEL_LIBAPPL) $(MODEL5_LIBAPPL) $(MODEL4_LIBAPPL) $(MODEL3_LIBAPPL) $(MODEL2_LIBAPPL) $(MODEL1_LIBAPPL) $(RDE_LIBAPPL1) $(RDEALL_LIBAPPL_POST)
 
-LIBRMN           = $(RMN_VERSION)
+# LIBRMN = $(RMN_VERSION)
 
 RDEALL_LIBSYS_PRE   = $(LIBSYS_PRE) $(MODEL_LIBSYSPRE) $(RDE_LIBSYSPRE)
 RDEALL_LIBSYS_POST  = $(LIBSYS_POST) $(MODEL_LIBSYSPOST) $(RDE_LIBSYSPOST)
 RDEALL_LIBSYS       = $(RDEALL_LIBSYS_PRE) $(LIBSYS) $(MODEL_LIBSYS) $(MODEL5_LIBSYS) $(MODEL4_LIBSYS) $(MODEL3_LIBSYS) $(MODEL2_LIBSYS) $(MODEL1_LIBSYS) $(RDE_LIBSYS) $(RDEALL_LIBSYS_POST)
 
-RDEALL_LIBS_NAMES = $(RDEALL_LIBAPPL) $(LIBRMN) $(RDEALL_LIBSYS)
+# RDEALL_LIBS_NAMES = $(RDEALL_LIBAPPL) $(LIBRMN) $(RDEALL_LIBSYS)
+RDEALL_LIBS_NAMES = $(RDEALL_LIBAPPL) $(RDEALL_LIBSYS)
 RDEALL_LIBS       = $(foreach item,$(RDEALL_LIBS_NAMES),-l$(item))
 
 ## ==== Constants for $(MAKEFILEDEP)
@@ -202,74 +200,61 @@ rm -f $$@ ; \
 ln -s lib$(1)_$$($(2)_VERSION).a $$@
 
 ## ==== Arch specific and Local/user definitions, targets and overrides
-
-ifneq (,$(wildcard $(ROOT)/Makefile.rules.mk))
-   ifneq (,$(DEBUGMAKE))
-      $(info include $(ROOT)/Makefile.rules.mk)
-   endif
-   include $(ROOT)/Makefile.rules.mk
+ifeq (aix-7.1-ppc7-64,$(ORDENV_PLAT))
+RDE_DEFINES_ARCH = -DAIX_POWERPC7
+LAPACK   = lapack-3.4.0
+BLAS     = essl
+LLAPI    = 
+IBM_LD   = 
+LIBHPC   = hpc
+LIBPMAPI = pmapi
+#LIBMASSWRAP =  modelutils_massvp7_wrap
+LIBMASS  = $(LIBMASSWRAP) massvp7 mass
+RDE_LIBPATH_ARCH = /opt/ibmhpc/ppedev.hpct/lib64
 endif
 
-ifneq (,$(wildcard $(RDE_INCLUDE0)/Makefile.ssm.mk))
-   ifneq (,$(DEBUGMAKE))
-      $(info include $(RDE_INCLUDE0)/Makefile.ssm.mk)
-   endif
-   include $(RDE_INCLUDE0)/Makefile.ssm.mk
+ifneq (,$(filter ubuntu-%,$(ORDENV_PLAT)))
+RDE_DEFINES_ARCH = -DLINUX_X86_64
+LAPACK      = lapack
+BLAS        = blas
+LIBMASSWRAP =  
+LIBMASS     = $(LIBMASSWRAP) massv_p4
+ifneq (,$(filter intel%,$(COMP_ARCH)))
+LAPACK      = 
+BLAS        = 
+RDE_MKL     = -mkl
+RDE_FP_MODEL= -fp-model source
+#RDE_OPTF_MODULE = -module $(BUILDMOD)
+RDE_INTEL_DIAG_DISABLE = -diag-disable 7713 -diag-disable 10212
+RDE_FFLAGS_COMP = $(RDE_INTEL_DIAG_DISABLE) $(RDE_MKL) $(RDE_FP_MODEL)
+RDE_CFLAGS_COMP = $(RDE_INTEL_DIAG_DISABLE) $(RDE_MKL) $(RDE_FP_MODEL)
+RDE_LFLAGS_COMP = $(RDE_INTEL_DIAG_DISABLE) $(RDE_MKL) $(RDE_FP_MODEL)
+endif
+ifneq (,$(filter pgi%,$(COMP_ARCH)))
+#RDE_OPTF_MODULE = -module $(BUILDMOD)
+RDE_FFLAGS_COMP = -Kieee
+endif
 endif
 
-ifneq (,$(wildcard $(RDE_INCLUDE0)/$(BASE_ARCH)/Makefile.arch.mk))
+LOCALMAKEFILES0 := $(foreach mydir,$(SRCPATH),$(mydir)/Makefile.local.mk)
+RDEBUILDMAKEFILES = $(wildcard \
+   $(ROOT)/Makefile.rules.mk \
+   $(LOCALMAKEFILES0) \
+   $(ROOT)/$(MAKEFILEDEP) \
+   $(ROOT)/Makefile.user.mk)
+ifneq (,$(RDEBUILDMAKEFILES))
    ifneq (,$(DEBUGMAKE))
-      $(info include $(RDE_INCLUDE0)/$(BASE_ARCH)/Makefile.arch.mk)
+      $(info include $(RDEBUILDMAKEFILES))
    endif
-   include $(RDE_INCLUDE0)/$(BASE_ARCH)/Makefile.arch.mk
-endif
-
-ifneq (,$(wildcard $(RDE_INCLUDE0)/$(EC_ARCH)/Makefile.arch.mk))
-   ifneq (,$(DEBUGMAKE))
-      $(info include $(RDE_INCLUDE0)/$(EC_ARCH)/Makefile.arch.mk)
-   endif
-   include $(RDE_INCLUDE0)/$(EC_ARCH)/Makefile.arch.mk
-endif
-
-#LOCALMAKEFILES := $(foreach mydir,$(SRCPATH),$(shell if [[ -f $(mydir)/Makefile.local.mk ]] ; then echo $(mydir)/Makefile.local.mk ; fi))
-LOCALMAKEFILES0 := $(foreach mydir,$(SRCPATH),$(mydir)/Makefile.local.mk $(mydir)/$(BASE_ARCH)/Makefile.arch.mk $(mydir)/$(EC_ARCH)/Makefile.arch.mk $(mydir)/$(EC_ARCH)/Makefile.comp.mk)
-LOCALMAKEFILES  := $(wildcard $(LOCALMAKEFILES0))
-ifneq (,$(LOCALMAKEFILES))
-   ifneq (,$(DEBUGMAKE))
-      $(info include $(LOCALMAKEFILES))
-   endif
-   include $(LOCALMAKEFILES)
-endif
-
-#Override model's components Makefile.local.mk LCLPO=malib$(EC_ARCH)
-LCLPO = .
-
-ifneq (,$(wildcard $(ROOT)/$(MAKEFILEDEP)))
-   ifneq (,$(DEBUGMAKE))
-      $(info include $(ROOT)/$(MAKEFILEDEP))
-   endif
-   include $(ROOT)/$(MAKEFILEDEP)
-endif
-
-ifneq (,$(wildcard $(ROOT)/Makefile.user.mk))
-   ifneq (,$(DEBUGMAKE))
-      $(info include $(ROOT)/Makefile.user.mk)
-   endif
-   include $(ROOT)/Makefile.user.mk
-endif
-ifneq (,$(wildcard $(ROOT)/Makefile.user.$(COMP_ARCH).mk))
-   ifneq (,$(DEBUGMAKE))
-      $(info include $(ROOT)/Makefile.user.$(COMP_ARCH).mk )
-   endif
-   include $(ROOT)/Makefile.user.$(COMP_ARCH).mk
+   include $(RDEBUILDMAKEFILES)
 endif
 
 ifneq (,$(findstring s,$(MAKEFLAGS)))
    VERBOSE := 
 endif
 ifneq (,$(VERBOSE))
-	VERBOSE  := -v
-	VERBOSE2 := -verbose
+	VERBOSEV  := -v
+	VERBOSEV2 := -verbose
 endif
 
 ## ==== Targets
@@ -308,4 +293,6 @@ objects: $(OBJECTS)
 # 	echo "Checking for duplicated include files" ;\
 # 	pfcheck_dup -r --src=$(VPATH) --ext="$(INCSUFFIXES)" . $(INCLUDES) $(EC_INCLUDE_PATH) #$(shell s.generate_ec_path --include)
 
-## ====================================================================
+ifneq (,$(DEBUGMAKE))
+$(info ## ==== Makefile.build.mk [END] =======================================)
+endif
