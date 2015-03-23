@@ -78,6 +78,7 @@ if __name__ == "__main__":
     parser.add_option("-L","--follow-links",
                       action="store_true",dest="lfollow",default=False,
                       help="Follow links")
+    #TODO: should be able to provide restricted list instead of taking ENV var
     parser.add_option("","--restricted",
                       action="store_true",dest="lrestrict",default=False,
                       help="Skip restricted dirs")

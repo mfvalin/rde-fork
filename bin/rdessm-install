@@ -60,6 +60,14 @@ while [[ $# -gt 0 ]] ; do
 done
 ssmpkglist="$ssmpkglist $*"
 
+
+if [[ ! -e $ssmbase ]] ; then
+   cat 1>&2 <<EOF
+ERROR: SSM install base dir does not exist or not readable: $ssmbase
+EOF
+   exit 1
+fi
+
 if [[ $uninstall == 1 ]] ; then
    if [[ -e $bndl ]] ; then
       chmod u+w -R $bndl
@@ -94,9 +102,10 @@ set -x
 mkdir -p ${domain%/*}
 chmod u+w ${domain%/*}
 ssm created $myverbose -d $domain
-if [[ ! -d $domain ]] ; then
+if [[ ! -d $domain || ! -w $domain ]] ; then
    cat 1>&2 <<EOF
-ERROR creating SSM Domain: $domain
+ERROR creating SSM Domain or not dir or not writable: 
+      $domain
 EOF
    exit 1
 fi
@@ -115,6 +124,13 @@ chmod a-w $domain
 mkdir -p ${bndl%/*}
 chmod u+w ${bndl%/*}
 touch $bndl
+if [[ ! -f  $bndl|| ! -w $bndl ]] ; then
+   cat 1>&2 <<EOF
+ERROR creating SSM bndl or not file or not writable: 
+      $bndl
+EOF
+   exit 1
+fi
 
 if [[ x$prebndl != x ]] ; then
    cat $prebndl >> $bndl

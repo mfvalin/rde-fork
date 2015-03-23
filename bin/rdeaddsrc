@@ -67,8 +67,18 @@ if [[ "x$DIRLIST" == x ]] ; then
    echo DIRLIST=$DIRLIST
    myerror "You need to provide at least one dir"
 fi
-export BASE_ARCH=${myarch:-${RDE_BASE_ARCH:-$BASE_ARCH}}
-
+if [[ x$myarch != x ]] ; then
+   export BASE_ARCH1=${myarch%/*}
+   export BASE_ARCH=${BASE_ARCH1:-${BASE_ARCH}}
+   if [[ x$myarch == x$BASE_ARCH ]] ; then
+      export COMP_ARCH=${COMP_ARCH:-${EC_ARCH#*/}}
+   else
+      export COMP_ARCH1=${myarch#*/}
+      export COMP_ARCH=${COMP_ARCH1:-${COMP_ARCH:-${EC_ARCH#*/}}}
+   fi
+   export EC_ARCH=${BASE_ARCH}/${EC_ARCH}
+   export ORDENV_PLAT=${BASE_ARCH}
+fi
 SRCPATH="$(rdevar srcpath)"
 SRCPATH_R="$(rdevar srcpath_r)"
 if [[ x$myreset == x0 ]] ; then
@@ -103,8 +113,6 @@ for mydir in $DIRLIST; do
 done
 SRCPATH_R="$SRCPATH_R $SRCPATH1"
 SRCPATH="\$SRCPATH_R"
-
-#TODO: add option for arch_specific (would imply --keep to preserve other arch srcpath
 
 if [[ x$mymaxdepth != x0 ]] ; then
    SRCPATH1=""

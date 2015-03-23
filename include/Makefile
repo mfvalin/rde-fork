@@ -95,7 +95,7 @@ all: obj
 	cd $(BUILDOBJ) ;\
 	$(MYTIME) $(MAKE) $(NOPRINTDIR) $@ $(MYMAKE_VARS)
 
-.PHONY: help sanity links dep deplocal objloc obj_forced obj_touch qclean clean rmpo distclean
+.PHONY: help sanity links dep deplocal objloc obj_forced obj_touch clean rmpo cleanbuild cleanbuild0 cleanall
 
 help:
 	@more $(rde)/etc/rde_make_help.txt
@@ -132,7 +132,6 @@ $(BUILDOBJ):
 	$(MYTIME) rdemklink $(VERBOSEV)
 
 #Compiler uniquement les fichiers  modifies.
-qobj: obj
 obj:  sanity
 	$(MAKE_LINKS) ;\
 	cd $(BUILDOBJ) ;\
@@ -157,10 +156,18 @@ obj_forced: obj_touch obj
 obj_touch:
 	touch $(wildcard *.f* *.c* *.h* *.F* *.t*) 2>/dev/null || true
 
-qclean: clean
-rmpo: sanity
+
+rmpo: clean
+clean: sanity
 	chmod -R u+w $(BUILDOBJ)/*.o $(BUILDMOD)/*.[Mm][Oo][Dd] 2>/dev/null || true ;\
 	rm -rf       $(BUILDOBJ)/*.o $(BUILDMOD)/*.[Mm][Oo][Dd] 2>/dev/null || true
+	cd $(BUILDPRE) ;\
+	for myfile in $(foreach exte,$(SRCSUFFIXES) $(INCSUFFIXES),$(wildcard *$(exte))) ; do \
+		if [[ ! -L $${myfile} ]] ; then \
+			chmod u+w $${myfile} ; rm -f  $${myfile};\
+		fi ;\
+	done ;\
+
 
 cleanbuild: sanity
 	chmod u+w -R $(BUILD) $(BUILDPRE) $(BUILDOBJ) $(BUILDMOD) $(BUILDLIB) $(BUILDBIN) 2>/dev/null || true
@@ -173,9 +180,11 @@ cleanbuild0: sanity
 	done
 
 cleanall: cleanbuild
-	for item in $(CONST_RDEROOTLINKS) ; do\
-		if [[ -l $${item} ]] ; then rm -f $${item} 2>/dev/null || true; done \
-	done	
+	for item in $(CONST_RDEROOTLINKS) ; do \
+		if [[ -L $${item} ]] ; then \
+			rm -f $${item} 2>/dev/null || true; \
+		fi ;\
+	done
 	chmod u+w . $(CONST_RDEROOTFILES) 2>/dev/null || true
 	rm -f $(CONST_RDEROOTFILES) 2>/dev/null || true
 	chmod -R u+w $(CONST_RDEDIRS) 2>/dev/null || true
