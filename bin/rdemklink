@@ -35,11 +35,9 @@ done
 set -x
 STORAGE=$(rdevar storage)
 BUILD=$(rdevar build)
-BUILDOBJ=$(rdevar build/obj)
-BUILDBIN=$(rdevar build/bin)
 set +x
 
-if [ -z "${STORAGE}" -o -z "${BUILD}" -o -z "${BUILDOBJ}" -o -z "${BUILDBIN}" ] ; then
+if [[ -z "${STORAGE}" ]] ; then
    myerror "Storage var not defined, check your \$storage_model var: $storage_model"
 fi
 
@@ -55,16 +53,17 @@ fi
 if [[ ! -e $BUILD ]] ; then
    ln -s $STORAGE $BUILD
 fi
-mkdir -p $BUILDOBJ $BUILDBIN
 
-
-# if [[ $myforce == 1 ]] ; then 
-#    rm -rf ${BUILD%/*}
-# fi
-# if [[ ! -e ${BUILD%/*} ]] ; then
-#    ln -s ${STORAGE_BIN%/*} ${BUILD%/*}
-# fi
-# mkdir -p $BUILD
+for item in $(rdevar -l build/) ; do
+   mydir="$(rdevar $item)"
+   if [[ -z "$mydir" ]] ; then
+      myerror "Var not defined: rdevar $item"
+   fi
+   mkdir -p $mydir
+   if [[ ! -d $mydir ]] ; then
+      myerror "Problem creating dir for $item: $mydir"
+   fi
+done
 
 for item in $RDE_BASE_MAKEFILES ; do
    if [[ -f $item && $myforce == 1 ]] ; then

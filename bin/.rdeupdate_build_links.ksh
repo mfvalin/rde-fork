@@ -38,6 +38,8 @@ while [[ $# -gt 0 ]] ; do
 done
 
 MAKEFILEDEP="$(rdevar Makefile_dep)"
+BUILDSRC=$(pwd)/$(rdevar build/src)
+BUILDMOD=$(pwd)/$(rdevar build/mod)
 
 ## ====================================================================
 
@@ -82,11 +84,15 @@ myrm_mod() {
     # fi
 	 _modlist="$(get_modules_in_file ${_filename})"
     for _mymod in ${_modlist} ; do
-       for _myfile in $(ls -1) ; do
+       for _myfile in $(ls -1 ${BUILDMOD}) ; do
           _myname=$(echo ${_myfile##*/} |tr 'A-Z' 'a-z')
           if [[ x${_myname%.*} == x${_mymod} ]] ; then
-             /bin/rm -f ${_myfile}
-             myecho 2 "++ rm ${_myfile}"
+             #myecho 2 "++ $(ls ${BUILDMOD}/${_myname})"
+             #/bin/rm -f ${_myfile}
+             #myecho 2 "++ rm BUILDMOD/${_myfile}"
+             /bin/rm -f ${BUILDMOD}/${_myname}
+             myecho 2 "++ rm BUILDMOD/${_myname}"
+             #myecho 2 "++ $(ls ${BUILDMOD}/${_myname})"
           fi
        done
     done
@@ -146,7 +152,6 @@ VALIDEXTWILD="$(echo $VALIDEXT | sed 's/\./*./g')"
 
 mylist="$(ls $SRC_PATH_FILE Makefile.build.mk Makefile.rules.mk ${MAKEFILEDEP} Makefile.user.mk $VALIDEXTWILD 2>/dev/null | sort)"
 
-BUILDSRC=$(rdevar build/src)
 cd ${BUILDSRC}
 
 #mylist2="$(ls $SRC_PATH_FILE Makefile.build.mk Makefile.rules.mk ${MAKEFILEDEP} Makefile.user.mk $VALIDEXTWILD 2>/dev/null | sort)"
@@ -177,6 +182,7 @@ for item in * ; do
 				myrm_mod $item
 				myrm_invdep $item #when $item is .cdk or .cdk90... need to remove .o, .mod of files having it as a dependency, use make_cdk for that
 				/bin/rm -f $item
+            rdeco -q $item
 		  fi
 	 fi
 done

@@ -67,7 +67,9 @@ ifneq (,$(findstring s,$(MAKEFLAGS)))
 endif
 ifneq (,$(VERBOSE))
    VERBOSEV  := -v
-   VERBOSEVV := -v -v -v -v
+ifeq (2,$(VERBOSE))
+   VERBOSEVV := -v -v
+endif
 endif
 ifeq (,$(DEBUGMAKE))
    NOPRINTDIR := --no-print-directory
@@ -154,7 +156,7 @@ objloc:
 	@echo
 obj_forced: obj_touch obj
 obj_touch:
-	touch $(wildcard *.f* *.c* *.h* *.F* *.t*) 2>/dev/null || true
+	touch `ls *.f* *.c* *.h* *.F* *.t* 2>/dev/null` 2>/dev/null || true
 
 
 rmpo: clean

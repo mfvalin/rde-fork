@@ -178,6 +178,8 @@ RDEALL_LIBS       = $(foreach item,$(RDEALL_LIBS_NAMES),-l$(item))
 
 ## all libs tagets have a dependency on LIBDEP_ALL
 LIBDEP_ALL =  $(MAKEFILEDEP)
+## Modules are created in MODDIR
+MODDIR = $(BUILDMOD)
 ## Local Libraries are created in LIBDIR
 LIBDIR = $(BUILDLIB)
 ## Local Abs are created in BINDIR
@@ -209,6 +211,7 @@ IBM_LD   =
 LIBHPC   = hpc
 LIBPMAPI = pmapi
 #LIBMASSWRAP =  modelutils_massvp7_wrap
+RDE_OPTF_MODULE = -qmoddir=$(BUILDMOD)
 LIBMASS  = $(LIBMASSWRAP) massvp7 mass
 RDE_LIBPATH_ARCH = /opt/ibmhpc/ppedev.hpct/lib64
 endif
@@ -219,12 +222,12 @@ LAPACK      = lapack
 BLAS        = blas
 LIBMASSWRAP =  
 LIBMASS     = $(LIBMASSWRAP) massv_p4
+RDE_OPTF_MODULE = -module $(BUILDMOD)
 ifneq (,$(filter intel%,$(COMP_ARCH)))
 LAPACK      = 
 BLAS        = 
 RDE_MKL     = -mkl
 RDE_FP_MODEL= -fp-model source
-#RDE_OPTF_MODULE = -module $(BUILDMOD)
 RDE_INTEL_DIAG_DISABLE = -diag-disable 7713 -diag-disable 10212
 RDE_FFLAGS_COMP = $(RDE_INTEL_DIAG_DISABLE) $(RDE_MKL) $(RDE_FP_MODEL)
 RDE_CFLAGS_COMP = $(RDE_INTEL_DIAG_DISABLE) $(RDE_MKL) $(RDE_FP_MODEL)
