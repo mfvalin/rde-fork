@@ -11,12 +11,13 @@ COMPILING_FORTRAN=YES
 
 ## De-Archive .a.fl objects
 _alllibs="${LIBRARIES} ${SYSLIBS}"
+forceobjdir=.fo-$$
 if [[ x${WILL_LINK} == xyes ]] ; then
    _alllibs=""
    #TODO: should libs and libpaths be treated reversly?
-   mkdir .fo >/dev/null 2>&1
-   rm -f .fo/*.o
-   cd .fo/
+   mkdir ${forceobjdir} >/dev/null 2>&1
+   rm -f ${forceobjdir}/*.o
+   cd ${forceobjdir}/
    for mylib in ${LIBRARIES} ${SYSLIBS} ; do
       _found=0
       for mypath in ${LIBRARIES_PATH} ${EC_LD_LIBRARY_PATH} ; do
@@ -35,7 +36,7 @@ if [[ x${WILL_LINK} == xyes ]] ; then
    ## Removed redondant .a.fl objects
    for item2 in $@ ; do
       if [[ x${item2##*.} == xo ]] ; then
-         rm -f .fo/${item2##*/} 2>/dev/null
+         rm -f ${forceobjdir}/${item2##*/} 2>/dev/null
       fi
    done
 fi
@@ -44,7 +45,7 @@ _mydefines="$(s.prefix "${Dprefix}" ${DEFINES} )"
 _myincludes="$(s.prefix "${Iprefix}" ${INCLUDES} ${EC_INCLUDE_PATH})"
 _mylibpath="$(s.prefix "${Lprefix}" ${LIBRARIES_PATH} ${EC_LD_LIBRARY_PATH})"
 _mylibs="$(s.prefix "${lprefix}" ${_alllibs} )"
-_myfobj="$(ls .fo/*.o |tr '\n' ' ' 2>/dev/null)"
+_myfobj="$(ls ${forceobjdir}/*.o |tr '\n' ' ' 2>/dev/null)"
 
 if [[ -n $Verbose ]] ; then
    cat <<EOF
@@ -69,6 +70,7 @@ $F90C ${SourceFile} ${FC_options} ${FC_LD_options} ${FFLAGS} \
 	"$@"
 _status=$?
 
-rm -f .fo/*.o 2>/dev/null
+rm -f ${forceobjdir}/*.o 2>/dev/null
+rmdir ${forceobjdir} 2>/dev/null
 
 exit ${_status}
