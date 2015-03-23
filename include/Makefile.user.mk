@@ -1,6 +1,6 @@
 ifneq (,$(DEBUGMAKE))
 $(info ## ====================================================================)
-$(info ## File: Makefile.user.mk
+$(info ## File: Makefile.user.mk)
 $(info ## )
 endif
 
