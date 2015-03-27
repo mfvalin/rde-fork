@@ -3,10 +3,4 @@ export rde_bndl=ENV/x/rde/1.0.0-b6 #${1}
 export rde_version=${rde_bndl##*/}
 #export rde=/users/dor/armn/sch/SsmBundles/data/rde/${rde_version}
 export rde=/users/dor/armn/env/SsmBundles/ENV/d/x/rde/${rde_version}
-#export RDE_COMPILER_VERSION=1.3.0
-export RDE_COMPILER_VERSION=
-export PATH=.:$rde/bin:$PATH
-if [[ x$ORDENV_PLAT == xaix-7.1-ppc7-64 ]] ; then
-   s.use gmake as make
-   s.use gtar as tar
-fi
+. $rde/bin/.rde.env_setup.dot rde ${rde_version} all $rde $rde
