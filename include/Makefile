@@ -38,13 +38,13 @@ BUILDOBJ := $(ROOT)/$(CONST_BUILDOBJ)
 BUILDMOD := $(ROOT)/$(CONST_BUILDMOD)
 BUILDLIB := $(ROOT)/$(CONST_BUILDLIB)
 BUILDBIN := $(ROOT)/$(CONST_BUILDBIN)
-BINDIR   := $(BUILDBIN)
+BINDIR   = $(BUILDBIN)
 
 MAKEFILEDEP := $(CONST_MAKEFILE_DEP)
 
 INCSUFFIXES := $(CONST_RDESUFFIXINC)
 SRCSUFFIXES := $(CONST_RDESUFFIXSRC)
-RDE_BASE_ARCH  := $(CONST_RDE_BASE_ARCH)
+RDE_BASE_ARCH := $(CONST_RDE_BASE_ARCH)
 RDE_ARCH_LIST := $(CONST_RDE_LINKED_ARCH_LIST)
 ifeq (,$(RDE_ARCH_LIST))
 RDE_ARCH_LIST := $(CONST_RDE_KNOWN_BASE_ARCH_LIST)
@@ -76,7 +76,17 @@ ifeq (,$(DEBUGMAKE))
 endif
 
 MAKE_LINKS = $(MYTIMEX) .rdeupdate_build_links.ksh $(VERBOSEVV)
-MYMAKE_VARS = ROOT=$(ROOT) RDE_BASE_ARCH=$(RDE_BASE_ARCH) BINDIR=$(BINDIR) DEBUGMAKE=$(DEBUGMAKE) MYTIME="$(MYTIME)" MAKEFILE_CONST=$(MAKEFILE_CONST)
+#MYMAKE_VARS = ROOT=$(ROOT) RDE_BASE_ARCH=$(RDE_BASE_ARCH) BINDIR=$(BINDIR) DEBUGMAKE=$(DEBUGMAKE) MYTIME="$(MYTIME)" MAKEFILE_CONST=$(MAKEFILE_CONST)
+MYMAKE_VARS = ROOT=$(ROOT) RDE_BASE_ARCH=$(RDE_BASE_ARCH) BINDIR=$(BINDIR) MAKEFILE_CONST=$(MAKEFILE_CONST)
+#MYMAKE_VARS = ROOT=$(ROOT) RDE_BASE_ARCH=$(RDE_BASE_ARCH) MAKEFILE_CONST=$(MAKEFILE_CONST)
+
+RDE_TARGET_OBJ = obj
+RDE_TARGET_OBJ_FORCES = obj_forced
+RDE_TARGET_OBJ_TOUCH = obj_touch
+RDE_TARGET_CLEAN = clean
+RDE_TARGET_BUILDCLEAN = buildclean
+RDE_TARGET_BUILDCLEAN0 = buildclean0
+RDE_TARGET_DISTCLEAN = distclean
 
 ifneq (,$(wildcard $(ROOT)/Makefile.user.root.mk))
    ifneq (,$(DEBUGMAKE))
@@ -87,7 +97,8 @@ endif
 
 ## ==== Targets
 
-all: obj
+RDE_TARGET_ALL = all
+$(RDE_TARGET_ALL): obj
 
 .SUFFIXES:
 
@@ -103,24 +114,34 @@ help:
 	@more $(rde)/etc/rde_make_help.txt
 	@echo "Raw list of Makefile targets:"
 	@echo
-	@.rdefindtargets
+	@.rdefindtargets | more
 	@echo "=============================================================="
 
-deplocal: 
+tags:
+	echo "Building the tag file for ${EDITOR:-vi} code navigation"
+	echo "You may set the EDITOR env. var. to make the tag file for that editor"
+	$(MYTIME) rdemktags -v
+
+deplocal: #$(MAKEFILE_CONST)
 	rm -f $(MAKEFILEDEP) 2>/dev/null || true
 	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
-dep: 
+dep: #$(MAKEFILE_CONST)
 	rm -f Makefile.dep.*.mk 2>/dev/null || true
 	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE) --arch "$(RDE_ARCH_LIST)"
 
+#$(MAKEFILE_CONST) 
 sanity: $(MAKEFILEDEP) Makefile.build.mk Makefile.rules.mk $(BUILD) $(BUILDOBJ)
 links: sanity
 	$(MAKE_LINKS)
 
 .PHONY: Makefile.const
-Makefile.const:
-	$(info Building $(MAKEFILE_CONST))
+Makefile.const: 
+	$(info Building Makefile Constants: $(MAKEFILE_CONST))
 	$(MYTIME) rdevar --mkfile
+$(MAKEFILE_CONST): $(CONST_SRCPATHFILE) $(CONST_RDE_CONFIG_FILE)
+	$(info Building Makefile Constants: $(MAKEFILE_CONST))
+	$(MYTIME) rdevar --mkfile
+
 
 $(MAKEFILEDEP):
 	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
@@ -134,7 +155,7 @@ $(BUILDOBJ):
 	$(MYTIME) rdemklink $(VERBOSEV)
 
 #Compiler uniquement les fichiers  modifies.
-obj:  sanity
+$(RDE_TARGET_OBJ):  sanity
 	$(MAKE_LINKS) ;\
 	cd $(BUILDOBJ) ;\
 	localfiles="" ;\
@@ -150,17 +171,13 @@ obj:  sanity
 	done ;\
 	$(MYTIME) $(MAKE) $(NOPRINTDIR) $${localfiles} $(MYMAKE_VARS)
 
-objloc:
-	@echo
-	@echo "WARNING, objloc is deprecated, use: make obj"
-	@echo
-obj_forced: obj_touch obj
-obj_touch:
+$(RDE_TARGET_OBJ_FORCES): $(RDE_TARGET_OBJ_TOUCH) 
+	$(MYTIME) $(MAKE) $(NOPRINTDIR) $(RDE_TARGET_OBJ) $(MYMAKE_VARS)
+$(RDE_TARGET_OBJ_TOUCH):
 	touch `ls *.f* *.c* *.h* *.F* *.t* 2>/dev/null` 2>/dev/null || true
 
-
-rmpo: clean
-clean: sanity
+rmpo: $(RDE_TARGET_CLEAN)
+$(RDE_TARGET_CLEAN): 
 	chmod -R u+w $(BUILDOBJ)/*.o $(BUILDMOD)/*.[Mm][Oo][Dd] 2>/dev/null || true ;\
 	rm -rf       $(BUILDOBJ)/*.o $(BUILDMOD)/*.[Mm][Oo][Dd] 2>/dev/null || true
 	cd $(BUILDPRE) ;\
@@ -171,25 +188,33 @@ clean: sanity
 	done ;\
 
 
-cleanbuild: sanity
+$(RDE_TARGET_BUILDCLEAN): 
 	chmod u+w -R $(BUILD) $(BUILDPRE) $(BUILDOBJ) $(BUILDMOD) $(BUILDLIB) $(BUILDBIN) 2>/dev/null || true
 	rm -rf $(BUILD)/* $(BUILDPRE)/* $(BUILDOBJ)/* $(BUILDMOD)/* $(BUILDLIB)/* $(BUILDBIN)/* 2>/dev/null || true
 	mkdir -p $(BUILD) $(BUILDPRE) $(BUILDOBJ) $(BUILDMOD) $(BUILDLIB) $(BUILDBIN) 2>/dev/null || true
-cleanbuild0: sanity
+
+$(RDE_TARGET_BUILDCLEAN0): 
 	for mydir in $(BUILDPRE) $(BUILDOBJ) $(BUILDMOD) $(BUILDLIB) $(BUILDBIN) ;do\
 	   chmod u+w $${mydir}/* $${mydir}/.[a-zA-Z0-9_-]* 2>/dev/null || true ;\
 		rm -f     $${mydir}/* $${mydir}/.[a-zA-Z0-9_-]* 2>/dev/null || true ;\
 	done
 
-cleanall: cleanbuild
-	for item in $(CONST_RDEROOTLINKS) ; do \
+$(RDE_TARGET_DISTCLEAN): $(RDE_TARGET_BUILDCLEAN)
+	for item in `rdevar RDEROOTLINKS` ; do \
 		if [[ -L $${item} ]] ; then \
 			rm -f $${item} 2>/dev/null || true; \
 		fi ;\
 	done
-	chmod u+w . $(CONST_RDEROOTFILES) 2>/dev/null || true
-	rm -f $(CONST_RDEROOTFILES) 2>/dev/null || true
-	chmod -R u+w $(CONST_RDEDIRS) 2>/dev/null || true
-	rm -rf $(CONST_RDEDIRS) 2>/dev/null || true
+	chmod u+w .`rdevar RDEROOTFILES` 2>/dev/null || true
+	rm -f `rdevar RDEROOTFILES` 2>/dev/null || true
+	chmod -R u+w `rdevar RDEDIRS` 2>/dev/null || true
+	rm -rf `rdevar RDEDIRS` 2>/dev/null || true
+	for item in $(RDE_ARCH_LIST) ; do \
+		buildlink=$$(rdevar --arch $${item} build) ;\
+		if [[ -d $${buildlink:-__no-such-link__} ]] ; then \
+			rm -rf $${buildlink:-__no-such-link__}/* ;\
+		fi ;\
+		rm -f $${buildlink:-__no-such-link__} ;\
+	done
 
 ## ====================================================================
