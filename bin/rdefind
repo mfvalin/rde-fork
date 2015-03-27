@@ -1,14 +1,10 @@
 #!/usr/bin/env python
 import os,optparse,fnmatch,re
 
+DESC='Search for files in a directory hierarchy'
 RESTRICTED_FNAME = '.restricted'
-BASE_ARCH = os.environ['BASE_ARCH']
-EC_ARCH = os.environ['EC_ARCH']
-COMP_ARCH = os.environ['COMP_ARCH']
-ORDENV_PLAT = os.environ['ORDENV_PLAT']
-ORDENV_ARCH = ORDENV_PLAT+'/'+COMP_ARCH
 
-def listfiles(folder,ftype,namepattern,lfollow,lrestrict,lnodotdir,maxdepth=-1):
+def listfiles(folder,ftype,namepattern,lfollow,restrict_list,lnodotdir,maxdepth=-1):
     restricteddir = set()
     folderdepth = len(folder.split('/'))
     for root, folders, files in os.walk(folder,followlinks=lfollow):
@@ -23,15 +19,14 @@ def listfiles(folder,ftype,namepattern,lfollow,lrestrict,lnodotdir,maxdepth=-1):
         ## if namepattern:
         ##     renamepattern = fnmatch.translate(namepattern)
         ##     #isname = fnmatch.fnmatch(,namepattern):
-        if lrestrict:
+        if restrict_list:
             rfname = os.path.join(root,RESTRICTED_FNAME)
             if os.path.isfile(rfname):
                 isrestricted = True
                 if os.stat(rfname).st_size != 0:
                     myfile = open(rfname, "r")
                     for line in myfile:
-                        ## if re.match(BASE_ARCH, line) or re.match(EC_ARCH, line):
-                        if line.strip() in (BASE_ARCH,COMP_ARCH,EC_ARCH,ORDENV_PLAT,ORDENV_ARCH,BASE_ARCH+':',COMP_ARCH+':',EC_ARCH+':',ORDENV_PLAT+':',ORDENV_ARCH+':'):
+                        if line.strip() in (restrict_list):
                             isrestricted = False
                             break
                     myfile.close()
@@ -44,7 +39,7 @@ def listfiles(folder,ftype,namepattern,lfollow,lrestrict,lnodotdir,maxdepth=-1):
             isrestricted = (name0[0] == '.')
             if isrestricted:
                 restricteddir.add(root)
-        if (lrestrict or lnodotdir) and (not isrestricted) :
+        if (restrict_list or lnodotdir) and (not isrestricted) :
             for item in restricteddir:
                 isrestricted = re.match(item,root)
                 if isrestricted:
@@ -78,10 +73,9 @@ if __name__ == "__main__":
     parser.add_option("-L","--follow-links",
                       action="store_true",dest="lfollow",default=False,
                       help="Follow links")
-    #TODO: should be able to provide restricted list instead of taking ENV var
     parser.add_option("","--restricted",
-                      action="store_true",dest="lrestrict",default=False,
-                      help="Skip restricted dirs")
+                      dest="restrict_str",default="",
+                      help="Skip restricted dirs, you can provided a whitelist")
     parser.add_option("","--nodotdir",
                       action="store_true",dest="lnodotdir",default=False,
                       help="Skip hidden dirs")
@@ -89,8 +83,12 @@ if __name__ == "__main__":
                       dest="maxdepth",default="-1",
                       help="Descend at most levels of directories below the command line arguments")
     (options,args) = parser.parse_args()
+    restrict_list = None
+    if options.restrict_str:
+        restrict_list = options.restrict_str.split()
+        restrict_list.extend([x.strip()+':' for x in restrict_list])
     for mydir in args:
-        for myfile in listfiles(mydir,options.ftype,options.namepattern,options.lfollow==1,options.lrestrict,options.lnodotdir,int(options.maxdepth)+1):
+        for myfile in listfiles(mydir,options.ftype,options.namepattern,options.lfollow==1,restrict_list,options.lnodotdir,int(options.maxdepth)+1):
             if options.namepattern:
                 if fnmatch.fnmatch(myfile.split('/')[-1],options.namepattern):
                     print(myfile)

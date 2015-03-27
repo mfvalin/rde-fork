@@ -67,17 +67,20 @@ if [[ "x$DIRLIST" == x ]] ; then
    echo DIRLIST=$DIRLIST
    myerror "You need to provide at least one dir"
 fi
+
+RESTRICT_LIST=""
 if [[ x$myarch != x ]] ; then
    export BASE_ARCH1=${myarch%/*}
-   export BASE_ARCH=${BASE_ARCH1:-${BASE_ARCH}}
-   if [[ x$myarch == x$BASE_ARCH ]] ; then
+   export BASE_ARCH_F=${BASE_ARCH1:-${BASE_ARCH}}
+   if [[ x$myarch == x$BASE_ARCH_F ]] ; then
       export COMP_ARCH=${COMP_ARCH:-${EC_ARCH#*/}}
    else
       export COMP_ARCH1=${myarch#*/}
       export COMP_ARCH=${COMP_ARCH1:-${COMP_ARCH:-${EC_ARCH#*/}}}
    fi
-   export EC_ARCH=${BASE_ARCH}/${EC_ARCH}
-   export ORDENV_PLAT=${BASE_ARCH}
+   export EC_ARCH_F=${BASE_ARCH_F}/${EC_ARCH}
+   export ORDENV_PLAT_F=${BASE_ARCH_F}
+   RESTRICT_LIST="${BASE_ARCH_F} ${EC_ARCH_F} ${ORDENV_PLAT_F} ${ORDENV_PLAT_F}/${COMP_ARCH}"
 fi
 SRCPATH="$(rdevar srcpath)"
 SRCPATH_R="$(rdevar srcpath_r)"
@@ -119,7 +122,11 @@ if [[ x$mymaxdepth != x0 ]] ; then
    for mydir in $SRCPATH_R; do
       mystderr 1 "Recursively Looking into: $mydir"
       #SRCPATH1="$SRCPATH1 $mydir"
-      SRCPATH1="$SRCPATH1 $(rdefind $mydir --type d -L --maxdepth $mymaxdepth --restricted --nodotdir --name '[a-zA-Z0-9]*' | sort -r)"
+      if [[ x$myarch != x ]] ; then
+         SRCPATH1="$SRCPATH1 $(rdefind $mydir --type d -L --maxdepth $mymaxdepth --restricted "${RESTRICT_LIST}" --nodotdir --name '[a-zA-Z0-9]*' | sort -r)"
+      else
+         SRCPATH1="$SRCPATH1 $(rdefind $mydir --type d -L --maxdepth $mymaxdepth --nodotdir --name '[a-zA-Z0-9]*' | sort -r)"
+      fi
    done
    SRCPATH="$SRCPATH1"
 fi
