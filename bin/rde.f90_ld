@@ -45,7 +45,7 @@ _mydefines="$(s.prefix "${Dprefix}" ${DEFINES} )"
 _myincludes="$(s.prefix "${Iprefix}" ${INCLUDES} ${EC_INCLUDE_PATH})"
 _mylibpath="$(s.prefix "${Lprefix}" ${LIBRARIES_PATH} ${EC_LD_LIBRARY_PATH})"
 _mylibs="$(s.prefix "${lprefix}" ${_alllibs} )"
-_myfobj="$(ls ${forceobjdir}/*.o |tr '\n' ' ' 2>/dev/null)"
+_myfobj="$(ls ${forceobjdir}/*.o 2>/dev/null |tr '\n' ' ' 2>/dev/null)"
 
 if [[ -n $Verbose ]] ; then
    cat <<EOF

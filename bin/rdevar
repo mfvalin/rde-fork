@@ -83,7 +83,7 @@ SRC_PATH_FILE=${RDE_EXP_ROOT}/.rde.srcpath.dot
 
 RDE_CONST_SH=${RDE_EXP_ROOT}/.rde.const.${RDE_BASE_ARCH}.dot
 RDE_CONST_SH_WILD=${RDE_EXP_ROOT}/.rde.const.*.dot
-RDE_CONST_MK=${RDE_EXP_ROOT}/.rde.const.${RDE_BASE_ARCH}.mk
+RDE_CONST_MK=${RDE_EXP_ROOT}/.rde.const.${RDE_BASE_ARCH}.${rde_version}.mk
 RDE_CONST_MK_WILD=${RDE_EXP_ROOT}/.rde.const.*.mk
 #RDE_DEP_MK=${RDE_EXP_ROOT}/Makefile.dep.${RDE_BASE_ARCH}.mk
 RDE_DEP_MK=${RDE_EXP_ROOT}/Makefile.dep.${RDE_BASE_ARCH}.mk
@@ -142,7 +142,7 @@ myvars="
  build/obj=       build\${hostarch}/\${RDE_COMP_ARCH};
  build/mod=       build\${hostarch}/mod/\${RDE_COMP_ARCH};
  build/lib=       build\${hostarch}/lib/\${RDE_COMP_ARCH};
- build/bin=       build\${hostarch}/bin;
+ build/bin=       build\${hostarch}/bin/\${RDE_COMP_ARCH};
  build/run=       build\${hostarch}/run;
  build/ssm=       build\${hostarch}/ssm;
  local/src=       .;

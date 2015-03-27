@@ -281,7 +281,6 @@ endif
 .PHONY: objexp #TODO
 
 #Produire les objets de tous les fichiers de l'experience qu'ils soient checkout ou non
-objexp: objects
 objects: $(OBJECTS)
 
 # #TODO: get .o .mod from lib again after make clean?

@@ -24,4 +24,4 @@ findtargetfn() {
    #find -L $BUILD/ -name 'Makefile*' -exec .rdefindtargetsinfile --nodep --norules {} \;
 }
 
-findtargetfn | sort -u | grep -v .SILENT | grep -v .SUFFIXES 
+findtargetfn | sort -u | grep -v .SILENT | grep -v .SUFFIXES
