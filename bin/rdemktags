@@ -2,7 +2,7 @@
 . .rdebase.inc.dot
 
 #TODO: implement [-d DIR_DEPTH] option
-DESC='Create tags code navigation files for emacs (default) or vi'
+DESC='Create tags code navigation files for EDITOR=${EDITOR:-vi} or emacs, vi'
 USAGE="USAGE: ${0##*/} [h] [-v] [-b] [--vi] [--emacs]"
 
 usage_long() {
@@ -59,9 +59,11 @@ fi
 
 tagprogs="etags"
 tagfilename="TAGS"
-if [[ x$EDITOR == xvi ]] ; then
+taglang="--language=fortran"
+if [[ x$EDITOR == xvi || x$EDITOR == xvim || x$EDITOR == gvim ]] ; then
 	 tagprogs="ctags"
 	 tagfilename="tags"
+    taglang="--language-force=fortran"
 fi
 
 EXT_F='.cdk .hf .fh .itf90 .inc .f .ftn .ptn .f90 .f95 .f03 .ftn90 .ptn90 .cdk90 .tmpl90 .F .FOR .F90 .F95 .F03 '
@@ -74,7 +76,8 @@ for mydir in $SEARCH_PATH_BASE ; do
 		filelist=`ls ${mydir}/*${extfile} 2>/dev/null`
 		for myfile in $filelist ; do
 			for tagexe in $tagprogs ; do
-				$tagexe $myfile --language=fortran --defines --append
+				#$tagexe $myfile $taglang --defines --append
+				$tagexe $myfile $taglang --append
 			done
 		done
 	done
@@ -82,7 +85,8 @@ for mydir in $SEARCH_PATH_BASE ; do
 		filelist=`ls ${mydir}/*${extfile} 2>/dev/null`
 		for myfile in $filelist ; do
 			for tagexe in $tagprogs ; do
-				$tagexe $myfile --defines --append
+				#$tagexe $myfile --defines --append
+				$tagexe $myfile --append
 			done
 		done
 	done
