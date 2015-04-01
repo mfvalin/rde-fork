@@ -30,6 +30,7 @@ my $export_list = undef;
 my %current_dependencies_list = ();
 my @outside_tree_list = ();
 my %module_missing = ();
+my %module_dup = ();
 my %module_list = ();
 my %module_missing_ignored = ();
 my %include_missing_ignored = ();
@@ -508,7 +509,13 @@ sub process_file {
          next if (process_file_for_include($file,$1));
       }
       next if ($file->{EXTENSION} =~ /^(c|cc|CC)$/);
-      
+
+      if ($file->{EXTENSION} =~ /^(F90)$/) {
+         if ($_ =~ /^[\s\t]*![\s\t]*\/\*/) {
+            print STDERR "\nWARNING: File $filename has C styles comments (/* ... */)\n"
+         }
+      }
+
       # FORTRAN include statement : include "..."    include ',,,"
       if ($_ =~ /^[@]*[\s]*include[\s]*[<'"\s]([\w.\/\.]+)[>"'\s][\s]*/i) {
          next if (process_file_for_include($file,$1));
@@ -540,7 +547,18 @@ sub process_file {
 
          # Verifier que le nom du module n'existe pas dans un autre fichier
          if ($search_filename = search_module($modname)) { 
-            print STDERR "Module ".$modname." (".$filename.") already defined in ".$search_filename."\n"; 
+            print STDERR "\n\nERROR: Multiple definitions of Module '".$modname."'\n";
+            print STDERR "       1: ".$search_filename."\n"; 
+            print STDERR "       2: ".$filename."\n"; 
+            print STDERR "==== ABORT ====\n\n"; 
+            close INPUT;
+            unlink $output_file;
+            exit 1;
+            #TODO: better exception handeling
+            # $module_dup{$modname} = () if not exists($module_dup{$modname});
+            # %a = $module_dup{$modname};
+            # $a{$search_filename} = 1 if not exists($a{$search_filename});
+            # $a{$filename} = 1 if not exists($a{$filename});
             next; 
          }
 
@@ -969,7 +987,7 @@ sub print_dep_rules {
 
          #@current_dependencies_list = ();
          %current_dependencies_list = ();
-          if (!($ext2 eq $file->{EXTENSION})) {
+         if (!($ext2 eq $file->{EXTENSION})) {
             if ($flat_layout) {
                print_header("$file->{FILENAME}.$ext2",":",$file->{NAMEyEXT});
             } else {
