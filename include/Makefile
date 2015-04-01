@@ -85,8 +85,10 @@ RDE_TARGET_OBJ_FORCES = obj_forced
 RDE_TARGET_OBJ_TOUCH = obj_touch
 RDE_TARGET_CLEAN = clean
 RDE_TARGET_BUILDCLEAN = buildclean
-RDE_TARGET_BUILDCLEAN0 = buildclean0
+RDE_TARGET_BUILDCLEAN_PLUS = buildclean+
 RDE_TARGET_DISTCLEAN = distclean
+
+RDE_BUILDCLEAN_LIST = $(BUILDSRC) $(BUILDPRE) $(BUILDOBJ) $(BUILDMOD) $(BUILDLIB) $(BUILDBIN) $(BUILDSSM)
 
 ifneq (,$(wildcard $(ROOT)/Makefile.user.root.mk))
    ifneq (,$(DEBUGMAKE))
@@ -187,14 +189,12 @@ $(RDE_TARGET_CLEAN):
 		fi ;\
 	done ;\
 
+$(RDE_TARGET_BUILDCLEAN_PLUS): 
+	chmod u+w -R $(BUILD)/
+	rm -f $$(find $(BUILD)/ -type f) 2>/dev//null || true
 
 $(RDE_TARGET_BUILDCLEAN): 
-	chmod u+w -R $(BUILD) $(BUILDPRE) $(BUILDOBJ) $(BUILDMOD) $(BUILDLIB) $(BUILDBIN) 2>/dev/null || true
-	rm -rf $(BUILD)/* $(BUILDPRE)/* $(BUILDOBJ)/* $(BUILDMOD)/* $(BUILDLIB)/* $(BUILDBIN)/* 2>/dev/null || true
-	mkdir -p $(BUILD) $(BUILDPRE) $(BUILDOBJ) $(BUILDMOD) $(BUILDLIB) $(BUILDBIN) 2>/dev/null || true
-
-$(RDE_TARGET_BUILDCLEAN0): 
-	for mydir in $(BUILDPRE) $(BUILDOBJ) $(BUILDMOD) $(BUILDLIB) $(BUILDBIN) ;do\
+	for mydir in $(RDE_BUILDCLEAN_LIST) ;do\
 	   chmod u+w $${mydir}/* $${mydir}/.[a-zA-Z0-9_-]* 2>/dev/null || true ;\
 		rm -f     $${mydir}/* $${mydir}/.[a-zA-Z0-9_-]* 2>/dev/null || true ;\
 	done
