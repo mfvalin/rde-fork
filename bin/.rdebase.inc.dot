@@ -63,7 +63,7 @@ rde_exit_if_not_rdetopdir() {
          cat<<EOF 1>&2
 =======================================
 ERROR: $MYSELF should be run in a RDE top development dir
-       Maybe you forgot to run "rde ouv_exp ; rde mklink"?
+       Maybe you forgot to run "rde addsrc" or "rde mklink"?
 =======================================
 EOF
       fi
