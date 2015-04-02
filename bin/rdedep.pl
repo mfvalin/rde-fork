@@ -419,6 +419,13 @@ sub pre_process_file {
          die "\nERROR1: using 2 files with the same name $duplicated_filename1 with $path$filn.$exte" if ($duplicated_filename1);
          die "\nERROR2: using 2 files ($duplicated_filename2 and $path$filn.$exte) that will produce the same object file ($filn.o)\n" if ($duplicated_filename2);        
       }
+   } else {
+      my $duplicated_output2 = find_same_output2("$path$filn.$exte");
+      if ($_dup_ok) {
+         print STDERR  "\nWARNING: using 2 files ($duplicated_output2 and $path$filn.$exte) that will produce the same object file ($filn.o)\n\n" if ($duplicated_output2);
+      } else {
+         die "\nERROR3: using 2 files ($duplicated_output2 and $path$filn.$exte) that will produce the same object file ($filn.o)\n" if ($duplicated_output2);
+      }
    }
    # print STDERR "process: '$entry' dupok=$_dup_ok ; path=$path ; filen=$filn ; exte=$exte ; dup=$duplicated_filename1\n" if ($msg >= 5);
    return undef;
@@ -471,12 +478,26 @@ sub find_same_filename2 {
 # OUT: object key (filename) if file already exist, false (undef) otherwise
 #------------------------------------------------------------------------
 sub find_same_output {
-   my $cmp_file = $LISTOBJECT{$_[1]};
+   my $cmp_file = $LISTOBJECT{$_[0]};
    return undef if (!$cmp_file->{COMPILABLE});
    for my $key (keys %LISTOBJECT) {
       return $key if (
          ($LISTOBJECT{$key}->{FILENAME} eq $cmp_file->{FILENAME}) and 
-         $LISTOBJECT{$key}->{COMPILABLE} and 
+         $LISTOBJECT{$key}->{COMPILABLE} and
+         !($LISTOBJECT{$key}->{FULLPATH_SRC} eq $cmp_file->{FULLPATH_SRC}) and 
+         ($key ne $_[1])); 
+   }
+   return undef;
+}
+
+sub find_same_output2 {
+   my $cmp_file = $LISTOBJECT{$_[0]};
+   return undef if (!$cmp_file->{COMPILABLE});
+   for my $key (keys %LISTOBJECT) {
+      return $key if (
+         ($LISTOBJECT{$key}->{FILENAME} eq $cmp_file->{FILENAME}) and 
+         $LISTOBJECT{$key}->{COMPILABLE} and
+         !($LISTOBJECT{$key}->{EXTENSION} eq $cmp_file->{EXTENSION}) and
          ($key ne $_[1])); 
    }
    return undef;
