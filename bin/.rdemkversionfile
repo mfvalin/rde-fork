@@ -18,7 +18,7 @@ Where:
    PKGVERSION : Version of the program/lib
    DESTDIR    : (optional) Where to create the file (Default: .)
    MODE       : (optional) Type of versin file to create (Default: sh)
-                Knownk values: sh, c, f
+                Knownk values: sh, c, f, py
    NAMEFMT    : (optional) If MODE=sh and NAMEFMT=s
                 File name will be short format (.VERSION)
                 instead if long (\${pkgname_}_version.ext)  
@@ -29,6 +29,7 @@ The version file defines the following variables in the spefcified language:
    \${PKGNAME}_DSTP_S
    \${PKGNAME}_EC_ARCH_S
    \${PKGNAME}_ORDENV_ARCH_S
+   \${PKGNAME}_ORDENV_PLAT_S
    \${PKGNAME}_COMP_ARCH_S
 
 EOF
@@ -53,6 +54,10 @@ elif [[ x$MODE == xf ]] ; then
    versionfilename=${DESTDIR}/${pkgname_}_version.inc
    prefix='       character(len=50),parameter ::'
    sep=' = '
+elif [[ x$MODE == xpy ]] ; then
+   versionfilename=${DESTDIR}/${pkgname_}_version.py
+   prefix=''
+   sep=' = '
 fi
 cat > ${versionfilename} << EOF
 $prefix ${PKGNAME}_NAME_S${sep}"${PKGNAME}"
@@ -60,6 +65,7 @@ $prefix ${PKGNAME}_VERSION_S${sep}"${PKGVERSION}"
 $prefix ${PKGNAME}_DSTP_S${sep}"${production_date}"
 $prefix ${PKGNAME}_EC_ARCH_S${sep}"${EC_ARCH}"
 $prefix ${PKGNAME}_ORDENV_ARCH_S${sep}"${ORDENV_ARCH}"
+$prefix ${PKGNAME}_ORDENV_PLAT_S${sep}"${ORDENV_PLAT}"
 $prefix ${PKGNAME}_COMP_ARCH_S${sep}"${COMP_ARCH:-${EC_ARCH#*/}}"
 EOF
 [[ $? == 0 ]] && echo ${versionfilename} & exit 0

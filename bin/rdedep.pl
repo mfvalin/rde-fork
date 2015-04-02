@@ -512,7 +512,7 @@ sub process_file {
 
       if ($file->{EXTENSION} =~ /^(F90)$/) {
          if ($_ =~ /^[\s\t]*![\s\t]*\/\*/) {
-            print STDERR "\nWARNING: File $filename has C styles comments (/* ... */)\n"
+            print STDERR "\nWARNING: File $filename has C style comments (/* ... */)\n"
          }
       }
 

@@ -16,12 +16,38 @@ endif
 
 ROOT := $(PWD)
 MAKEFILE_CONST := $(shell rdevar Makefile_const)
+MAKEFILE_CONST_REDONE := 0
 
 ifeq (,$(wildcard $(MAKEFILE_CONST)))
    $(info Building $(MAKEFILE_CONST))
    $(info $(shell $(MYTIMEX) rdevar --mkfile))
+   MAKEFILE_CONST_REDONE := 1
 endif
 ifeq (,$(CONST_BUILD))
+   ifneq (,$(DEBUGMAKE))
+      $(info include $(ROOT)/include $(MAKEFILE_CONST))
+   endif
+   include $(ROOT)/$(MAKEFILE_CONST)
+endif
+
+MAKEFILE_CONST_REDO := 0
+ifeq (0,$(MAKEFILE_CONST_REDONE))
+   ifneq ($(rde_version),$(CONST_RDE_VERSION))
+      $(info WARNING: $(MAKEFILE_CONST) found for another version of RDE: $(CONST_RDE_VERSION))
+      MAKEFILE_CONST_REDO := 1
+   endif
+   ifeq (0,$(MAKEFILE_CONST_REDO))
+      MAKEFILE_CONST_AGE_MAX := 3600
+      #MAKEFILE_CONST_AGE := $(shell let age=`date +%s`-$(CONST_RDE_LASTUPDATED) ; echo $$age)
+      #MAKEFILE_CONST_REDO := $(shell [[ $(MAKEFILE_CONST_AGE) -lt $(MAKEFILE_CONST_AGE_MAX) ]] && echo 1 || echo 0)
+      MAKEFILE_CONST_REDO := $(shell let age=`date +%s`-$(CONST_RDE_LASTUPDATED) ; [[ $${age} -lt $(MAKEFILE_CONST_AGE_MAX) ]] && echo 0 || echo 1)
+
+   endif
+endif
+
+ifeq (1,$(MAKEFILE_CONST_REDO))
+   $(info Building $(MAKEFILE_CONST))
+   $(info $(shell $(MYTIMEX) rdevar --mkfile))
    ifneq (,$(DEBUGMAKE))
       $(info include $(ROOT)/include $(MAKEFILE_CONST))
    endif
