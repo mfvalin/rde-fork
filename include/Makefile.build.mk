@@ -256,8 +256,13 @@ ifneq (,$(findstring s,$(MAKEFLAGS)))
    VERBOSE := 
 endif
 ifneq (,$(VERBOSE))
-	VERBOSEV  := -v
-	VERBOSEV2 := -verbose
+ifeq (0,$(VERBOSE))
+   VERBOSEV  :=
+   VERBOSEVL := 
+else
+   VERBOSEV  := -v
+   VERBOSEVL := -verbose
+endif
 endif
 
 ## ==== Targets

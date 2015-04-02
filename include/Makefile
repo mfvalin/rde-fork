@@ -7,7 +7,7 @@ SHELL = /bin/bash
 ## ==== Basic definitions
 
 ifneq (,$(DEBUGMAKE))
-	VERBOSE = 1
+   VERBOSE = 2
    MYTIME  = time
 endif
 ifneq (,$(MYTIME))
@@ -92,9 +92,14 @@ ifneq (,$(findstring s,$(MAKEFLAGS)))
    VERBOSE = 
 endif
 ifneq (,$(VERBOSE))
+ifeq (0,$(VERBOSE))
+   VERBOSEV  :=
+else
    VERBOSEV  := -v
-ifeq (2,$(VERBOSE))
-   VERBOSEVV := -v -v
+   ifeq (2,$(VERBOSE))
+      VERBOSEV2 := -v
+      VERBOSEVV := -v -v
+   endif
 endif
 endif
 ifeq (,$(DEBUGMAKE))
@@ -174,13 +179,13 @@ $(MAKEFILE_CONST): $(CONST_SRCPATHFILE) $(CONST_RDE_CONFIG_FILE)
 $(MAKEFILEDEP):
 	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
 Makefile.build.mk:
-	$(MYTIME) rdemklink $(VERBOSEV)
+	$(MYTIME) rdemklink $(VERBOSEV2)
 Makefile.rules.mk:
-	$(MYTIME) rdemklink $(VERBOSEV)
+	$(MYTIME) rdemklink $(VERBOSEV2)
 $(BUILD):
-	$(MYTIME) rdemklink $(VERBOSEV)
+	$(MYTIME) rdemklink $(VERBOSEV2)
 $(BUILDOBJ):
-	$(MYTIME) rdemklink $(VERBOSEV)
+	$(MYTIME) rdemklink $(VERBOSEV2)
 
 #Compiler uniquement les fichiers  modifies.
 $(RDE_TARGET_OBJ):  sanity
