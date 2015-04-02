@@ -120,17 +120,22 @@ mkdepfn() {
       done
    fi
 
+   rm -f $TMPDIR/${MAKEFILEDEP}
    ${MYTIME} ${PERLPROF}rdedep.pl ${VERBOSE} ${DEP_DUP_OK} ${DEP_FLAT} \
       --deep-include \
       --any_inc \
       --soft-restriction \
       --libext=.a.fl \
-      --out=${MAKEFILEDEP} \
+      --out=$TMPDIR/${MAKEFILEDEP} \
       $DEP_SUPP_FILE_ARG \
       $TOPDIROPT \
       $OVERRIDEDIR \
       $SRCPATH
    mystatus=$?
+   if [[ $mystatus  == 0 ]] ; then
+      rm -f ${MAKEFILEDEP} 
+      mv $TMPDIR/${MAKEFILEDEP} ${MAKEFILEDEP}
+   fi
 }
 
 mystatus=0
