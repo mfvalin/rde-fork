@@ -82,6 +82,15 @@ DORBUILDLIBSAPPL = \
 	   	lRBUILD_LIBAPPL="$${lRBUILD_LIBAPPL} -l$${mylib}";\
 		done ;\
 	fi
+DORBUILDRPATH = \
+	LRBUILD_RPATH="" ;\
+	for mypath in $(RDEALL_LIBPATH) ; do \
+		if [[ x$${LRBUILD_RPATH} == x ]] ; then \
+			LRBUILD_RPATH=" -Wl,-rpath,$${mypath}";\
+		else \
+	   	LRBUILD_RPATH="$${LRBUILD_RPATH},$${mypath}";\
+		fi ;\
+	done ;\
 DORBUILD4FINALIZE = \
 	rm -f .bidon/bidon_$${MAINSUBNAME}.o 2>/dev/null || true ;\
 	if [[ x$${status} == x1 ]] ; then exit 1 ; fi
@@ -129,6 +138,53 @@ RBUILD4NOMPI_C = \
 	$(BUILDCC_NOMPI) -o $${RBUILD_ABS_NAME:-$@} $${lRBUILD_EXTRA_LIB} $${lRBUILD_LIBAPPL} $(RDEALL_LIBS) $${lRBUILD_COMM_STUBS}\
 	   .bidon/bidon_$${MAINSUBNAME}.o $${RBUILD_EXTRA_OBJ1} $(CODEBETA) || status=1 ;\
 	$(DORBUILD4FINALIZE)
+
+
+ifeq (aix-7.1-ppc7-64,$(ORDENV_PLAT))
+
+#	$${LRBUILD_RPATH} : -Wl,-rpath not understood by xlf13 !?!
+
+RBUILD4MPI_SO = \
+	status=0 ;\
+	$(DORBUILD4EXTRAOBJ) ;\
+	$(DORBUILDLIBSAPPL) ; $(DORBUILDEXTRALIBS) ;\
+	$(BUILDFC) -mpi -o $${RBUILD_LIBSO_NAME:-$@}.o $${lRBUILD_EXTRA_LIB} $${lRBUILD_LIBAPPL} $(RDEALL_LIBS) \
+	    -G -qmkshrobj $${RBUILD_EXTRA_OBJ1} $(CODEBETA) || status=1 ;\
+	ar rcv $${RBUILD_LIBSO_NAME:-$@} $${RBUILD_LIBSO_NAME:-$@}.o ;\
+	$(DORBUILD4FINALIZE)
+
+RBUILD4NOMPI_SO = \
+	status=0 ;\
+	$(DORBUILD4EXTRAOBJ) ;\
+	$(DORBUILD4COMMSTUBS) ;\
+	$(DORBUILDLIBSAPPL) ; $(DORBUILDEXTRALIBS) ;\
+	$(BUILDFC_NOMPI) -shared -mpi -o $${RBUILD_LIBSO_NAME:-$@}.o $${lRBUILD_EXTRA_LIB} $${lRBUILD_LIBAPPL} $(RDEALL_LIBS) $${lRBUILD_COMM_STUBS}\
+	   -G -qmkshrobj $${RBUILD_EXTRA_OBJ1} $(CODEBETA) || status=1 ;\
+	ar rcv $${RBUILD_LIBSO_NAME:-$@} $${RBUILD_LIBSO_NAME:-$@}.o ;\
+	$(DORBUILD4FINALIZE)
+
+else
+
+RBUILD4MPI_SO = \
+	status=0 ;\
+	$(DORBUILD4EXTRAOBJ) ;\
+	$(DORBUILD4COMMSTUBS) ;\
+	$(DORBUILDLIBSAPPL) ; $(DORBUILDEXTRALIBS) ;\
+	$(DORBUILDRPATH) ;\
+	$(BUILDFC) -shared -mpi -o $${RBUILD_LIBSO_NAME:-$@} $${LRBUILD_RPATH} $${lRBUILD_EXTRA_LIB} $${lRBUILD_LIBAPPL} $(RDEALL_LIBS) $${lRBUILD_COMM_STUBS} \
+	   $${RBUILD_EXTRA_OBJ1} $(CODEBETA) || status=1 ;\
+	$(DORBUILD4FINALIZE)
+
+RBUILD4NOMPI_SO = \
+	status=0 ;\
+	$(DORBUILD4EXTRAOBJ) ;\
+	$(DORBUILDLIBSAPPL) ; $(DORBUILDEXTRALIBS) ;\
+	$(DORBUILDRPATH) ;\
+	$(BUILDFC_NOMPI) -shared -o $${RBUILD_LIBSO_NAME:-$@} $${LRBUILD_RPATH} $${lRBUILD_EXTRA_LIB} $${lRBUILD_LIBAPPL} $(RDEALL_LIBS) \
+	   $${RBUILD_EXTRA_OBJ1} $(CODEBETA) || status=1 ;\
+	$(DORBUILD4FINALIZE)
+
+endif
 
 
 ## ==== Implicit Rules

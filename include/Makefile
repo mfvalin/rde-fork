@@ -5,6 +5,7 @@
 SHELL = /bin/bash
 
 ## ==== Basic definitions
+rdeuc = $(shell echo $(1) | tr 'a-z' 'A-Z')
 
 ifneq (,$(DEBUGMAKE))
    VERBOSE = 2
@@ -37,7 +38,7 @@ ifeq (0,$(MAKEFILE_CONST_REDONE))
       MAKEFILE_CONST_REDO := 1
    endif
    ifeq (0,$(MAKEFILE_CONST_REDO))
-      MAKEFILE_CONST_AGE_MAX := 3600
+      MAKEFILE_CONST_AGE_MAX := 10800
       #MAKEFILE_CONST_AGE := $(shell let age=`date +%s`-$(CONST_RDE_LASTUPDATED) ; echo $$age)
       #MAKEFILE_CONST_REDO := $(shell [[ $(MAKEFILE_CONST_AGE) -lt $(MAKEFILE_CONST_AGE_MAX) ]] && echo 1 || echo 0)
       MAKEFILE_CONST_REDO := $(shell let age=`date +%s`-$(CONST_RDE_LASTUPDATED) ; [[ $${age} -lt $(MAKEFILE_CONST_AGE_MAX) ]] && echo 0 || echo 1)
