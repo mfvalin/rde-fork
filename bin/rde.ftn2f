@@ -26,7 +26,7 @@ doit() {
    status=0
    r.gppf "$Prefixlang" -chop_bang -gpp -F  \
 	   $(s.prefix -I ${INCLUDES} ${EC_INCLUDE_PATH}) \
-	   -D__FILE__="#file" -D__LINE__="#line" ${DEFINES} \
+	   -D__FILE__=\"#file\" -D__LINE__=\"#line\" ${DEFINES} \
  	   "$SourceFile" 2>&1 > ${DestFile}.${Suffixlang} || { rm -f ${DestFile}.${Suffixlang} ; status=1 ;} 
    return $status
 }

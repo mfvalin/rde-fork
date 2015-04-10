@@ -22,7 +22,7 @@ fi
 
 r.gppf -chop_bang -gpp -F  \
 	$(s.prefix -I ${INCLUDES} ${EC_INCLUDE_PATH}) \
-	-D__FILE__="#file" -D__LINE__="#line" ${DEFINES} \
+	-D__FILE__=\"#file\" -D__LINE__=\"#line\" ${DEFINES} \
 	"$SourceFile" > ${DestFile}.f  || { rm -f ${DestFile}.f ; exit 1 ; }
 
 if [[ -n $Verbose ]] ; then
