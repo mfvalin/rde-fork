@@ -1,10 +1,10 @@
 #!/bin/bash
 DESC='List processed Makefile content'
-USAGE="USAGE: ${MYSELF} [-h] [--targets] [--vars|--var=VARNAME] [--full]"
+USAGE="USAGE: ${0##*/} [-h] [--targets] [--vars|--var=VARNAME] [--full]"
 
 usage_long() {
 	 toto=$(echo -e $USAGE)
-	 more <<EOF
+	 cat <<EOF
 $DESC
 
 $toto
@@ -40,14 +40,27 @@ while [[ $# -gt 0 ]] ; do
     shift
 done
 
+#TODO: use perl instead of sed for parsing to avoid arch limitation
+ls | sed -r "/./d" > /dev/null 2>&1 && ls | grep -A 1 . >/dev/null 2>&1
+if [[ $? -ne 0 ]] ; then
+   cat <<EOF
+
+ERROR: this script cannot be run on this ARCH, please try on a Linux system
+
+EOF
+   exit 1
+fi
+
 if [[ $targets == 0 && $vars == 0 ]] ; then
    usage_long
    exit 1
 fi
 
+
 if [[ $targets == 1 ]] ; then
-if [[ $myfull == 1 ]] ; then
-SCRIPT='
+   if [[ $myfull == 1 ]] ; then
+
+      SCRIPT='
   /^# Make data base/,/^# Files/d             # skip until files section
   /^# Not a target/,+1          d             # following target isnt
   /^\.PHONY:/                   d             # special target
@@ -87,8 +100,10 @@ SCRIPT='
     d                                         # hide any bugs
   }
 '
-else #if myfull==1
-SCRIPT='
+
+   else #if myfull==1
+
+      SCRIPT='
   /^# Make data base/,/^# Files/d             # skip until files section
   /^# Not a target/,+1          d             # following target isnt
   /^\.PHONY:/                   d             # special target
@@ -141,26 +156,33 @@ SCRIPT='
     d                                         # hide any bugs
   }
 '
-fi
-make -np 2>/dev/null | sed -n -r "$SCRIPT" \
-  | sort | uniq
+
+   fi #if myfull==1
+   make -np 2>/dev/null \
+      | sed -n -r "$SCRIPT" \
+      | sort -u
 fi #if targets=1
+
+
 
 if [[ $vars == 1 ]] ; then
 
    if [[ x"$varname" == x"" ]] ; then
       if [[ $myfull == 1 ]] ; then
-         make -np 2>/dev/null | grep = \
+         make -np 2>/dev/null \
+            | grep = \
             | sed -r "/^if /d" \
-            | sort | uniq
+            | sort -u
       else
-         make -np 2>/dev/null | grep = \
-            | sed -r "/^[#\t]/d;/^[^a-zA-Z_0-9]/d;/^if /d;/^FMOD_FILE_/d;/^FMOD_LIST_/d;/^INVDEP_LIST_/d" \
-            | sort | uniq
-         #TODO: remove Env.Var?
+         make -np 2>/dev/null \
+            | grep -A 1 '# makefile' \
+            | grep = \
+            | sed -r "/^FMOD_FILE_/d;/^FMOD_LIST_/d;/^INVDEP_LIST_/d" \
+            | sort -u
       fi
    else
-      make -np 2>/dev/null | sed -n -r "/^\s*$varname\s*:?=/p"
+      make -np 2>/dev/null \
+         | sed -n -r "/^\s*$varname\s*:?=/p"
    fi
 
 fi #if vars == 1
