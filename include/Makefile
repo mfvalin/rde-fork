@@ -142,29 +142,37 @@ $(RDE_TARGET_ALL): obj
 	cd $(BUILDOBJ) ;\
 	$(MYTIME) $(MAKE) $(NOPRINTDIR) $@ $(MYMAKE_VARS)
 
-.PHONY: help sanity links dep deplocal objloc obj_forced obj_touch clean rmpo cleanbuild cleanbuild0 cleanall
+.PHONY: sanity links dep deplocal objloc obj_forced obj_touch clean rmpo cleanbuild cleanbuild0 cleanall
 
+.PHONY: help
 help:
-	@more $(rde)/etc/rde_make_help.txt
+	@cat $(rde)/etc/rde_make_help.txt
 	@echo "Raw list of Makefile targets:"
 	@echo
-	@.rdefindtargets | more
+	@rdelsmake --targets
 	@echo "=============================================================="
 
+
+.PHONY: tags
+# Build tags file for emacs/vi dependiong on ${EDITOR:-vi} env.var.
 tags:
 	echo "Building the tag file for ${EDITOR:-vi} code navigation"
 	echo "You may set the EDITOR env. var. to make the tag file for that editor"
 	$(MYTIME) rdemktags -v
 
+.PHONY: deplocal
 deplocal: #$(MAKEFILE_CONST)
 	rm -f $(MAKEFILEDEP) 2>/dev/null || true
 	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
+.PHONY: dep
 dep: #$(MAKEFILE_CONST)
 	rm -f Makefile.dep.*.mk 2>/dev/null || true
 	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE) --arch "$(RDE_ARCH_LIST)"
 
 #$(MAKEFILE_CONST) 
+.PHONY: sanity
 sanity: $(MAKEFILEDEP) Makefile.build.mk Makefile.rules.mk $(BUILD) $(BUILDOBJ)
+.PHONY: links
 links: sanity
 	$(MAKE_LINKS)
 
@@ -188,6 +196,7 @@ $(BUILD):
 $(BUILDOBJ):
 	$(MYTIME) rdemklink $(VERBOSEV2)
 
+.PHONY: $(RDE_TARGET_OBJ)
 #Compiler uniquement les fichiers  modifies.
 $(RDE_TARGET_OBJ):  sanity
 	$(MAKE_LINKS) ;\
@@ -205,12 +214,16 @@ $(RDE_TARGET_OBJ):  sanity
 	done ;\
 	$(MYTIME) $(MAKE) $(NOPRINTDIR) $${localfiles} $(MYMAKE_VARS)
 
+.PHONY: $(RDE_TARGET_OBJ_FORCES)
 $(RDE_TARGET_OBJ_FORCES): $(RDE_TARGET_OBJ_TOUCH) 
 	$(MYTIME) $(MAKE) $(NOPRINTDIR) $(RDE_TARGET_OBJ) $(MYMAKE_VARS)
+.PHONY: $(RDE_TARGET_OBJ_TOUCH)
 $(RDE_TARGET_OBJ_TOUCH):
 	touch `ls *.f* *.c* *.h* *.F* *.t* 2>/dev/null` 2>/dev/null || true
 
+.PHONY: rmpo
 rmpo: $(RDE_TARGET_CLEAN)
+.PHONY: $(RDE_TARGET_CLEAN)
 $(RDE_TARGET_CLEAN): 
 	chmod -R u+w $(BUILDOBJ)/*.o $(BUILDMOD)/*.[Mm][Oo][Dd] 2>/dev/null || true ;\
 	rm -rf       $(BUILDOBJ)/*.o $(BUILDMOD)/*.[Mm][Oo][Dd] 2>/dev/null || true
@@ -221,16 +234,19 @@ $(RDE_TARGET_CLEAN):
 		fi ;\
 	done ;\
 
+.PHONY: $(RDE_TARGET_BUILDCLEAN_PLUS)
 $(RDE_TARGET_BUILDCLEAN_PLUS): 
 	chmod u+w -R $(BUILD)/
 	rm -f $$(find $(BUILD)/ -type f) 2>/dev//null || true
 
+.PHONY: $(RDE_TARGET_BUILDCLEAN)
 $(RDE_TARGET_BUILDCLEAN): 
 	for mydir in $(RDE_BUILDCLEAN_LIST) ;do\
 	   chmod u+w $${mydir}/* $${mydir}/.[a-zA-Z0-9_-]* 2>/dev/null || true ;\
 		rm -f     $${mydir}/* $${mydir}/.[a-zA-Z0-9_-]* 2>/dev/null || true ;\
 	done
 
+.PHONY: $(RDE_TARGET_DISTCLEAN)
 $(RDE_TARGET_DISTCLEAN): $(RDE_TARGET_BUILDCLEAN)
 	for item in `rdevar RDEROOTLINKS` ; do \
 		if [[ -L $${item} ]] ; then \
