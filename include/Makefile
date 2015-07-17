@@ -140,6 +140,7 @@ $(RDE_TARGET_ALL): obj
 	$(MAKE) $(NOPRINTDIR) sanity
 	$(MAKE_LINKS) ;\
 	cd $(BUILDOBJ) ;\
+   if [[ $$? != 0 ]] ; then echo "ERROR: cannot move into build dir: $(BUILDOBJ)" ; exit 1 ; fi ;\
 	$(MYTIME) $(MAKE) $(NOPRINTDIR) $@ $(MYMAKE_VARS)
 
 .PHONY: sanity links dep deplocal objloc obj_forced obj_touch clean rmpo cleanbuild cleanbuild0 cleanall
@@ -201,6 +202,7 @@ $(BUILDOBJ):
 $(RDE_TARGET_OBJ):  sanity
 	$(MAKE_LINKS) ;\
 	cd $(BUILDOBJ) ;\
+   if [[ $$? != 0 ]] ; then echo "ERROR: cannot move into build dir: $(BUILDOBJ)" ; exit 1 ; fi ;\
 	localfiles="" ;\
 	for myfile in $(foreach exte,$(SRCSUFFIXES),$(wildcard *$(exte))) ; do \
 		if [[ -L $${myfile} ]] ; then \
@@ -228,6 +230,7 @@ $(RDE_TARGET_CLEAN):
 	chmod -R u+w $(BUILDOBJ)/*.o $(BUILDMOD)/*.[Mm][Oo][Dd] 2>/dev/null || true ;\
 	rm -rf       $(BUILDOBJ)/*.o $(BUILDMOD)/*.[Mm][Oo][Dd] 2>/dev/null || true
 	cd $(BUILDPRE) ;\
+   if [[ $$? != 0 ]] ; then echo "ERROR: cannot move into build dir: $(BUILDOBJ)" ; exit 1 ; fi ;\
 	for myfile in $(foreach exte,$(SRCSUFFIXES) $(INCSUFFIXES),$(wildcard *$(exte))) ; do \
 		if [[ ! -L $${myfile} ]] ; then \
 			chmod u+w $${myfile} ; rm -f  $${myfile};\
