@@ -103,6 +103,17 @@ myrdeconfigvar() {
    fi
    echo $(eval "echo $(echo \${$1})")
 }
+myrde_utils_list() {
+   utils_list=
+   for item in ${rde}/bin/rde*; do 
+      itemname=${item##*/}
+      if [[ x"${itemname##*.}" == x"${itemname}" ]] ; then
+         utils_list="${utils_list} ${itemname}"
+      fi
+   done
+   echo ${utils_list}
+}
+
 mysrcpathvar() {
    if [[ -r $SRC_PATH_FILE ]] ; then
       . $SRC_PATH_FILE
@@ -156,6 +167,7 @@ myvars="
  srcpath_arch_list= \$(mysrcpathvar SRCPATH_ARCH_LIST);
  srcpath_topdirs= \$(mysrcpathvar SRCPATH_TOPDIRS);
  storage=         \$(rdemodel_path -l storage);
+ utils=           \$(myrde_utils_list);
  Makefile_dep=    \${RDE_DEP_MK};
  Makefile_const=  \${RDE_CONST_MK};
  Makefile_const_wild=  \${RDE_CONST_MK_WILD};
