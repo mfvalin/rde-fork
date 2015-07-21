@@ -150,11 +150,9 @@ myrm_empty() {
 #VALIDEXTWILD="*.F *.F90 *.f *.f90 *.ftn *.ftn90 *.cdk *.cdk90 *.fh* *.inc *.h* *.c *.cpp"
 VALIDEXTWILD="$(echo $VALIDEXT | sed 's/\./*./g')"
 
-mylist="$(ls $SRC_PATH_FILE Makefile.build.mk Makefile.rules.mk ${MAKEFILEDEP} Makefile.user.mk $VALIDEXTWILD 2>/dev/null | sort)"
+mylist="$(ls $SRC_PATH_FILE Makefile.build.mk ${MAKEFILEDEP} $VALIDEXTWILD 2>/dev/null | sort)"
 
 cd ${BUILDSRC}
-
-#mylist2="$(ls $SRC_PATH_FILE Makefile.build.mk Makefile.rules.mk ${MAKEFILEDEP} Makefile.user.mk $VALIDEXTWILD 2>/dev/null | sort)"
 
 ## Checking changes status
 echo $mylist > $TMPDIR/.rdesrcusrls

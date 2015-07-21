@@ -68,6 +68,7 @@ BUILDBIN := $(ROOT)/$(CONST_BUILDBIN)
 BINDIR   = $(BUILDBIN)
 
 MAKEFILEDEP := $(CONST_MAKEFILE_DEP)
+MAKEFILEUSERLIST := $(wildcard $(ROOT)/$(CONST_MAKEFILE_ROOT) $(ROOT)/$(CONST_MAKEFILE_ROOT_BASEARCH) $(ROOT)/$(CONST_MAKEFILE_ROOT_COMPARCH))
 
 INCSUFFIXES := $(CONST_RDESUFFIXINC)
 SRCSUFFIXES := $(CONST_RDESUFFIXSRC)
@@ -122,11 +123,11 @@ RDE_TARGET_DISTCLEAN = distclean
 
 RDE_BUILDCLEAN_LIST = $(BUILDSRC) $(BUILDPRE) $(BUILDOBJ) $(BUILDMOD) $(BUILDLIB) $(BUILDBIN) $(BUILDSSM)
 
-ifneq (,$(wildcard $(ROOT)/Makefile.user.root.mk))
+ifneq (,$(MAKEFILEUSERLIST))
    ifneq (,$(DEBUGMAKE))
-      $(info include $(ROOT)/Makefile.user.root.mk)
+      $(info include $(MAKEFILEUSERLIST))
    endif
-   include $(ROOT)/Makefile.user.root.mk
+   include $(MAKEFILEUSERLIST)
 endif
 
 ## ==== Targets

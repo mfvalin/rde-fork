@@ -34,6 +34,7 @@ SRCPATH  := $(CONST_SRCPATH)
 
 export RDE_EXP_ROOT := $(ROOT)
 MAKEFILEDEP := $(CONST_MAKEFILE_DEP)
+MAKEFILEUSERLIST := $(wildcard $(ROOT)/$(CONST_MAKEFILE_USER) $(ROOT)/$(CONST_MAKEFILE_USER_BASEARCH) $(ROOT)/$(CONST_MAKEFILE_USER_COMPARCH))
 
 ifeq (,$(rde))
    $(error FATAL ERROR: rde is not defined)
@@ -244,7 +245,7 @@ RDEBUILDMAKEFILES = $(wildcard \
    $(ROOT)/Makefile.rules.mk \
    $(LOCALMAKEFILES0) \
    $(ROOT)/$(MAKEFILEDEP) \
-   $(ROOT)/Makefile.user.mk)
+   $(MAKEFILEUSERLIST))
 ifneq (,$(RDEBUILDMAKEFILES))
    ifneq (,$(DEBUGMAKE))
       $(info include $(RDEBUILDMAKEFILES))
