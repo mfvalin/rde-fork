@@ -9,7 +9,11 @@ endif
 #OMP     = -openmp
 #MPI     = -mpi
 #LFLAGS = 
-#FFLAGS  = '-g -C -traceback -warn all'
+#ifeq (intel13sp1u2,$(CONST_RDE_COMP_ARCH))
+#FFLAGS  = -C -g -traceback -warn all
+#else
+#FFLAGS  = -C -g -traceback
+#endif
 #CFLAGS  =
 #LIBAPPL = 
 #LIBPATH_USER = 

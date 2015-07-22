@@ -119,7 +119,18 @@ mysrcpathvar() {
    if [[ -r $SRC_PATH_FILE ]] ; then
       . $SRC_PATH_FILE
    fi
-   echo $(eval "echo $(echo \${$1})")
+   _mysrcpathvarval=$(eval "echo $(echo \${$1})")
+   if [[ x"${_mysrcpathvarval}" == x"" && x$2 != x ]] ; then
+      _mysrcpathvarval=$(eval "echo $(echo \${$2})")
+   fi
+   echo ${_mysrcpathvarval}
+}
+
+myvpathvar() {
+   if [[ -r $SRC_PATH_FILE ]] ; then
+      . $SRC_PATH_FILE
+   fi
+   echo $(eval "echo $(echo \${$1})" | tr ' ' ':')
 }
 
 mybasearchold() {
@@ -164,6 +175,8 @@ myvars="
  ref/src=         ref/src;
  ref/bin=         ref/bin;
  srcpathfile=       \${SRC_PATH_FILE};
+ vpath=             \$(myvpathvar SRCPATH);
+ srcpath_include=   \$(mysrcpathvar SRCPATH_INCLUDE SRCPATH);
  srcpath=           \$(mysrcpathvar SRCPATH);
  srcpath_maxdepth=  \$(mysrcpathvar SRCPATH_MAXDEPTH);
  srcpath_r=         \$(mysrcpathvar SRCPATH_R);

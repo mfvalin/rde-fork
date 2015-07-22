@@ -29,6 +29,8 @@ Options:
 EOF
 }
 
+#TODO: add option to set SRCPATH_INCLUDE independent of SRCPATH
+
 RDE_BASE_ARCH=$(rdevar rde_base_arch)
 myforce=0
 myreset=0

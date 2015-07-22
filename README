@@ -1,3 +1,7 @@
+==== Before Tagging
+
+Create/update "setup" file: etc/ssm/VERSION.sh
+
 ==== Installation
 
 SSM_X=x/
