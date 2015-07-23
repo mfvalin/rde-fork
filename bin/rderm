@@ -55,8 +55,8 @@ mymakefilestub() {
       return 0
    fi
    _iscomp="$(echo ":${SRCSUFFIXES}:" | tr ' ' ':' | grep \.${_myfile##*.})"
-   if [[ x"$_isinc" != x"" ]] ; then
-      myerror "Removing a source file is not yet supported, ignoring ${_myfile}"
+   if [[ x"$_iscomp" != x"" ]] ; then
+      myerror "Removing (building a stub of) a source file is not yet supported, ignoring ${_myfile}"
       # echo > ${_myfile}
       # return 0
    fi
