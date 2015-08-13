@@ -2,10 +2,10 @@
 # @Object: Copy source code from a specified experiment
 # @Author: R.McTaggart-Cowan
 # @Date:   August2015
+. .rdebase.inc.dot
 
-MYSELF=${0##*/}
 DESC='Copy source code from a specified experiment'
-USAGE="Usage: ${MYSELF} [-h] SRC_PATH(S)"
+USAGE="Usage: ${MYSELF} [-h] [-v] [-f] SRC_PATH(S)"
 
 usage_long() {
          toto=$(echo -e $USAGE)
@@ -16,17 +16,23 @@ $toto
 
 Options:
     -h, --help  : print this help
+    -v, --verbose      : verbose mode
+    -f, --force        : force replace existing file
 
 EOF
 }
 
 # Retrieve and parse command line arguments
 src_path=''
+verbose=0
+myforce=0
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
+      (-v|--verbose) ((verbose=verbose+1));;
+      (-f|--force) myforce=1;;
       (--) shift ; break;;
-      (-*) echo "ERROR: Option Not recognized: $1" 1>&2 ; exit 1;;
+      (-*) myerror "ERROR: Option Not recognized: $1" ;;
       *) src_path="${src_path} $1";;
     esac
     shift
@@ -35,12 +41,27 @@ if [[ -z "${src_path}" ]] ; then
    usage_long; exit 1
 fi
 
+
 # Import source files from specified path
-set -e
-for ext in $(rdevar rdesuffix) ; do
-   for src in ${src_path} ; do      
-      for srcfile in $(find ${src} -name "*${ext}") ; do
-         cp ${srcfile} .
+mywild="$(rdevar rdesuffix | sed 's/\./*./g')"
+for src in ${src_path} ; do     
+   if [[ ! -d ${src} ]] ; then
+      mystderr 0 "WARNING: Ignoring not dir: $src"
+   else
+      for srcfile in $(cd ${src} && ls ${mywild} 2>/dev/null || true) ; do
+         if [[ -f ${srcfile} ]] ; then
+            if [[ ${myforce} == 1 ]] ; then
+               rm -f ${srcfile} && cp ${src}/${srcfile} .
+               myecho 1 "Overriting ${srcfile} with ${src}/${srcfile}"
+            else
+               mystderr 0 "WARNING: File $srcfile already exists, ignoring ${src}/${srcfile}"
+               mystderr 0 "Use '${MYSELF} -f' to overwrite"
+            fi
+         else
+            #TODO: check if source is a file before cp
+            cp ${src}/${srcfile} .
+            myecho 1 "cp ${src}/${srcfile} ."
+         fi
       done
-   done
+   fi
 done
