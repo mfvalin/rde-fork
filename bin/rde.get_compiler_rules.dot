@@ -65,6 +65,11 @@ if [ -n "${COMPILING_FORTRAN}${COMPILING_C}" ]; then
 				SourceFile="$1"
 				[[ $1 = */* ]] && INCLUDES="${1%/*} $INCLUDES"
 				;;
+			-src1 )
+				shift
+				SourceFile="$1"
+				[[ $1 = */* ]] && INCLUDES="$INCLUDES ${1%/*}"
+				;;
 			-D* )
 				DEFINES="$DEFINES $1"
 				;;
@@ -111,6 +116,11 @@ if [ -n "${COMPILING_FORTRAN}${COMPILING_C}" ]; then
 				shift
 				SourceFile="$1"
 				[[ $1 = */* ]] && INCLUDES="${1%/*} $INCLUDES"
+				;;
+			-src1 )
+				shift
+				SourceFile="$1"
+				[[ $1 = */* ]] && INCLUDES="$INCLUDES ${1%/*}"
 				;;
 			-I* )
 				INCLUDES="$INCLUDES ${1#-I}"
