@@ -1,0 +1,46 @@
+#!/usr/bin/env ksh
+# @Object: Copy source code from a specified experiment
+# @Author: R.McTaggart-Cowan
+# @Date:   August2015
+
+MYSELF=${0##*/}
+DESC='Copy source code from a specified experiment'
+USAGE="Usage: ${MYSELF} [-h] SRC_PATH(S)"
+
+usage_long() {
+         toto=$(echo -e $USAGE)
+         more 1>&2 <<EOF
+$DESC
+
+$toto
+
+Options:
+    -h, --help  : print this help
+
+EOF
+}
+
+# Retrieve and parse command line arguments
+src_path=''
+while [[ $# -gt 0 ]] ; do
+   case $1 in
+      (-h|--help) usage_long; exit 0;;
+      (--) shift ; break;;
+      (-*) echo "ERROR: Option Not recognized: $1" 1>&2 ; exit 1;;
+      *) src_path="${src_path} $1";;
+    esac
+    shift
+done
+if [[ -z "${src_path}" ]] ; then
+   usage_long; exit 1
+fi
+
+# Import source files from specified path
+set -e
+for ext in $(rdevar rdesuffix) ; do
+   for src in ${src_path} ; do      
+      for srcfile in $(find ${src} -name "*${ext}") ; do
+         cp ${srcfile} .
+      done
+   done
+done
