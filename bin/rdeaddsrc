@@ -131,6 +131,12 @@ if [[ x$mymaxdepth != x0 ]] ; then
       fi
    done
    SRCPATH="$SRCPATH1"
+   SRCPATH_INCLUDE=""
+   for mydir in $SRCPATH1 ; do
+      if [[ x"$(rdefind $mydir --type f -L --maxdepth 0 --restricted "${RESTRICT_LIST}" --nodotdir --name '[a-zA-Z0-9]*')" != x"" ]] ; then
+         SRCPATH_INCLUDE="${SRCPATH_INCLUDE} ${mydir}"
+      fi
+   done
 fi
 
 
@@ -149,6 +155,7 @@ SRCPATH_MAXDEPTH=$mymaxdepth
 SRCPATH_R="$SRCPATH_R"
 SRCPATH="$SRCPATH"
 SRCPATH_TOPDIRS="${mytopdirs}"
+SRCPATH_INCLUDE="${SRCPATH_INCLUDE}"
 EOF
 if [[ x$myarch != x ]] ; then
 cat >> $SRC_PATH_FILE <<EOF

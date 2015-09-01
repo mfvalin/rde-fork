@@ -32,6 +32,7 @@ FTNC77 = export EC_LD_LIBRARY_PATH="" ; $(RDEFTN2F) $(RDEALL_DEFINES) $(RDEALL_I
 FTNC90 = export EC_LD_LIBRARY_PATH="" ; $(RDEFTN902F90) $(RDEALL_DEFINES) $(RDEALL_INCLUDES) -src1
 FC77 = export EC_LD_LIBRARY_PATH="" ; $(RDEF77) $(RDEALL_DEFINES) $(RDEALL_INCLUDES) $(RDEALL_FFLAGS) -c -src1
 FC90a = $(RDEF90) $(RDEALL_DEFINES) $(RDEALL_INCLUDES) $(RDEALL_FFLAGS) -c -src1
+FC90aNoInclude = $(RDEF90) $(RDEALL_DEFINES) $(RDEALL_FFLAGS) -c -src1
 FC90 = export EC_LD_LIBRARY_PATH="" ; $(FC90a)
 FC95 = $(FC90)
 FC03 = $(FC90)
@@ -52,7 +53,7 @@ BUILDCC_NOMPI = export EC_INCLUDE_PATH="" ; $(RDECC)  $(RDEALL_LFLAGS_NOMPI) $(R
 DORBUILD4BIDONF = \
 	mkdir .bidon 2>/dev/null ; cd .bidon ;\
 	.rdemakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ;\
-	$(FC90a) bidon_$${MAINSUBNAME}.f90 >/dev/null || status=1 ;\
+	$(FC90aNoInclude) bidon_$${MAINSUBNAME}.f90 >/dev/null || status=1 ;\
 	rm -f bidon_$${MAINSUBNAME}.f90 ;\
 	cd ..
 DORBUILD4BIDONC = \

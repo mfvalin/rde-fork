@@ -29,9 +29,22 @@ BINDIR   := $(BUILDBIN)
 
 BUILDSRC := $(ROOT)/$(CONST_BUILDSRC)
 
-VPATH    := $(CONST_VPATH) #$(ROOT)/$(CONST_BUILDSRC)
+#------------------------------------------------------------------------
+# WARNING: Avoid using VPATH to find source files
+#          VPATH cause wrong file include when a include file is modified 
+#          but not the source file including it. The fortran preprocessor 
+#          then includes the include file located in the same dir as the 
+#          source file, not the modified one in the build dir.
+#          Copying the source file to the build dir does not solve all problems
+#          since recursive include files produce the same problem.
+#          For that reason avoid using VPATH when working only with modified
+#          source files. Instead allow the default make rules to checkout
+#          all files related to dependencies and inverse dependencies.
+## SRCPATH_INCLUDE := $(CONST_SRCPATH_INCLUDE)
+## VPATH           := $(CONST_VPATH) #$(ROOT)/$(CONST_BUILDSRC)
+VPATH    := $(ROOT)/$(CONST_BUILDSRC)
 SRCPATH  := $(CONST_SRCPATH)
-SRCPATH_INCLUDE := $(CONST_SRCPATH_INCLUDE)
+#------------------------------------------------------------------------
 
 export RDE_EXP_ROOT := $(ROOT)
 MAKEFILEDEP := $(CONST_MAKEFILE_DEP)
@@ -119,15 +132,17 @@ RDEALL_DEFINES       = $(RDE_DEFINES) $(MODEL_DEFINE1) $(DEFINE)
 #USER:  INCLUDES_PRE INCLUDES INCLUDES_POST
 
 RDE_INCLUDE0 := $(CONST_RDEINC)
-RDE_INCLUDE_PRE = "$(BUILDPRE)"
-RDE_INCLUDE_MOD = "$(BUILDMOD)"
-RDE_INCLUDE     = $(RDE_INCLUDE_COMP) $(RDE_INCLUDE_ARCH) $(RDE_INCLUDE0) $(PWD) $(RDE_INCLUDE_PRE) $(RDE_INCLUDE_MOD)
+RDE_INCLUDE_PRE = $(BUILDPRE)
+RDE_INCLUDE_MOD = $(BUILDMOD)
+#RDE_INCLUDE     = $(RDE_INCLUDE_COMP) $(RDE_INCLUDE_ARCH) $(RDE_INCLUDE0) $(PWD) $(RDE_INCLUDE_PRE) $(RDE_INCLUDE_MOD)
+RDE_INCLUDE     = $(RDE_INCLUDE_COMP) $(RDE_INCLUDE_ARCH) $(RDE_INCLUDE0)
 
 INCLUDES1      = $(INCLUDES_PRE) $(INCLUDES) $(INCLUDES_POST)
-RDE_INCLUDE1   = $(RDE_INCLUDE_PRE) $(RDE_INCLUDE) $(RDE_INCLUDE_POST)
+#RDE_INCLUDE1   = $(RDE_INCLUDE_PRE) $(RDE_INCLUDE) $(RDE_INCLUDE_POST)
 MODEL_INCLUDE1 = $(MODEL_INCLUDE_PRE) $(MODEL_INCLUDE) $(MODEL1_INCLUDE) $(MODEL2_INCLUDE) $(MODEL3_INCLUDE) $(MODEL4_INCLUDE) $(MODEL5_INCLUDE) $(SRCPATH_INCLUDE) $(MODEL_INCLUDE_POST)
 
-RDEALL_INCLUDE_NAMES = $(PWD) $(RDE_INCLUDE_PRE) $(RDE_INCLUDE_MOD) $(INCLUDES1) $(MODEL_INCLUDE1) $(RDE_INCLUDE1)
+#RDEALL_INCLUDE_NAMES = $(PWD) $(RDE_INCLUDE_PRE) $(RDE_INCLUDE_MOD) $(INCLUDES1) $(MODEL_INCLUDE1) $(RDE_INCLUDE1) 
+RDEALL_INCLUDE_NAMES = $(PWD) $(RDE_INCLUDE_PRE) $(RDE_INCLUDE_MOD) $(INCLUDES1) $(MODEL_INCLUDE1) $(RDE_INCLUDE)  $(RDE_INCLUDE_POST)
 RDEALL_INCLUDES      = $(foreach item,$(RDEALL_INCLUDE_NAMES),-I$(item))
 
 ## ==== Libpath
@@ -137,6 +152,7 @@ RDEALL_INCLUDES      = $(foreach item,$(RDEALL_INCLUDE_NAMES),-I$(item))
 
 RDE_LIBPATH_LEGACY = $(LIBDIR) $(LIBPATHEXTRA) $(LIBSYSPATHEXTRA) $(LIBPATHOTHER)
 RDE_LIBPATH        = $(RDE_LIBPATH_COMP) $(RDE_LIBPATH_ARCH) $(PWD) $(BUILDLIB) $(RDE_LIBPATH_LEGACY)
+#NOTE: BUILDLIB also apears as: LIBDIR in RDE_LIBPATH_LEGACY
 
 LIBPATH1       = $(LIBPATH_PRE) $(LIBPATH_USER) $(LIBPATH_POST)
 RDE_LIBPATH1   = $(RDE_LIBPATH_PRE) $(RDE_LIBPATH) $(RDE_LIBPATH_POST)
@@ -205,6 +221,7 @@ rm -f $$@ ; \
 ln -s lib$(1)_$$($(2)_VERSION).a $$@
 
 ## ==== Arch specific and Local/user definitions, targets and overrides
+#TODO: move these back into separated files RDEINC/ARCH/COMP/Makefile.comp.mk
 ifeq (aix-7.1-ppc7-64,$(ORDENV_PLAT))
 RDE_DEFINES_ARCH = -DAIX_POWERPC7
 LAPACK   = lapack-3.4.0
@@ -219,7 +236,7 @@ LIBMASS  = $(LIBMASSWRAP) massvp7 mass
 RDE_LIBPATH_ARCH = /opt/ibmhpc/ppedev.hpct/lib64
 endif
 
-ifneq (,$(filter ubuntu-%,$(ORDENV_PLAT)))
+ifneq (,$(filter linux26-%,$(ORDENV_PLAT))$(filter rhel-%,$(ORDENV_PLAT))$(filter ubuntu-%,$(ORDENV_PLAT)))
 RDE_DEFINES_ARCH = -DLINUX_X86_64
 LAPACK      = lapack
 BLAS        = blas
