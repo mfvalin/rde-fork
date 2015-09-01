@@ -173,7 +173,9 @@ dep: #$(MAKEFILE_CONST)
 
 #$(MAKEFILE_CONST) 
 .PHONY: sanity
-sanity: $(MAKEFILEDEP) Makefile.build.mk Makefile.rules.mk $(BUILD) $(BUILDOBJ)
+sanity: $(MAKEFILEDEP) Makefile.build.mk Makefile.rules.mk $(BUILD) $(BUILDOBJ) chkclock
+chkclock:
+	rdechkclock -v || exit 1
 .PHONY: links
 links: sanity
 	$(MAKE_LINKS)
