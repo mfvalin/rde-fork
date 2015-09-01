@@ -54,28 +54,58 @@ rde_exit_if_not_rdetopdir
 #followlinks='-L'
 followlinks=''
 
+srclist_cache_file="$(rdevar srcpathfilelistcache)"
+
+get_srclist_files() {
+   #TODO: check if up to date
+   if [[ ! -f ${srclist_cache_file} ]] ; then
+      rdefind $(rdevar srcpath) --type=f --maxdepth=0 > $srclist_cache_file
+   fi
+   cat $srclist_cache_file
+}
+
 find_file() {
-   _myfile=$1
-   _mydir=$2
-   if [[ -f ${_mydir}/${_myfile} ]] ; then
-      myecho 0 ${_mydir}/${_myfile}
+   #_myfile=$1
+   #_mydir=$2
+   if [[ -f ${2}/${1} ]] ; then
+      echo ${2}/${1}
    elif [[ $myrecurse == 1 ]] ; then
-      _mypath="$(find ${followlinks} ${_mydir} -name ${_myfile})"
-      myecho 0 ${_mypath}
+      _mypath="$(find ${followlinks} ${2} -name ${1})"
+      echo ${_mypath}
    fi
 }
 
-#mydirlist=". $(rdevar build/src) $(rdevar build/pre) $(rdevar srcpath)"
-mydirlist=". $(rdevar build/src) $(rdevar srcpath)"
+
 if [[ $localonly == 1 ]] ; then
-   mydirlist="." 
-fi
-if [[ $refonly == 1 ]] ; then
-   mydirlist="$(rdevar srcpath)" 
-fi
-if [[ $buildonly == 1 ]] ; then
+
+   for myfile in $files ; do
+      if [[ -f $myfile ]] ; then
+         myecho 0 ./$myfile
+      else
+         mystderr 0 "Missing file: $myfile"
+      fi
+   done
+   exit 0
+   
+elif [[ $refonly == 1 ]] ; then
+
+   mycache="$(get_srclist_files)"
+   for myfile in $files ; do
+      mypathlist="$(echo $mycache | tr ' ' '\n' | grep /${myfile} 2>/dev/null)"
+      if [[ x"$mypathlist" != x"" ]] ; then
+         myecho 0 $mypathlist | tr ' ' '\n'
+      else
+         mystderr 0 "Missing file: $myfile"
+      fi
+   done
+   exit 0
+
+elif [[ $buildonly == 1 ]] ; then
    #mydirlist="$(rdevar build/src) $(rdevar build/pre)" 
-   mydirlist="$(rdevar build/src)" 
+   mydirlist="$(rdevar build/src)"
+else
+   #mydirlist=". $(rdevar build/src) $(rdevar build/pre) $(rdevar srcpath)"
+   mydirlist=". $(rdevar build/src) $(rdevar srcpath)"
 fi
 
 for myfile in $files ; do
@@ -86,11 +116,8 @@ for myfile in $files ; do
       if [[ x"${mypathlist}" != x"" ]] ; then
          mypathlist2="${mypathlist2} ${mypathlist}"
          found=1
-            #echo 1:${mypathlist}:$myfile  $found  $mydir
       fi
-         #echo 2:${mypathlist}:$myfile  $found
    done
-      #echo 3:${mypathlist}:$myfile  $found
    if [[ x$found == x1 ]] ; then
       myecho 0 ${mypathlist2} | tr ' ' '\n'
    else
