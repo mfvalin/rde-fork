@@ -2,7 +2,7 @@
 . .rdebase.inc.dot
 
 DESC='Grep (print lines matching a pattern) in src'
-USAGE="USAGE: ${MYSELF} [-l] [GREP_OPTIONS] SEARCH_STRING [PATH]"
+USAGE="USAGE: ${MYSELF} [-l] [-r] [-b] [-R] [GREP_OPTIONS] SEARCH_STRING [PATH]"
 usage_long() {
 	 toto=$(echo -e $USAGE)
 	 more <<EOF
@@ -14,18 +14,27 @@ Options:
     -h, --help    : print this help
     -v, --verbose : verbose mode
     -l, --local   : grep into locally modified code only
+    -r, --ref     : grep into src ref dirs only
+    -b, --build   : grep into build dir only
+    -e, --egrep   : use egrep
     -R            : search recursively down the dir tree
 EOF
 }
 
 localonly=0
+refonly=0
+buildonly=0
 recurse=''
+mygrep=grep
 GREP_OPTIONS=""
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help)  usage_long; exit 0;;
       (-v|--verbose) ((verbose=verbose+1));;
       (-l|--local) localonly=1;;
+      (-r|--ref)   refonly=1;;
+      (-b|--build) buildonly=1;;
+      (-e|--egrep) mygrep=egrep;;
       (-R) recurse=recursively;;
       -*) GREP_OPTIONS="$GREP_OPTIONS $1";;
       *) break;;
@@ -46,32 +55,44 @@ fi
 
 rde_exit_if_not_rdetopdir
 
-SEARCH_PATH_BASE=". $(rdevar srcpath)"
 if [[ $localonly == 1 ]] ; then
    SEARCH_PATH_BASE="."
+elif [[ $refonly == 1 ]] ; then
+   SEARCH_PATH_BASE="$(rdevar srcpath)"
+elif [[ $buildonly == 1 ]] ; then
+   tmp="$(rdevar build/pre)"
+   SEARCH_PATH_BASE="$(rdevar build/src)"
+   if [[ x"$SEARCH_PATH_BASE" != x"$tmp" ]] ; then
+      SEARCH_PATH_BASE="$SEARCH_PATH_BASE $tmp"
+   fi
+else
+   SEARCH_PATH_BASE=". $(rdevar srcpath)"
 fi
 
 if [[ ! -n ${SEARCH_PATH} ]] ; then
    SEARCH_PATH='.'
 fi
 
+suffixes="*$(rdevar rdesuffix | sed 's/ [.]/,*./g'),*.mk"
+
 for PATH_BASE in $SEARCH_PATH_BASE ; do
    cd ${PATH_BASE}
    for MYPATH in ${SEARCH_PATH} ; do
       #TODO: if $recurse -r condition is too restrictive
       if [[ -r ${MYPATH} ]] ; then
-         myecho 1 "Searching $recurse in ${PATH_BASE}/${MYPATH}"
+         myecho 1 "### Searching $recurse in ${PATH_BASE}/${MYPATH}"
          if [[ -d ${MYPATH} ]] ; then
             if [[ x$recurse == x ]] ; then
-               myfiles="$(ls -d1 ${MYPATH}/* ${MYPATH}/.[a-zA-Z0-9_-]* 2>/dev/null | grep -v '.Abs' | grep -v malib | grep -v build| grep -v Makefile.dep.)"
+               #myfiles="$(ls -d1 ${MYPATH}/* ${MYPATH}/.[a-zA-Z0-9_-]* 2>/dev/null | grep -v '.Abs' | grep -v malib | grep -v build| grep -v Makefile.dep.)"
+               myfiles="$(ls -1 ${MYPATH}/{${suffixes}} 2>/dev/null | grep -v Makefile.dep. | sed 's|[.]/||g')"
                if [[ x"${myfiles}" != x"" ]] ; then
-                  grep -H ${GREP_OPTIONS} "${SEARCH_STRING}" ${myfiles}
+                  $mygrep -H ${GREP_OPTIONS} "${SEARCH_STRING}" ${myfiles}
                fi
             else
-               find -L ${MYPATH} -type f -exec grep -H ${GREP_OPTIONS} "${SEARCH_STRING}" {} \; | grep -v Makefile.dep.:
+               find -L ${MYPATH} -type f -exec $mygrep -H ${GREP_OPTIONS} "${SEARCH_STRING}" {} \; | $mygrep -v Makefile.dep.:
             fi
          else
-            grep -H ${GREP_OPTIONS} "${SEARCH_STRING}" ${MYPATH}
+            $mygrep -H ${GREP_OPTIONS} "${SEARCH_STRING}" ${MYPATH}
          fi
       else
          mystderr 1 "Searching $recurse in ${PATH_BASE}, No such file/Dir: ${MYPATH}"

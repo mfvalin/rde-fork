@@ -144,32 +144,32 @@ find_src_file_list() {
 
 
 
-# echo_file_status() {
-#    #_myfile=$1
-#    # _itemname2=$(is_src_local_deleted ${1})
-#    # _isrestricted="$(isrestricted ${1} ${_itemname2})"
-#    # file_usr="$(rdelocate -l ${1} 2>/dev/null)"
-#    file_usr=${1}
-#    file_ref="$(rdelocate -r ${1} 2>/dev/null)"
-#    # if [[ x${_itemname2} != x ]] ; then
-#    #    echo DEL ${_itemname2} ${_isrestricted}
-#    # elif [[ x${file_usr} != x ]] ; then
-#    if [[ x${file_usr} != x ]] ; then
-#       if [[ x${file_ref} != x ]] ; then
-#          _isdiff=1
-#          diff ${file_ref} ${file_usr} >/dev/null 2>&1 && _isdiff=0
-#          if [[ ${_isdiff} == 1 ]] ; then
-#             echo MOD ${1} ${_isrestricted}
-#          else
-#             echo REF ${1} ${_isrestricted}
-#          fi
-#       else
-#          echo NEW ${1} ${_isrestricted}
-#       fi
-#    else
-#       echo ??? ${1} ${_isrestricted}
-#    fi
-# }
+echo_file_status() {
+   #_myfile=$1
+   # _itemname2=$(is_src_local_deleted ${1})
+   # _isrestricted="$(isrestricted ${1} ${_itemname2})"
+   # file_usr="$(rdelocate -l ${1} 2>/dev/null)"
+   file_usr=${1}
+   file_ref="$(rdelocate -r ${1} 2>/dev/null)"
+   # if [[ x${_itemname2} != x ]] ; then
+   #    echo DEL ${_itemname2} ${_isrestricted}
+   # elif [[ x${file_usr} != x ]] ; then
+   if [[ x${file_usr} != x ]] ; then
+      if [[ x${file_ref} != x ]] ; then
+         _isdiff=1
+         diff ${file_ref} ${file_usr} >/dev/null 2>&1 && _isdiff=0
+         if [[ ${_isdiff} == 1 ]] ; then
+            echo MOD ${1} ${_isrestricted}
+         else
+            echo REF ${1} ${_isrestricted}
+         fi
+      else
+         echo NEW ${1} ${_isrestricted}
+      fi
+   else
+      echo ??? ${1} ${_isrestricted}
+   fi
+}
 
 
 
