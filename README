@@ -9,7 +9,7 @@ SSM_X=x/
 BASE_INSTALL_DIR=/users/dor/armn/env/SsmBundles/ENV/d/${SSM_X}rde
 BASE_SSM_BNDL_DIR=/users/dor/armn/env/SsmBundles/ENV/${SSM_X}rde
 
-VERSION0=${SSM_X}rde_1.0.b8
+VERSION0=${SSM_X}rde_1.0.b12
 
 VERSIONGIT=${VERSION0##*/}
 VERSION=${VERSION0##*_}
