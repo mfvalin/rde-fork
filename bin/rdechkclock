@@ -5,7 +5,7 @@
 
 MYSELF=${0##*/}
 DESC='Check clock skew between src and build dir'
-USAGE="USAGE: ${MYSELF} [-h] [-v]"
+USAGE="USAGE: ${MYSELF} [-h] [-v] [-t NB_SECONDS]"
 
 usage_long() {
 	 toto=$(echo -e $USAGE)
@@ -16,6 +16,7 @@ $toto
 
 Options:
     -h, --help         : print this help
+    -t, --tolerance    : skew tolerance in seconds [default=0]
     -v, --verbose      : verbose mode
 EOF
 }
@@ -31,10 +32,12 @@ EOF
 }
 
 verbose=0
+tolerance=0
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
       (-v|--verbose) ((verbose=verbose+1));;
+      (-t|--tolerance) tolerance=$2 ; shift;;
       *) myerror "Option Not recognized: $1";;
     esac
 	 previous=$1
@@ -52,7 +55,10 @@ m0="$(stat -c %Y $myname)"
 m1="$(stat -c %Y $BUILDOBJ/$myname)"
 rm -f $myname $BUILDOBJ/$myname
 let dm=m1-m0
-if [[ dm -ne 0 ]] ; then
+if [[ dm -lt 0 ]] ; then
+   let dm=m0-m1
+fi
+if [[ dm -gt $tolerance ]] ; then
    if [[ $verbose -ge 1 ]] ; then
       cat <<EOF
 ====================================================================

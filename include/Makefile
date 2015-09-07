@@ -80,6 +80,8 @@ endif
 
 RDE_INCLUDE0 := $(CONST_RDEINC)
 
+CLOCK_SKEW_MAX := 0
+
 ifeq (,$(rde))
    $(error FATAL ERROR: rde is not defined)
 endif
@@ -175,7 +177,7 @@ dep: #$(MAKEFILE_CONST)
 .PHONY: sanity
 sanity: $(MAKEFILEDEP) Makefile.build.mk Makefile.rules.mk $(BUILD) $(BUILDOBJ) chkclock
 chkclock:
-	rdechkclock -v || exit 1
+	rdechkclock -v -t $(CLOCK_SKEW_MAX)|| exit 1
 .PHONY: links
 links: sanity
 	$(MAKE_LINKS)
