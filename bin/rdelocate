@@ -58,10 +58,11 @@ srclist_cache_file="$(rdevar srcpathfilelistcache)"
 
 get_srclist_files() {
    #TODO: check if up to date
-   if [[ ! -f ${srclist_cache_file} ]] ; then
-      rdefind $(rdevar srcpath) --type=f --maxdepth=0 > $srclist_cache_file
-   fi
-   cat $srclist_cache_file
+   #if [[ ! -f ${srclist_cache_file} ]] ; then
+   #   rdefind $(rdevar srcpath) --type=f --maxdepth=0 > $srclist_cache_file
+   #fi
+   #cat $srclist_cache_file
+   rdefind $(rdevar srcpath) --type=f --maxdepth=0
 }
 
 find_file() {

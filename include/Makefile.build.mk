@@ -262,8 +262,8 @@ endif
 LOCALMAKEFILES0 := $(foreach mydir,$(SRCPATH),$(mydir)/Makefile.local.mk)
 RDEBUILDMAKEFILES = $(wildcard \
    $(ROOT)/Makefile.rules.mk \
-   $(LOCALMAKEFILES0) \
    $(ROOT)/$(MAKEFILEDEP) \
+   $(LOCALMAKEFILES0) \
    $(MAKEFILEUSERLIST))
 ifneq (,$(RDEBUILDMAKEFILES))
    ifneq (,$(DEBUGMAKE))
