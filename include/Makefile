@@ -80,7 +80,7 @@ endif
 
 RDE_INCLUDE0 := $(CONST_RDEINC)
 
-CLOCK_SKEW_MAX := 0
+CLOCK_SKEW_MAX := 1
 
 ifeq (,$(rde))
    $(error FATAL ERROR: rde is not defined)

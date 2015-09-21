@@ -32,7 +32,7 @@ EOF
 }
 
 verbose=0
-tolerance=0
+tolerance=1
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
