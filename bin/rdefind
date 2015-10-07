@@ -5,6 +5,8 @@ DESC='Search for files in a directory hierarchy'
 RESTRICTED_FNAME = '.restricted'
 
 def listfiles(folder,ftype,namepattern,lfollow,restrict_list,lnodotdir,maxdepth=-1):
+    """
+    """
     restricteddir = set()
     folderdepth = len(folder.split('/'))
     for root, folders, files in os.walk(folder,followlinks=lfollow):
@@ -36,7 +38,9 @@ def listfiles(folder,ftype,namepattern,lfollow,restrict_list,lnodotdir,maxdepth=
             name0 = root.split('/')[-1]
             if not name0:
                 name0 = root.split('/')[-2]
-            isrestricted = (name0[0] == '.')
+            if name0[0] == '.':
+                if folder != root:
+                    isrestricted = (name0[0] == '.')
             if isrestricted:
                 restricteddir.add(root)
         if (restrict_list or lnodotdir) and (not isrestricted) :
@@ -60,6 +64,7 @@ def listfiles(folder,ftype,namepattern,lfollow,restrict_list,lnodotdir,maxdepth=
                     yield os.path.join(root, filename)
                 ## for filename in folders + files:
                 ##     yield os.path.join(root, filename)
+
 
 if __name__ == "__main__":
     usage = "usage: \n\t%prog PATH [-type l/d/f] "
