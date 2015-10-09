@@ -64,8 +64,8 @@ $prefix ${PKGNAME}_NAME_S${sep}"${PKGNAME}"
 $prefix ${PKGNAME}_VERSION_S${sep}"${PKGVERSION}"
 $prefix ${PKGNAME}_DSTP_S${sep}"${production_date}"
 $prefix ${PKGNAME}_EC_ARCH_S${sep}"${EC_ARCH}"
-$prefix ${PKGNAME}_ORDENV_ARCH_S${sep}"${ORDENV_ARCH}"
-$prefix ${PKGNAME}_ORDENV_PLAT_S${sep}"${ORDENV_PLAT}"
+$prefix ${PKGNAME}_ORDENV_ARCH_S${sep}"${ORDENV_ARCH:-UNKNOWN}"
+$prefix ${PKGNAME}_ORDENV_PLAT_S${sep}"${ORDENV_PLAT:-$(uname -spvr)}"
 $prefix ${PKGNAME}_COMP_ARCH_S${sep}"${COMP_ARCH:-${EC_ARCH#*/}}"
 EOF
 [[ $? == 0 ]] && echo ${versionfilename} & exit 0

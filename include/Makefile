@@ -16,6 +16,10 @@ ifneq (,$(MYTIME))
 endif
 
 ROOT := $(PWD)
+ifeq (,$(ROOT))
+ROOT := $(CURDIR)
+endif
+
 MAKEFILE_CONST := $(shell rdevar Makefile_const)
 MAKEFILE_CONST_REDONE := 0
 
@@ -169,9 +173,14 @@ deplocal: #$(MAKEFILE_CONST)
 	rm -f $(MAKEFILEDEP) 2>/dev/null || true
 	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
 .PHONY: dep
+
+ifneq (,$(filter aix-%,$(RDE_BASE_ARCH))$(filter AIX-%,$(RDE_BASE_ARCH)))
+dep: deplocal
+else
 dep: #$(MAKEFILE_CONST)
 	rm -f Makefile.dep.*.mk 2>/dev/null || true
 	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE) --arch "$(RDE_ARCH_LIST)"
+endif
 
 #$(MAKEFILE_CONST) 
 .PHONY: sanity

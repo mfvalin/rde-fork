@@ -222,7 +222,7 @@ ln -s lib$(1)_$$($(2)_VERSION).a $$@
 
 ## ==== Arch specific and Local/user definitions, targets and overrides
 #TODO: move these back into separated files RDEINC/ARCH/COMP/Makefile.comp.mk
-ifeq (aix-7.1-ppc7-64,$(ORDENV_PLAT))
+ifneq (,$(filter aix-%,$(RDE_BASE_ARCH))$(filter AIX-%,$(RDE_BASE_ARCH)))
 RDE_DEFINES_ARCH = -DAIX_POWERPC7
 LAPACK   = lapack-3.4.0
 BLAS     = essl
@@ -236,7 +236,7 @@ LIBMASS  = $(LIBMASSWRAP) massvp7 mass
 RDE_LIBPATH_ARCH = /opt/ibmhpc/ppedev.hpct/lib64
 endif
 
-ifneq (,$(filter linux26-%,$(ORDENV_PLAT))$(filter rhel-%,$(ORDENV_PLAT))$(filter ubuntu-%,$(ORDENV_PLAT)))
+ifneq (,$(filter Linux_x86-64,$(RDE_BASE_ARCH))$(filter linux26-%,$(RDE_BASE_ARCH))$(filter rhel-%,$(RDE_BASE_ARCH))$(filter ubuntu-%,$(RDE_BASE_ARCH)))
 RDE_DEFINES_ARCH = -DLINUX_X86_64
 LAPACK      = lapack
 BLAS        = blas

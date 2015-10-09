@@ -141,7 +141,7 @@ RBUILD4NOMPI_C = \
 	$(DORBUILD4FINALIZE)
 
 
-ifeq (aix-7.1-ppc7-64,$(ORDENV_PLAT))
+ifneq (,$(filter aix-%,$(RDE_BASE_ARCH))$(filter AIX-%,$(RDE_BASE_ARCH)))
 
 #	$${LRBUILD_RPATH} : -Wl,-rpath not understood by xlf13 !?!
 

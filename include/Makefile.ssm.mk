@@ -4,6 +4,10 @@ $(info ## File: Makefile.ssm.mk)
 $(info ## )
 endif
 
+ifeq (,$(HOME))
+   $(error FATAL ERROR: HOME is not defined)
+endif
+
 ## ==== Pkg Building Macros
 
 BUILDSSM    := $(ROOT)/$(shell rdevar build/ssm)
