@@ -26,4 +26,6 @@ git checkout -b tmp $VERSIONGIT
 rm -rf .git
 
 cd $BASE_SSM_BNDL_DIR
-cat $BASE_INSTALL_DIR/$VERSION/etc/ssm/profile.sh | sed "s/DEV_BNDL/${SSM_BNDL=$}/" | sed "s/DEV_DIR/${BASE_INSTALL_DIR}/" > ${VERSION}.sh
+cat $BASE_INSTALL_DIR/$VERSION/etc/ssm/profile.sh | \
+    sed "s|DEV_BNDL|${SSM_BNDL}|" | \
+    sed "s|DEV_DIR|${BASE_INSTALL_DIR}/${VERSION}|" > ${VERSION}.sh
