@@ -259,6 +259,11 @@ RDE_FFLAGS_COMP = -Kieee
 endif
 endif
 
+#Default target if no other is specified
+.PHONY: nothingtobedone
+nothingtobedone:
+	@echo "Nothing to be done"
+
 LOCALMAKEFILES0 := $(foreach mydir,$(SRCPATH),$(mydir)/Makefile.local.mk)
 RDEBUILDMAKEFILES = $(wildcard \
    $(ROOT)/Makefile.rules.mk \
