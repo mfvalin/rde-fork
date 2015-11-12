@@ -71,6 +71,7 @@ my $suppress_errors_file='';
 my $defaultlibname = 'all';
 my $defaultlibext = '.a';
 my $override_dir='';
+my $files_from='';
 GetOptions('help'   => \$help,
 			  'verbose:+' => \$msg,
            'quiet'  => sub{$msg=0;},
@@ -90,17 +91,35 @@ GetOptions('help'   => \$help,
            'short_target_names' => \$short_target_names,
 			  'libext=s' => \$defaultlibext,
 			  'override_dir=s' => \$override_dir,
+			  'files_from=s' => \$files_from,
            # 'lib_target' => \$lib_target,
     )
     or $help=1;
 
 #@listfile = @ARGV if ($#ARGV >= 0);
 %listfile = map { $_ => 1 } @ARGV if ($#ARGV >= 0);
-#print STDERR "listfile: $#listfile",@listfile,"\n";
-#if (!$help and !($#listfile+1)) {
+
+if ($files_from) {
+   if (!$help and (keys %listfile)>=1) {
+      $help=1;
+      print STDERR "\nERROR: you cannot provied both --files_from and a list of files_dirs\n"
+   }
+   if (!open(INPUT,"<", $files_from)) {
+      print STDERR "\nERROR: Can't open files_from file, ignoring: ".$files_from."\n";
+   } else {
+      while (<INPUT>) {
+         $k = $_;
+         chomp($k);
+         if ($k) {
+            $listfile{$k} = 1;
+         }
+      }
+   }
+}
+
 if (!$help and (keys %listfile)<1) {
    $help=1;
-   print STDERR "\nERRROR: you must provide a list of targets\n"
+   print STDERR "\nERROR: you must provide a list of targets\n"
 }
 if ($help) {
    print STDERR "
@@ -113,7 +132,7 @@ Usage: $myname [-v|--quiet] \\
                [--side_dir_inc] [--any_inc] [--topdirs=list_of_top_dirs]\\
                [--strict] [--deep-include] [--soft-restriction] \\
                [--flat_layout] [--short_target_names] \\
-               list_of_files_dirs
+               [--files_from=filelistfile] list_of_files_dirs
 Options:
     -v     : verbose mode (multipe time to increaselevel)
    --quiet : no printed message
@@ -137,6 +156,8 @@ Options:
                           
    --override_dir       : dir with locally modified source, 
                           overrides other sources files with same name
+   --files_from         : File that includes the full list of 
+                          files or dirs to process
 list_of_files_dirs      : full list of files or dirs to process
 
 suppress_errors_file sample:
@@ -158,6 +179,7 @@ $myname \\
     --side_dir_inc=$side_dir_inc --any_inc=$anywhere_inc  -v=$msg \\
     --strict=$use_stric       --deep-include=$deep_include --soft-restriction=$soft_restriction \\
     --flat_layout=$flat_layout --short_target_names=$short_target_names \\
+    --files_from=$files_from \\
     ",join(" ", keys %listfile),"
    \n" if ($msg>=3);
 #    ",join(" ", @listfile),"

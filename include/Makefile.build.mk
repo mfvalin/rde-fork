@@ -255,7 +255,8 @@ RDE_LFLAGS_COMP = $(RDE_INTEL_DIAG_DISABLE) $(RDE_MKL) $(RDE_FP_MODEL)
 endif
 ifneq (,$(filter pgi%,$(COMP_ARCH)))
 #RDE_OPTF_MODULE = -module $(BUILDMOD)
-RDE_FFLAGS_COMP = -Kieee
+RDE_KIEEE = -Kieee
+RDE_FFLAGS_COMP = $(RDE_KIEEE)
 endif
 endif
 

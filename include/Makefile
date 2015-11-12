@@ -20,6 +20,10 @@ ifeq (,$(ROOT))
 ROOT := $(CURDIR)
 endif
 
+ifeq (,$(rde))
+   $(error FATAL ERROR: rde is not defined; Maybe you forgot to load the RDE env)
+endif
+
 MAKEFILE_CONST := $(shell rdevar Makefile_const)
 MAKEFILE_CONST_REDONE := 0
 
@@ -86,9 +90,6 @@ RDE_INCLUDE0 := $(CONST_RDEINC)
 
 CLOCK_SKEW_MAX := 1
 
-ifeq (,$(rde))
-   $(error FATAL ERROR: rde is not defined)
-endif
 ifeq (,$(ROOT))
    $(error FATAL ERROR: ROOT is not defined)
 endif
