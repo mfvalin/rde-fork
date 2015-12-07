@@ -20,9 +20,11 @@ $DESC
 $toto
 
 Options:
-    -h, --help  : print this help
-    -l, --list  : list known vars, with short match if any
-        --arch  : provide var as if EC_ARCH were provided arch
+    -h, --help   : print this help
+    -l, --list   : list known vars, with short match if any
+        --arch   : provide var as if EC_ARCH were provided arch
+        --mkfile : produce an Makefile include-able arch-specific file with all named const
+        --shfile : produce an shell dot-able arch-specific file with all named const
 
 EOF
 }
