@@ -82,10 +82,10 @@ RDE_CONFIG_FILE=${RDE_EXP_ROOT}/.rde.config.dot
 RDE_INC=$rde/include/$RDE_COMPILER_VERSION
 SRC_PATH_FILE=${RDE_EXP_ROOT}/.rde.srcpath.dot
 
-RDE_CONST_SH=${RDE_EXP_ROOT}/.rde.const.${RDE_BASE_ARCH_SFX}.dot
-RDE_CONST_SH_WILD=${RDE_EXP_ROOT}/.rde.const.*.dot
-RDE_CONST_MK=${RDE_EXP_ROOT}/.rde.const.${RDE_BASE_ARCH_SFX}.${rde_version}.mk
-RDE_CONST_MK_WILD=${RDE_EXP_ROOT}/.rde.const.*.mk
+RDE_CONST_SH=${RDE_EXP_ROOT}/build${hostarch}/.rde.const.${RDE_BASE_ARCH_SFX}.dot
+RDE_CONST_SH_WILD=${RDE_EXP_ROOT}/build*/.rde.const.*.dot
+RDE_CONST_MK=${RDE_EXP_ROOT}/build${hostarch}/.rde.const.${rde_version}.mk
+RDE_CONST_MK_WILD=${RDE_EXP_ROOT}/build*/.rde.const.*.mk
 #RDE_DEP_MK=${RDE_EXP_ROOT}/Makefile.dep.${RDE_BASE_ARCH}.mk
 RDE_DEP_MK=${RDE_EXP_ROOT}/Makefile.dep.${RDE_BASE_ARCH}.mk
 RDE_DEP_MK_WILD=${RDE_EXP_ROOT}/Makefile.dep.*.mk

@@ -23,7 +23,9 @@ endif
 ifeq (,$(rde))
    $(error FATAL ERROR: rde is not defined; Maybe you forgot to load the RDE env)
 endif
-
+ifeq (,$(wildcard $(shell rdevar srcpathfile)))
+   $(error FATAL ERROR: Not in a properly set RDE development dir, Source file list not found, maybe you forgot to do "rde addsrc" or equivalent, see "rde help" for more details)
+endif
 MAKEFILE_CONST := $(shell rdevar Makefile_const)
 MAKEFILE_CONST_REDONE := 0
 
