@@ -3,7 +3,7 @@
 
 ==== Installation
 
-VERSION0=x/1.0.b12
+VERSION0=x/1.0.rc1
 VERSION=${VERSION0##*/}
 
 SSM_BASE=ENV
