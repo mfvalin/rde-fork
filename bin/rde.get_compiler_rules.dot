@@ -6,10 +6,105 @@ export LC_ALL=C
 [[ "$1" == -verbose ]] && Verbose="YES" && shift
 CompilerRules="$(s.get_compiler_rules \"$@\")"
 
-if [ -n "$CompilerRules" ]; then
+get_filename() {
+   _prev=''
+   for _item in $@ ; do
+      case ${_item} in
+         (-*) _prev=${_item} ;;
+         *)
+            case ${_prev} in
+               (-src|-src1)  echo ${_item} ; return ;;
+            esac ;;
+      esac
+   done
+   echo /dev/null
+}
+
+get_comp_extras() {
+   head -10 ${1} | grep \
+      -e "^[ ]*\(\!\|//\|/\*\)COMP_ARCH=[.][ ;]" \
+      -e "^[ ]*\(\!\|//\|/\*\)COMP_ARCH=${COMP_ARCH}[ ]*;" | \
+      sed -e 's/^.*COMP_ARCH=[^;]*;//g' | tr -d '\n' | \
+      sed -e 's/[ ]*;[ ]*/;/g'
+}
+
+get_opt_suppress() {
+   _outfile=$1
+   shift
+   if [[ x"$(echo $@ | grep -- '-suppress=')" == x"" ]] ;then
+      echo ""
+      return
+   fi
+   printf "sed -e 's/^//'" > ${_outfile}
+   _cnt=1
+   _item="$(echo $@ | cut -d';' -f${_cnt})"
+   while [[ -n ${_item} && _cnt -lt 64 ]] ; do
+      case "${_item}" in 
+         -suppress=*) 
+            _item="$(echo ${_item} | sed 's/^[ ]*//' | sed 's/[ ]*$//')"
+            printf " -e 's/ %s / /g'"  "${_item#*=}" >>${_outfile} ;
+            echo "+ ${myfile##*/} COMP FLAGS Suppressing: ${_item#*=}" 1>&2
+            ;;
+      esac
+      let _cnt=_cnt+1
+      _item="$(echo $@ | cut -d';' -f${_cnt})"
+   done
+   printf " -e 's:$: %s:'"  "${File}" >>${_outfile}
+   printf "\n" >>${_outfile}
+   chmod 755 ${_outfile}
+   #printf "%s" "+ Suppress Command: " 1>&2
+   #cat ${_outfile} 1>&2
+   echo ${_outfile}
+}
+
+get_opt_add() {
+   myaddflags=""
+   _cnt=1
+   _item="$(echo $@ | cut -d';' -f${_cnt})"
+   while [[ -n ${_item} && _cnt -lt 64 ]] ; do
+      case "${_item}" in 
+         -add=*) myaddflags="${myaddflags} ${_item#*=}" ;;
+      esac
+      let _cnt=_cnt+1
+      _item="$(echo $@ | cut -d';' -f${_cnt})"
+   done
+   if [[ -n ${myaddflags} ]] ; then
+      echo "+ ${myfile##*/} COMP FLAGS Adding: ${myaddflags}" 1>&2
+   fi
+   echo ${myaddflags}
+}
+
+suppress_cmdline_args() {
+   printf "%s" "set -- "
+   _mycmd=$1
+   shift;
+   _myadd=$1
+   shift;
+   echo " $@ " | ${_mycmd}
+   echo ${_myadd}
+}
+
+set_cmdline_args() {
+   echo "set -- $@"
+}
+
+myfile="$(get_filename $@)"
+mypragmas="$(get_comp_extras "${myfile}")"
+if [[ -n ${mypragmas} ]] ; then
+   mysuppcmd="$(get_opt_suppress ${TMPDIR}/FiLtEr_$$ ${mypragmas})"
+   myaddflags="$(get_opt_add ${mypragmas})"
+fi
+
+if [[ -n ${mysuppcmd} ]] ; then
+   eval $(suppress_cmdline_args "${mysuppcmd}" "${myaddflags}" "$@")
+elif [[ -n ${myaddflags} ]] ; then
+   eval $(set_cmdline_args $@ ${myaddflags})
+fi
+
+if [ -n "${CompilerRules}" ]; then
 	for CompilerRule in ${CompilerRules}; do
 		if [[ -r ${CompilerRule} ]] ; then
-         if [[ -n $Verbose ]] ; then
+         if [[ -n ${Verbose} ]] ; then
             echo USING: ${CompilerRule}
             . ${CompilerRule}
          else
@@ -163,3 +258,11 @@ if [ -n "${COMPILING_FORTRAN}${COMPILING_C}" ]; then
 	[[ -d $ARMNLIB/include/${EC_ARCH} ]] && INCLUDES="$INCLUDES ${ARMNLIB}/include/${EC_ARCH}"
 	[[ -z $DestFile ]] && DestFile=${SourceFile##*/} && DestFile=${DestFile%.*}
 fi
+
+if [[ -n ${mysuppcmd} ]] ; then
+   CFLAGS="$(echo " $CFLAGS " | ${mysuppcmd})"
+   FFLAGS="$(echo " $FFLAGS " | ${mysuppcmd})"
+   rm -f ${mysuppcmd} 2>/dev/null || true
+fi
+
+unset myfile mypragmas mysuppcmd myaddflags 2>/dev/null || true
