@@ -3,7 +3,7 @@
 
 ==== Installation
 
-VERSION0=x/1.0.rc1
+VERSION0=x/1.0.rc2
 VERSION=${VERSION0##*/}
 
 SSM_BASE=ENV
@@ -28,4 +28,4 @@ rm -rf .git
 cd $BASE_SSM_BNDL_DIR
 cat $BASE_INSTALL_DIR/$VERSION/etc/ssm/profile.sh | \
     sed "s|DEV_BNDL|${SSM_BNDL}|" | \
-    sed "s|DEV_DIR|${BASE_INSTALL_DIR}/${VERSION}|" > ${VERSION}.sh
+    sed "s|DEV_DIR|${BASE_INSTALL_DIR}|" > ${VERSION}.sh
