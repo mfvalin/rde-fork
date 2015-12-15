@@ -14,9 +14,9 @@ endif
 
 ifeq (,$(CONST_BUILD))
    ifneq (,$(DEBUGMAKE))
-      $(info include $(ROOT)/include $(MAKEFILE_CONST))
+      $(info include $(MAKEFILE_CONST))
    endif
-   include $(ROOT)/$(MAKEFILE_CONST)
+   include $(MAKEFILE_CONST)
 endif
 
 BUILD    := $(ROOT)/$(CONST_BUILD)

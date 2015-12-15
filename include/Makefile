@@ -36,9 +36,9 @@ ifeq (,$(wildcard $(MAKEFILE_CONST)))
 endif
 ifeq (,$(CONST_BUILD))
    ifneq (,$(DEBUGMAKE))
-      $(info include $(ROOT)/include $(MAKEFILE_CONST))
+      $(info include $(MAKEFILE_CONST))
    endif
-   include $(ROOT)/$(MAKEFILE_CONST)
+   include $(MAKEFILE_CONST)
 endif
 
 MAKEFILE_CONST_REDO := 0
@@ -60,9 +60,9 @@ ifeq (1,$(MAKEFILE_CONST_REDO))
    $(info Building $(MAKEFILE_CONST))
    $(info $(shell $(MYTIMEX) rdevar --mkfile))
    ifneq (,$(DEBUGMAKE))
-      $(info include $(ROOT)/include $(MAKEFILE_CONST))
+      $(info include $(MAKEFILE_CONST))
    endif
-   include $(ROOT)/$(MAKEFILE_CONST)
+   include $(MAKEFILE_CONST)
 endif
 
 ifeq (,$(RDE_DEP_SUPP_FILE))
@@ -244,7 +244,7 @@ $(RDE_TARGET_OBJ_TOUCH):
 rmpo: $(RDE_TARGET_CLEAN)
 .PHONY: $(RDE_TARGET_CLEAN)
 $(RDE_TARGET_CLEAN): 
-	chmod -R u+w $(BUILDOBJ)/*.o $(BUILDMOD)/*.[Mm][Oo][Dd] 2>/dev/null || true ;\
+	chmod -R u+w $(BUILDOBJ)/*.o $(BUILDMOD)/*.[Mm][Oo][Dd] 2>/dev/null || true
 	rm -rf       $(BUILDOBJ)/*.o $(BUILDMOD)/*.[Mm][Oo][Dd] 2>/dev/null || true
 	cd $(BUILDPRE) ;\
    if [[ $$? != 0 ]] ; then echo "ERROR: cannot move into build dir: $(BUILDOBJ)" ; exit 1 ; fi ;\
@@ -252,12 +252,14 @@ $(RDE_TARGET_CLEAN):
 		if [[ ! -L $${myfile} ]] ; then \
 			chmod u+w $${myfile} ; rm -f  $${myfile};\
 		fi ;\
-	done ;\
+	done
+	rm -f $(MAKEFILE_CONST)
 
 .PHONY: $(RDE_TARGET_BUILDCLEAN_PLUS)
 $(RDE_TARGET_BUILDCLEAN_PLUS): 
 	chmod u+w -R $(BUILD)/
 	rm -f $$(find $(BUILD)/ -type f) 2>/dev//null || true
+	rm -f $(MAKEFILE_CONST)
 
 .PHONY: $(RDE_TARGET_BUILDCLEAN)
 $(RDE_TARGET_BUILDCLEAN): 
@@ -265,6 +267,7 @@ $(RDE_TARGET_BUILDCLEAN):
 	   chmod u+w $${mydir}/* $${mydir}/.[a-zA-Z0-9_-]* 2>/dev/null || true ;\
 		rm -f     $${mydir}/* $${mydir}/.[a-zA-Z0-9_-]* 2>/dev/null || true ;\
 	done
+	rm -f $(MAKEFILE_CONST)
 
 .PHONY: $(RDE_TARGET_DISTCLEAN)
 $(RDE_TARGET_DISTCLEAN): $(RDE_TARGET_BUILDCLEAN)
