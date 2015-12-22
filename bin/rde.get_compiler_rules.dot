@@ -21,10 +21,9 @@ get_filename() {
 }
 
 get_comp_extras() {
-   head -10 ${1} | grep \
-      -e "^[ ]*\(\!\|//\|/\*\)COMP_ARCH=[.][ ;]" \
-      -e "^[ ]*\(\!\|//\|/\*\)COMP_ARCH=${COMP_ARCH}[ ]*;" | \
-      sed -e 's/^.*COMP_ARCH=[^;]*;//g' | tr -d '\n' | \
+   head -10 ${1} | \
+      perl -ne "print if s/^([ ]*(\!|\/\/|\/*)COMP_ARCH=([.]|${COMP_ARCH})[ ]*;)(.*)/\$4/" | \
+      tr -d '\n' | \
       sed -e 's/[ ]*;[ ]*/;/g'
 }
 
