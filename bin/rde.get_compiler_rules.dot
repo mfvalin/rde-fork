@@ -38,12 +38,13 @@ get_opt_suppress() {
    printf "sed -e 's/^//'" > ${_outfile}
    _cnt=1
    _item="$(echo $@ | cut -d';' -f${_cnt})"
-   while [[ -n ${_item} && _cnt -lt 64 ]] ; do
+   _nmax="$(echo $@ | tr ';' '\n' | wc -l)"
+   while [[ -n ${_item} && _cnt -lt 64 && _cnt -le ${_nmax} ]] ; do
       case "${_item}" in 
          -suppress=*) 
-            _item="$(echo ${_item} | sed 's/^[ ]*//' | sed 's/[ ]*$//')"
-            printf " -e 's/ %s / /g'"  "${_item#*=}" >>${_outfile} ;
-            echo "+ ${myfile##*/} COMP FLAGS Suppressing: ${_item#*=}" 1>&2
+            _item="$(echo ${_item} | sed 's/^[ ]*//' | sed 's/[ ]*$//')" ;\
+            printf " -e 's/ %s / /g'"  "${_item#*=}" >>${_outfile} ;\
+            echo "+ ${myfile##*/} COMP FLAGS Suppressing: ${_item#*=}" 1>&2 \
             ;;
       esac
       let _cnt=_cnt+1
