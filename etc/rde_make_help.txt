@@ -32,11 +32,15 @@
  OMP      = -openmp
  MPI      = -mpi
  #LFLAGS  = 
- FFLAGS   = '-g -C -traceback -warn all'
+ #ifeq (intel13sp1u2,$(CONST_RDE_COMP_ARCH))
+ #FFLAGS  = -g -traceback -C -ftrapuv #-warn all
+ #else
+ #FFLAGS  = -g -traceback -C -qinitauto=FF -qflttrap=ov:zerodivide:enable:invalid
+ #endif
  #CFLAGS  =
  #LIBAPPL = 
  #LIBPATH_USER = 
- 
+ #COMP_RULES_FILE = $(ROOT)/Compiler_rules_$(CONST_RDE_COMP_ARCH)
  --------------------------------------------------------------
  For a list and details of tools use:
    rdehelp [--long]

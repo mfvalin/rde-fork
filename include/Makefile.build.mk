@@ -80,6 +80,14 @@ LIBPATH = $(PWD) $(LIBPATH_PRE) $(BUILDLIB) $(LIBPATHEXTRA) $(LIBSYSPATHEXTRA) $
 LIBAPPL = $(LIBS_PRE) $(LIBOTHERS) $(LIBEXTRA) $(LIBS_POST)
 LIBSYS  = $(LIBSYS_PRE) $(LIBSYSOTHERS) $(LIBSYSEXTRA) $(LIBSYS_POST)
 
+## ==== Compiler rules override
+# You may take a copy of the compiler rules file and modify it
+#    cp $(s.get_compiler_rules) Compiler_rules_${COMP_ARCH}
+#    and set it in Makefile.user.mk: 
+#       COMP_RULES_FILE = $(ROOT)/Compiler_rules_$(COMP_ARCH)
+
+#COMP_RULES_FILE = 
+
 ## ==== Compiler/linker options
 OPTIL  := 2
 OMP    := -openmp
@@ -289,6 +297,17 @@ else
    VERBOSEV  := -v
    VERBOSEVL := -verbose
 endif
+endif
+
+RDE_COMP_RULES_FILE_USER = 
+ifneq (,$(COMP_RULES_FILE))
+   ifneq (,$(wildcard $(ROOT)/$(COMP_RULES_FILE)))
+      RDE_COMP_RULES_FILE_USER = --comprules=$(ROOT)/$(COMP_RULES_FILE)
+   endif
+   ifneq (,$(wildcard $(COMP_RULES_FILE)))
+      RDE_COMP_RULES_FILE_USER = --comprules=$(COMP_RULES_FILE)
+   endif
+   $(info RDE_COMP_RULES_FILE_USER =$(RDE_COMP_RULES_FILE_USER))
 endif
 
 ## ==== Targets

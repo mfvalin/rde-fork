@@ -3,9 +3,23 @@
 # s.get_compiler_rules.dot
 
 export LC_ALL=C
-[[ "$1" == -verbose ]] && Verbose="YES" && shift
-CompilerRules="$(s.get_compiler_rules \"$@\")"
 
+for _item in $@ ; do
+   case ${_item} in
+      -verbose) Verbose="YES" ; break ;;
+   esac
+done
+
+get_comp_rules_file() {
+   _prev=''
+   for _item in $@ ; do
+      case ${_item} in
+         (--comprules=*) echo ${_item#*=} ; return ;;
+      esac
+   done
+   echo "$(s.get_compiler_rules \"$@\")"
+}
+   
 get_filename() {
    _prev=''
    for _item in $@ ; do
@@ -41,9 +55,9 @@ get_opt_suppress() {
    while [[ -n ${_item} && _cnt -lt 64 && _cnt -le ${_nmax} ]] ; do
       case "${_item}" in 
          -suppress=*) 
-            _item="$(echo ${_item} | sed 's/^[ ]*//' | sed 's/[ ]*$//')" ;\
-            printf " -e 's/ %s / /g'"  "${_item#*=}" >>${_outfile} ;\
-            echo "+ ${myfile##*/} COMP FLAGS Suppressing: ${_item#*=}" 1>&2 \
+            _item="$(echo ${_item#*=} | sed 's/^[ ]*//' | sed 's/[ ]*$//')" ;\
+            printf " -e 's/ %s / /g'"  "${_item}" >>${_outfile} ;\
+            echo "+ ${myfile##*/} COMP FLAGS Suppressing: ${_item}" 1>&2 \
             ;;
       esac
       let _cnt=_cnt+1
@@ -61,9 +75,13 @@ get_opt_add() {
    myaddflags=""
    _cnt=1
    _item="$(echo $@ | cut -d';' -f${_cnt})"
-   while [[ -n ${_item} && _cnt -lt 64 ]] ; do
+   _nmax="$(echo $@ | tr ';' '\n' | wc -l)"
+   while [[ -n ${_item} && _cnt -lt 64 && _cnt -le ${_nmax} ]] ; do
       case "${_item}" in 
-         -add=*) myaddflags="${myaddflags} ${_item#*=}" ;;
+         -add=*) 
+            _item="$(echo ${_item#*=} | sed 's/^[ ]*//' | sed 's/[ ]*$//')" ;\
+            myaddflags="${myaddflags} ${_item}" \
+            ;;
       esac
       let _cnt=_cnt+1
       _item="$(echo $@ | cut -d';' -f${_cnt})"
@@ -88,6 +106,7 @@ set_cmdline_args() {
    echo "set -- $@"
 }
 
+CompilerRules="$(get_comp_rules_file $@)"
 myfile="$(get_filename $@)"
 mypragmas="$(get_comp_extras "${myfile}")"
 if [[ -n ${mypragmas} ]] ; then
@@ -122,6 +141,7 @@ if [ -n "${COMPILING_FORTRAN}${COMPILING_C}" ]; then
 	while [[ -n $LocalArgs && -n $1 ]]; do
 		if [ -n "$COMPILING_FORTRAN" ]; then
 			case "$1" in
+         --comprules=*) ;; #ignore
 			-verbose )
 				Verbose=yes
 				;;
@@ -188,6 +208,7 @@ if [ -n "${COMPILING_FORTRAN}${COMPILING_C}" ]; then
 			esac
 		elif [ -n $COMPILING_C ]; then
 			case "$1" in
+         --comprules=*) ;; #ignore
 			-verbose )
 				Verbose=yes
 				;;
