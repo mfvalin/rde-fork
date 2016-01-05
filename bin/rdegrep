@@ -1,11 +1,11 @@
-#!/bin/ksh
+#!/bin/bash
 . .rdebase.inc.dot
 
 DESC='Grep (print lines matching a pattern) in src'
 USAGE="USAGE: ${MYSELF} [-l] [-r] [-b] [-R] [GREP_OPTIONS] SEARCH_STRING [PATH]"
 usage_long() {
-	 toto=$(echo -e $USAGE)
-	 more <<EOF
+   toto=$(echo -e $USAGE)
+   more <<EOF
 $DESC
 
 $toto
@@ -89,7 +89,8 @@ for PATH_BASE in $SEARCH_PATH_BASE ; do
             if [[ x$recurse == x || ${PATH_BASE} == . ]] ; then
                myecho 1 "### Searching in ${PATH_BASE}/${MYPATH}"
                #myfiles="$(ls -d1 ${MYPATH}/* ${MYPATH}/.[a-zA-Z0-9_-]* 2>/dev/null | grep -v '.Abs' | grep -v malib | grep -v build| grep -v Makefile.dep.)"
-               myfiles="$(ls -1 ${MYPATH}/{${suffixes}} 2>/dev/null | grep -v Makefile.dep. | sed 's|[.]/||g')"
+               #myfiles="$(ls -1 ${MYPATH}/{*.cdk,*.h,*.hf,*.fh,*.itf90,*.inc,*.include,*.c,*.cpp,*.f,*.ftn,*.ptn,*.f90,*.f95,*.f03,*.ftn90,*.ptn90,*.cdk90,*.tmpl90,*.F,*.FOR,*.F90,*.F95,*.F03,*.mk} 2>/dev/null | grep -v Makefile.dep. | sed 's|[.]/||g')"
+               myfiles="$(eval "ls -1 ${MYPATH}/{${suffixes}}" 2>/dev/null | grep -v Makefile.dep. | sed 's|[.]/||g')"
                if [[ x"${myfiles}" != x"" ]] ; then
                   $mygrep -H ${GREP_OPTIONS} "${SEARCH_STRING}" ${myfiles}
                fi

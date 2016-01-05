@@ -3,8 +3,8 @@ DESC='List processed Makefile content'
 USAGE="USAGE: ${0##*/} [-h] [--targets] [--vars|--var=VARNAME] [--full]"
 
 usage_long() {
-	 toto=$(echo -e $USAGE)
-	 cat <<EOF
+   toto=$(echo -e $USAGE)
+   cat <<EOF
 $DESC
 
 $toto
