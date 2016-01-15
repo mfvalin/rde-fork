@@ -15,9 +15,10 @@ $DESC
 $toto
 
 Options:
-    -h, --help  : print this help
-    -v, --verbose      : verbose mode
-    -f, --force        : force replace existing file
+    -h, --help     : print this help
+    -v, --verbose  : verbose mode
+    -f, --force    : force replace existing file
+    -d, --dest     : destination directory (default=.)
 
 EOF
 }
@@ -26,11 +27,14 @@ EOF
 src_path=''
 verbose=0
 myforce=0
+mydest='.'
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
       (-v|--verbose) ((verbose=verbose+1));;
       (-f|--force) myforce=1;;
+      (-d|--dest) shift ; mydest=$1;;
+      (--dest=*) mydest=${1#*=};;
       (--) shift ; break;;
       (-*) myerror "ERROR: Option Not recognized: $1" ;;
       *) src_path="${src_path} $1";;
@@ -41,6 +45,8 @@ if [[ -z "${src_path}" ]] ; then
    usage_long; exit 1
 fi
 
+myecho 1 "Files will be copied to ${mydest}"
+cd ${mydest}
 
 # Import source files from specified path
 mywild="$(rdevar rdesuffix | sed 's/\./*./g')"
