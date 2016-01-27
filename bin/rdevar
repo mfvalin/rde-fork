@@ -13,8 +13,8 @@ DESC='Echo specific RDE var or path'
 USAGE="Usage: ${MYSELF} [-h] [-l] [--arch ARCH]"
 
 usage_long() {
-	 toto=$(echo -e $USAGE)
-	 more 1>&2 <<EOF
+   toto=$(echo -e $USAGE)
+   more 1>&2 <<EOF
 $DESC
 
 $toto
@@ -36,7 +36,7 @@ namelist=""
 if [[ x$RDE_USE_OLD_ARCH != x1 ]] ; then
    export RDE_KNOWN_BASE_ARCH0="linux26-x86-64 rhel-6.0-amd64-64 ubuntu-10.04-amd64-64 ubuntu-12.04-amd64-64 ubuntu-14.04-amd64-64 aix-7.1-ppc7-64" 
    export RDE_KNOWN_BASE_ARCH="${RDE_KNOWN_BASE_ARCH:-$RDE_KNOWN_BASE_ARCH0}"
-   export RDE_KNOWN_BASE_ARCH_OLD="linux26-x86-64 rhel-6.0-amd64-64 ubuntu-10.04-amd64-64:Linux_x86-64 ubuntu-12.04-amd64-64:Linux_x86-64 aix-7.1-ppc7-64:AIX-powerpc7" 
+   export RDE_KNOWN_BASE_ARCH_OLD="linux26-x86-64 rhel-6.0-amd64-64 ubuntu-10.04-amd64-64:Linux_x86-64 ubuntu-12.04-amd64-64:Linux_x86-64 ubuntu-14.04-amd64-64:Linux_x86-64 aix-7.1-ppc7-64:AIX-powerpc7" 
    #TODO: export RDE_KNOWN_ARCH=
    export RDE_BASE_ARCH=$ORDENV_PLAT
 else
@@ -81,6 +81,7 @@ hostarch=-${RDE_BASE_ARCH_SFX}
 
 RDE_EXP_ROOT=${RDE_EXP_ROOT:-.}
 RDE_CONFIG_FILE=${RDE_EXP_ROOT}/.rde.config.dot
+RDE_SETENV_FILE=.rde.setenv.dot
 RDE_INC=$rde/include/$RDE_COMPILER_VERSION
 SRC_PATH_FILE=${RDE_EXP_ROOT}/.rde.srcpath.dot
 
@@ -157,6 +158,7 @@ myvars="
  rdesuffix/inc=   \$INCSUFFIXES;
  rdesuffix/src=   \$SRCSUFFIXES;
  rde_config_file= \$RDE_CONFIG_FILE;
+ rde_setenv_dot=  \$RDE_SETENV_FILE;
  rde_known_arch_list=   \$RDE_KNOWN_ARCH;
  rde_known_base_arch_list= \$RDE_KNOWN_BASE_ARCH;
  rde_supp_arch_list=   \$(myrde_arch_list);
