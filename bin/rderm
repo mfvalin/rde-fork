@@ -20,6 +20,7 @@ Options:
     -l, --local_only   : remove only local src modifications (leave lib copy)
                          If a lib version exists, it will bring it back
                          DEFAULT: removes local and lib copies
+        --stubs        : create stubs for the included modules, functions, sub
     FILES              : space separated list of src files to remove
 EOF
 }
@@ -27,12 +28,14 @@ EOF
 mystatus=0
 localonly=0
 mylocal=""
+mystubs=0
 PATHLIST=""
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
       (-v|--verbose) ((verbose=verbose+1));;
       (-l|--local_only) localonly=1; mylocal=-l;;
+      (--stubs) mystubs=1;;
       (-*) myerror "Option Not recognized: $1";;
         *) PATHLIST="$PATHLIST $1" ;;
     esac
@@ -42,6 +45,10 @@ done
 
 if [[ x"$PATHLIST" == x"" ]] ; then
    myerror "Must provide at least one FILE name"
+fi
+
+if [[ $mystubs == 1 ]] ; then
+   myerror "options --stubs is not supported yet"
 fi
 
 rde_exit_if_not_rdetopdir
@@ -56,11 +63,14 @@ mymakefilestub() {
    fi
    _iscomp="$(echo ":${SRCSUFFIXES}:" | tr ' ' ':' | grep \.${_myfile##*.})"
    if [[ x"$_iscomp" != x"" ]] ; then
-      myerror "Removing (building a stub of) a source file is not yet supported, ignoring ${_myfile}"
-      # echo > ${_myfile}
-      # return 0
+      #myerror "Removing (building a stub of) a source file is not yet supported, ignoring ${_myfile}"
+      cat > ${_myfile} <<EOF
+!# DELETED - This file was removed
+subroutine dummy_$$
+return
+end
+EOF
    fi
-   echo > ${_myfile}
 }
 
 isfile=0
