@@ -19,13 +19,23 @@ BASE_SSM_BNDL_DIR=${BASE_SSM_DIR}/${SSM_X}${SSM_NAME}
 
 VERSIONGIT=${SSM_NAME}_${VERSION}
 
+mkdir -p $BASE_INSTALL_DIR
 cd $BASE_INSTALL_DIR
+if [[ x$(pwd) != x$BASE_INSTALL_DIR ]] ; then
+   echo "ERROR: was not able to change to BASE_INSTALL_DIR: $BASE_INSTALL_DIR" 1>&2
+   exit 1
+fi
 git clone ssh://localhost/users/dor/armn/env/GitDepots/${SSM_NAME}.git $VERSION
 cd $VERSION
 git checkout -b tmp $VERSIONGIT
 rm -rf .git
 
+mkdir -p $BASE_INSTALL_DIR
 cd $BASE_SSM_BNDL_DIR
+if [[ x$(pwd) != x$BASE_SSM_BNDL_DIR ]] ; then
+   echo "ERROR: was not able to change to BASE_SSM_BNDL_DIR: $BASE_SSM_BNDL_DIR" 1>&2
+   exit 1
+fi
 cat $BASE_INSTALL_DIR/$VERSION/etc/ssm/profile.sh | \
     sed "s|DEV_BNDL|${SSM_BNDL}|" | \
     sed "s|DEV_DIR|${BASE_INSTALL_DIR}|" > ${VERSION}.sh

@@ -81,7 +81,6 @@ $F90C ${SourceFile} \\
 
 EOF
 fi
-set -x
    # $_mydefines \
    # $_myincludes \
 $F90C ${SourceFile} ${FC_options} ${FC_LD_options} \
