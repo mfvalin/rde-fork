@@ -22,6 +22,9 @@ if [[ x${WILL_LINK} == xyes ]] ; then
       _found=0
       for mypath in ${LIBRARIES_PATH} ${EC_LD_LIBRARY_PATH} ; do
          if [[ -r ${mypath}/lib${mylib}.a.fl ]] ; then
+            if [[ -n $Verbose ]] ; then
+               echo "ar x ${mypath}/lib${mylib}.a.fl"
+            fi
             ar x ${mypath}/lib${mylib}.a.fl
             _found=1
             break
@@ -34,8 +37,11 @@ if [[ x${WILL_LINK} == xyes ]] ; then
    cd ..
 
    ## Removed redondant .a.fl objects
-   for item2 in $@ ; do
+   for item2 in $@ ${FFLAGS}; do
       if [[ x${item2##*.} == xo ]] ; then
+         if [[ -n $Verbose ]] ; then
+            echo "rm -f ${forceobjdir}/${item2##*/}"
+         fi
          rm -f ${forceobjdir}/${item2##*/} 2>/dev/null
       fi
    done
@@ -58,8 +64,8 @@ if [[ -n $Verbose ]] ; then
          FFLAGS2="$FFLAGS2 $_item"
       fi
    done
-	# $_mydefines \\
-	# $_myincludes \\
+   # $_mydefines \\
+   # $_myincludes \\
 
    cat <<EOF
 
@@ -75,15 +81,15 @@ $F90C ${SourceFile} \\
 
 EOF
 fi
-
-	# $_mydefines \
-	# $_myincludes \
+set -x
+   # $_mydefines \
+   # $_myincludes \
 $F90C ${SourceFile} ${FC_options} ${FC_LD_options} \
    ${FFLAGS} \
-	$_mylibpath \
-	$_mylibs \
-	$_myfobj \
-	"$@"
+   $_mylibpath \
+   $_myfobj \
+   $_mylibs \
+   "$@"
 _status=$?
 
 rm -f ${forceobjdir}/*.o 2>/dev/null
