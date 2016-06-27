@@ -1,41 +1,25 @@
-==== Before Tagging
+==== Building ============================================================
 
+#git clone ssh://armnenv@localhost/~armnenv/GitDepots/rde.git
+git clone ssh://localhost/~armnenv/GitDepots/rde.git
+cd rde
+#git checkout -b tmp rde_VERSION
+#update version number (including leading 'x/') in Makefile
+. ./.setenv.dot
+make ssm
 
-==== Installation
+==== Installing ==========================================================
 
-VERSION0=1.0.0
-VERSION=${VERSION0##*/}
+ssh MY_INSTALL_MACH
+cd /PATH/
+. ./.setenv.dot
+make install CONFIRM_INSTALL=yes
+## make install CONFIRM_INSTALL=yes SSM_BASE=/ssm/net/rpn/MIG
 
-SSM_BASE=ENV
-SSM_NAME=rde
-SSM_X=${VERSION0%%/*}
-[[ x${SSM_X} == x${VERSION0} ]] && SSM_X="" || SSM_X="${SSM_X}/"
+==== Uninstalling ========================================================
 
-SSM_BNDL=${SSM_BASE}/${SSM_X}${SSM_NAME}/${VERSION}
+ssh MY_INSTALL_MACH
+cd /PATH/
+. ./.setenv.dot
+make uninstall UNINSTALL_CONFIRM=yes
 
-BASE_SSM_DIR=/users/dor/armn/env/SsmBundles/${SSM_BASE}
-BASE_INSTALL_DIR=${BASE_SSM_DIR}/d/${SSM_X}${SSM_NAME}
-BASE_SSM_BNDL_DIR=${BASE_SSM_DIR}/${SSM_X}${SSM_NAME}
-
-VERSIONGIT=${SSM_NAME}_${VERSION}
-
-mkdir -p $BASE_INSTALL_DIR
-cd $BASE_INSTALL_DIR
-if [[ x$(pwd) != x$BASE_INSTALL_DIR ]] ; then
-   echo "ERROR: was not able to change to BASE_INSTALL_DIR: $BASE_INSTALL_DIR" 1>&2
-   exit 1
-fi
-git clone ssh://localhost/users/dor/armn/env/GitDepots/${SSM_NAME}.git $VERSION
-cd $VERSION
-git checkout -b tmp $VERSIONGIT
-rm -rf .git
-
-mkdir -p $BASE_INSTALL_DIR
-cd $BASE_SSM_BNDL_DIR
-if [[ x$(pwd) != x$BASE_SSM_BNDL_DIR ]] ; then
-   echo "ERROR: was not able to change to BASE_SSM_BNDL_DIR: $BASE_SSM_BNDL_DIR" 1>&2
-   exit 1
-fi
-cat $BASE_INSTALL_DIR/$VERSION/etc/ssm/profile.sh | \
-    sed "s|DEV_BNDL|${SSM_BNDL}|" | \
-    sed "s|DEV_DIR|${BASE_INSTALL_DIR}|" > ${VERSION}.sh

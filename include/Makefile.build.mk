@@ -30,7 +30,8 @@ BINDIR   := $(BUILDBIN)
 BUILDSRC := $(ROOT)/$(CONST_BUILDSRC)
 
 #------------------------------------------------------------------------
-# WARNING: Avoid using VPATH to find source files
+# WARNING: Avoid using VPATH to find source files when working only 
+#          with modified source files.
 #          VPATH cause wrong file include when a include file is modified 
 #          but not the source file including it. The fortran preprocessor 
 #          then includes the include file located in the same dir as the 
