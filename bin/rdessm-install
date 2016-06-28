@@ -35,7 +35,8 @@ bndl=''
 prebndl=''
 postbndl=''
 depot=~/SsmDepot
-ssmbase=$HOME/SsmBundle/
+#ssmbase=$HOME/SsmBundle/
+ssmbase=
 ssmpkglist=''
 uninstall=0
 while [[ $# -gt 0 ]] ; do
@@ -58,31 +59,36 @@ while [[ $# -gt 0 ]] ; do
     esac
     shift
 done
-ssmpkglist="$ssmpkglist $*"
+ssmpkglist="$(set -x;cd $depot && ls -1 $ssmpkglist $* 2>/dev/null)"
 
-
-if [[ ! -e $ssmbase ]] ; then
-   cat 1>&2 <<EOF
-ERROR: SSM install base dir does not exist or not readable: $ssmbase
-EOF
-   exit 1
-fi
+# if [[ ! -e $ssmbase ]] ; then
+#    cat 1>&2 <<EOF
+# ERROR: SSM install base dir does not exist or not readable: $ssmbase
+# EOF
+#    exit 1
+# fi
 
 if [[ $uninstall == 1 ]] ; then
+   set -x
    if [[ -e $bndl ]] ; then
       chmod u+w -R $bndl
-      rm -r $bndl
+      rm -rf $bndl
+   elif [[ -e ${bndl%.*} ]] ; then
+      chmod u+w -R ${bndl%.*}
+      rm -rf ${bndl%.*}
    else
       echo "WARNING: No such bdnl to uninstall: $bndl"
    fi
    if [[ -d $domain ]] ; then
       chmod u+w -R $domain
-      rm -r $domain
+      rm -rf $domain
    else
       echo "WARNING: No such domaine to uninstall: $domain"
    fi
    exit
 fi
+
+echo "Packages to install: $ssmpkglist"
 
 if [[ -e $domain ]] ; then
    cat 1>&2 <<EOF
@@ -112,6 +118,7 @@ fi
 
 
 for ssmpkg in ${ssmpkglist} ; do
+   echo "==== Installing: $ssmpkg"
    if [[ x${ssmpkg##*.} == xssm ]] ; then
       ssmpkg=${ssmpkg%.*}
    fi
@@ -148,4 +155,13 @@ if [[ x$postbndl != x ]] ; then
    cat $postbndl >> $bndl
 fi
 
-chmod a-w $bndl
+if [[ "$(cat $bndl)" == "$domain" ]] ; then
+   rm -f $bndl
+   if [[ x$ssmbase != x ]] ; then
+      ln -s $ssmbase/$domain ${bndl%.*}
+   else
+      ln -s $domain ${bndl%.*}
+   fi
+else
+   chmod a-w $bndl
+fi

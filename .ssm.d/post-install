@@ -19,7 +19,7 @@ cp ${packageHome}/.ssm.d/r.pkg-config \
 #==== Define needed vars in package profile
 mkdir -p ${profileDirPath} 2>/dev/null || true
 
-if [[ -e ${packageHome}/bin/.env_setup.dot ]] ; then
+if [[ -e ${packageHome}/bin/.rde.env_setup.dot ]] ; then
    cat > ${profilePath} << EOF
 [[ -e ${packageHome}/bin/.rde.env_setup.dot ]] && . ${packageHome}/bin/.rde.env_setup.dot ${packageName} ${packageVersion} ${packageArch} ${packageHome} ${domainHome}
 EOF

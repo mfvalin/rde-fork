@@ -6,7 +6,6 @@
 [.]fo/*
 build-*/
 build-*/*
-[.]rde*
 Makefile.dep*
 __build__/
 __build__/*
