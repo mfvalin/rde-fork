@@ -245,14 +245,14 @@ LIBMASS  = $(LIBMASSWRAP) massvp7 mass
 RDE_LIBPATH_ARCH = /opt/ibmhpc/ppedev.hpct/lib64
 endif
 
-ifneq (,$(filter Linux_x86-64,$(RDE_BASE_ARCH))$(filter linux26-%,$(RDE_BASE_ARCH))$(filter rhel-%,$(RDE_BASE_ARCH))$(filter ubuntu-%,$(RDE_BASE_ARCH)))
+ifneq (,$(filter Linux_x86-64,$(RDE_BASE_ARCH))$(filter linux26-%,$(RDE_BASE_ARCH))$(filter rhel-%,$(RDE_BASE_ARCH))$(filter ubuntu-%,$(RDE_BASE_ARCH))$(filter sles--%,$(RDE_BASE_ARCH)))
 RDE_DEFINES_ARCH = -DLINUX_X86_64
 LAPACK      = lapack
 BLAS        = blas
 LIBMASSWRAP =  
 LIBMASS     = $(LIBMASSWRAP) massv_p4
 RDE_OPTF_MODULE = -module $(BUILDMOD)
-ifneq (,$(filter intel%,$(COMP_ARCH)))
+ifneq (,$(filter intel%,$(COMP_ARCH))$(filter PrgEnv-intel%,$(COMP_ARCH)))
 LAPACK      = 
 BLAS        = 
 RDE_MKL     = -mkl
