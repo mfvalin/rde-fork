@@ -12,9 +12,9 @@ endif
 # OMP     = -openmp
 # MPI     = -mpi
 # LFLAGS  =     # User's flags passed to the linker
-# ifeq (intel13sp1u2,$(CONST_RDE_COMP_ARCH))
-# FFLAGS  = -C -g -traceback #-warn all
-# CFLAGS  = -C -g -traceback -fp-model precise #-Wall
+# ifneq (,$(filter intel%,$(COMP_ARCH))$(filter PrgEnv-intel%,$(COMP_ARCH)))
+# FFLAGS  = -C -g -traceback -ftrapuv #-warn all
+# CFLAGS  = -C -g -traceback -ftrapuv -fp-model precise #-Wall
 # else
 # FFLAGS  = -C -g -traceback
 # CFLAGS  = -C -g -traceback 

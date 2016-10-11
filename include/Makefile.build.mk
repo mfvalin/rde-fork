@@ -252,10 +252,12 @@ BLAS        = blas
 LIBMASSWRAP =  
 LIBMASS     = $(LIBMASSWRAP) massv_p4
 RDE_OPTF_MODULE = -module $(BUILDMOD)
+ifneq (,$(filter intel%,$(COMP_ARCH)))
+RDE_MKL     = -mkl
+endif
 ifneq (,$(filter intel%,$(COMP_ARCH))$(filter PrgEnv-intel%,$(COMP_ARCH)))
 LAPACK      = 
 BLAS        = 
-RDE_MKL     = -mkl
 RDE_FP_MODEL= -fp-model source
 RDE_INTEL_DIAG_DISABLE = -diag-disable 7713 -diag-disable 10212 -diag-disable 5140
 RDE_FFLAGS_COMP = $(RDE_INTEL_DIAG_DISABLE) $(RDE_MKL) $(RDE_FP_MODEL)

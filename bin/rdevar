@@ -34,9 +34,9 @@ domkfile=0
 dolist=0
 namelist=""
 if [[ x$RDE_USE_OLD_ARCH != x1 ]] ; then
-   export RDE_KNOWN_BASE_ARCH0="linux26-x86-64 rhel-6.0-amd64-64 ubuntu-10.04-amd64-64 ubuntu-12.04-amd64-64 ubuntu-14.04-amd64-64 aix-7.1-ppc7-64 sles-11-amd64-64" 
+   export RDE_KNOWN_BASE_ARCH0="linux26-x86-64 rhel-6.0-amd64-64 ubuntu-10.04-amd64-64 ubuntu-12.04-amd64-64 ubuntu-14.04-amd64-64 aix-7.1-ppc7-64 sles-11-amd64-64 sles-11-haswell-64 sles-11-haswell-64-xc40 sles-11-broadwell-64 sles-11-broadwell-64-xc40" 
    export RDE_KNOWN_BASE_ARCH="${RDE_KNOWN_BASE_ARCH:-$RDE_KNOWN_BASE_ARCH0}"
-   export RDE_KNOWN_BASE_ARCH_OLD="linux26-x86-64:Linux_x86-64 rhel-6.0-amd64-64:Linux_x86-64 sles-11-amd64-64:Linux_x86-64 ubuntu-10.04-amd64-64:Linux_x86-64 ubuntu-12.04-amd64-64:Linux_x86-64 ubuntu-14.04-amd64-64:Linux_x86-64 aix-7.1-ppc7-64:AIX-powerpc7" 
+   export RDE_KNOWN_BASE_ARCH_OLD="linux26-x86-64:Linux_x86-64 rhel-6.0-amd64-64:Linux_x86-64 sles-11-amd64-64:Linux_x86-64 sles-11-haswell-64:sles-11-haswell-64 sles-11-haswell-64-xc40:sles-11-haswell-64-xc40 sles-11-broadwell-64:sles-11-broadwell-64 sles-11-broadwell-64-xc40:sles-11-broadwell-64-xc40 ubuntu-10.04-amd64-64:Linux_x86-64 ubuntu-12.04-amd64-64:Linux_x86-64 ubuntu-14.04-amd64-64:Linux_x86-64 aix-7.1-ppc7-64:AIX-powerpc7" 
    #TODO: export RDE_KNOWN_ARCH=
    export RDE_BASE_ARCH=$ORDENV_PLAT
 else
