@@ -11,7 +11,7 @@ COMPILING_FORTRAN=YES
 
 if [[ -n $Verbose ]] ; then
    cat <<EOF
-$FC ${SourceFile} $FC_options ${FFLAGS} \\
+${FC:-ERROR_FC_undefined} ${SourceFile} $FC_options ${FFLAGS} \\
 	$(s.prefix "${Dprefix}" ${DEFINES} ) \\
 	$(s.prefix "${Iprefix}" ${INCLUDES} ${EC_INCLUDE_PATH}) \\
 	$(s.prefix "${Lprefix}" ${LIBRARIES_PATH} ${EC_LD_LIBRARY_PATH}) \\
@@ -20,7 +20,7 @@ $FC ${SourceFile} $FC_options ${FFLAGS} \\
 EOF
 fi
 
-$FC ${SourceFile} $FC_options ${FFLAGS} \
+${FC:-ERROR_FC_undefined} ${SourceFile} $FC_options ${FFLAGS} \
 	$(s.prefix "${Dprefix}" ${DEFINES} ) \
 	$(s.prefix "${Iprefix}" ${INCLUDES} ${EC_INCLUDE_PATH}) \
 	$(s.prefix "${Lprefix}" ${LIBRARIES_PATH} ${EC_LD_LIBRARY_PATH}) \

@@ -27,7 +27,7 @@ r.gppf -chop_bang -gpp -F --curdirinclast  \
 
 if [[ -n $Verbose ]] ; then
    cat <<EOF
-$FC ${DestFile}.f $FC_options ${FFLAGS} \\
+${FC:-ERROR_FC_undefined} ${DestFile}.f $FC_options ${FFLAGS} \\
 	$(s.prefix "${Iprefix}" ${INCLUDES} ${EC_INCLUDE_PATH}) \\
 	$(s.prefix "${Lprefix}" ${LIBRARIES_PATH} ${EC_LD_LIBRARY_PATH}) \\
 	$(s.prefix "${lprefix}" ${LIBRARIES} ${SYSLIBS} ) \\
@@ -35,7 +35,7 @@ $FC ${DestFile}.f $FC_options ${FFLAGS} \\
 EOF
 fi
 
-$FC ${DestFile}.f $FC_options ${FFLAGS} \
+${FC:-ERROR_FC_undefined} ${DestFile}.f $FC_options ${FFLAGS} \
 	$(s.prefix "${Iprefix}" ${INCLUDES} ${EC_INCLUDE_PATH}) \
 	$(s.prefix "${Lprefix}" ${LIBRARIES_PATH} ${EC_LD_LIBRARY_PATH}) \
 	$(s.prefix "${lprefix}" ${LIBRARIES} ${SYSLIBS} ) \

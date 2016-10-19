@@ -19,7 +19,7 @@ _mylibs="$(s.prefix "${lprefix}" ${LIBRARIES} ${SYSLIBS} )"
 if [[ -n $Verbose ]] ; then
    cat <<EOF
 
-$F90C ${SourceFile} \\
+${F90C:-ERROR_F90C_undefined} ${SourceFile} \\
    ${FC_options} \\
    ${FFLAGS} \\
    $_mydefines \\
@@ -40,7 +40,7 @@ SourceFile1=${SourceFile}
 #    SourceFile1=${SourceFile##*/}
 # fi
 
-$F90C ${SourceFile1} \
+${F90C:-ERROR_F90C_undefined} ${SourceFile1} \
    ${FC_options} \
    ${FFLAGS} \
 	$_mydefines \

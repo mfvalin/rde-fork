@@ -12,7 +12,7 @@ export COMPILING_C=yes
 if [ -n "$WILL_LINK" ]; then
    if [[ -n $Verbose ]] ; then
       cat <<EOF
-$CC ${SourceFile} $CC_options ${CFLAGS} \\
+${CC:-ERROR_CC_undefined} ${SourceFile} $CC_options ${CFLAGS} \\
 		$(s.prefix "" ${DEFINES} ) \\
 		$(s.prefix "-I" ${INCLUDES} ${EC_INCLUDE_PATH}) \\
 		$(s.prefix "-L" ${LIBRARIES_PATH} ${EC_LD_LIBRARY_PATH}) \\
@@ -20,7 +20,7 @@ $CC ${SourceFile} $CC_options ${CFLAGS} \\
 		"$@"
 EOF
    fi
-	$CC ${SourceFile} $CC_options ${CFLAGS} \
+	${CC:-ERROR_CC_undefined} ${SourceFile} $CC_options ${CFLAGS} \
 		$(s.prefix "" ${DEFINES} ) \
 		$(s.prefix "-I" ${INCLUDES} ${EC_INCLUDE_PATH}) \
 		$(s.prefix "-L" ${LIBRARIES_PATH} ${EC_LD_LIBRARY_PATH}) \
@@ -29,13 +29,13 @@ EOF
 else
    if [[ -n $Verbose ]] ; then
       cat <<EOF
-$CC ${SourceFile} ${CC_options_NOLD:-${CC_options}} ${CFLAGS} \\
+${CC:-ERROR_CC_undefined} ${SourceFile} ${CC_options_NOLD:-${CC_options}} ${CFLAGS} \\
 		$(s.prefix "" ${DEFINES} ) \\
 		$(s.prefix "-I" ${INCLUDES} ${EC_INCLUDE_PATH}) \\
 		"$@"
 EOF
    fi
-	$CC ${SourceFile} ${CC_options_NOLD:-${CC_options}} ${CFLAGS} \
+	${CC:-ERROR_CC_undefined} ${SourceFile} ${CC_options_NOLD:-${CC_options}} ${CFLAGS} \
 		$(s.prefix "" ${DEFINES} ) \
 		$(s.prefix "-I" ${INCLUDES} ${EC_INCLUDE_PATH}) \
 		"$@"

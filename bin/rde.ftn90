@@ -27,7 +27,7 @@ r.gppf -lang-f90+ -chop_bang -gpp -F --curdirinclast  \
 
 if [[ -n $Verbose ]] ; then
    cat <<EOF
-$F90C ${DestFile}.f90 ${FC_options} ${FFLAGS} \\
+${F90C:-ERROR_F90C_undefined} ${DestFile}.f90 ${FC_options} ${FFLAGS} \\
 	$(s.prefix "${Iprefix}" ${INCLUDES} ${EC_INCLUDE_PATH}) \\
 	$(s.prefix "${Lprefix}" ${LIBRARIES_PATH} ${EC_LD_LIBRARY_PATH}) \\
 	$(s.prefix "${lprefix}" ${LIBRARIES} ${SYSLIBS} ) \\
@@ -35,7 +35,7 @@ $F90C ${DestFile}.f90 ${FC_options} ${FFLAGS} \\
 EOF
 fi
 
-$F90C ${DestFile}.f90 ${FC_options} ${FFLAGS} \
+${F90C:-ERROR_F90C_undefined} ${DestFile}.f90 ${FC_options} ${FFLAGS} \
 	$(s.prefix "${Iprefix}" ${INCLUDES} ${EC_INCLUDE_PATH}) \
 	$(s.prefix "${Lprefix}" ${LIBRARIES_PATH} ${EC_LD_LIBRARY_PATH}) \
 	$(s.prefix "${lprefix}" ${LIBRARIES} ${SYSLIBS} ) \

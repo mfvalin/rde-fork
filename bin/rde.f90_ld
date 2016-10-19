@@ -69,7 +69,7 @@ if [[ -n $Verbose ]] ; then
 
    cat <<EOF
 
-$F90C ${SourceFile} \\
+${F90C:-ERROR_F90C_undefined} ${SourceFile} \\
    ${FC_options} \\
    ${FC_LD_options} \\
    ${FFLAGS2} \\
@@ -83,7 +83,7 @@ EOF
 fi
    # $_mydefines \
    # $_myincludes \
-$F90C ${SourceFile} ${FC_options} ${FC_LD_options} \
+${F90C:-ERROR_F90C_undefined} ${SourceFile} ${FC_options} ${FC_LD_options} \
    ${FFLAGS} \
    $_mylibpath \
    $_myfobj \

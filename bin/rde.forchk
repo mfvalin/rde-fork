@@ -19,7 +19,7 @@ if [[ -n $Verbose ]] ; then
 #   ${FC_options} \\
 #   ${FFLAGS} \\
 
-$F90C \\
+${F90C:-ERROR_F90C_undefined} \\
    $_mydefines \\
    $(echo $_myincludes | sed 's/;/;\\\n   /g') \\
    "$@" \\
@@ -40,7 +40,7 @@ SourceFile1=${SourceFile}
 #   ${FC_options} \
 #   ${FFLAGS} \
 
-$F90C \
+${F90C:-ERROR_F90C_undefined} \
    $_mydefines \
    $_myincludes \
    "$@" \
