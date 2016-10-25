@@ -83,6 +83,7 @@ MAKEFILEUSERLIST := $(wildcard $(ROOT)/$(CONST_MAKEFILE_ROOT) $(ROOT)/$(CONST_MA
 INCSUFFIXES := $(CONST_RDESUFFIXINC)
 SRCSUFFIXES := $(CONST_RDESUFFIXSRC)
 RDE_BASE_ARCH := $(CONST_RDE_BASE_ARCH)
+RDE_BASE_ARCH_EQUIV := $(CONST_RDE_BASE_ARCH_EQUIV)
 RDE_ARCH_LIST := $(CONST_RDE_LINKED_ARCH_LIST)
 ifeq (,$(RDE_ARCH_LIST))
 RDE_ARCH_LIST := $(CONST_RDE_KNOWN_BASE_ARCH_LIST)
@@ -174,7 +175,7 @@ tags:
 .PHONY: deplocal
 deplocal: #$(MAKEFILE_CONST)
 	rm -f $(MAKEFILEDEP) 2>/dev/null || true
-	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
+	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE) --arch $(RDE_BASE_ARCH_EQUIV)
 .PHONY: dep
 
 ifneq (,$(filter aix-%,$(RDE_BASE_ARCH))$(filter AIX-%,$(RDE_BASE_ARCH)))
@@ -204,7 +205,7 @@ $(MAKEFILE_CONST): $(CONST_SRCPATHFILE) $(CONST_RDE_CONFIG_FILE)
 
 
 $(MAKEFILEDEP):
-	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE)
+	$(MYTIME) rdemkdep -v --supp $(RDE_DEP_SUPP_FILE) --arch $(RDE_BASE_ARCH_EQUIV)
 Makefile.build.mk:
 	$(MYTIME) rdemklink $(VERBOSEV2)
 Makefile.rules.mk:

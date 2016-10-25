@@ -34,9 +34,29 @@ domkfile=0
 dolist=0
 namelist=""
 if [[ x$RDE_USE_OLD_ARCH != x1 ]] ; then
-   export RDE_KNOWN_BASE_ARCH0="linux26-x86-64 rhel-6.0-amd64-64 ubuntu-10.04-amd64-64 ubuntu-12.04-amd64-64 ubuntu-14.04-amd64-64 aix-7.1-ppc7-64 sles-11-amd64-64 sles-11-haswell-64 sles-11-haswell-64-xc40 sles-11-broadwell-64 sles-11-broadwell-64-xc40" 
+   #export RDE_KNOWN_BASE_ARCH0="linux26-x86-64 rhel-6.0-amd64-64 ubuntu-10.04-amd64-64 ubuntu-12.04-amd64-64 ubuntu-14.04-amd64-64 aix-7.1-ppc7-64 sles-11-amd64-64 sles-11-haswell-64 sles-11-haswell-64-xc40 sles-11-broadwell-64 sles-11-broadwell-64-xc40"
+   export RDE_KNOWN_BASE_ARCH0="
+ Linux_x86-64 
+ aix-7.1-ppc7-64
+ "
    export RDE_KNOWN_BASE_ARCH="${RDE_KNOWN_BASE_ARCH:-$RDE_KNOWN_BASE_ARCH0}"
-   export RDE_KNOWN_BASE_ARCH_OLD="linux26-x86-64:Linux_x86-64 rhel-6.0-amd64-64:Linux_x86-64 sles-11-amd64-64:Linux_x86-64 sles-11-haswell-64:sles-11-haswell-64 sles-11-haswell-64-xc40:sles-11-haswell-64-xc40 sles-11-broadwell-64:sles-11-broadwell-64 sles-11-broadwell-64-xc40:sles-11-broadwell-64-xc40 ubuntu-10.04-amd64-64:Linux_x86-64 ubuntu-12.04-amd64-64:Linux_x86-64 ubuntu-14.04-amd64-64:Linux_x86-64 aix-7.1-ppc7-64:AIX-powerpc7" 
+   export RDE_KNOWN_BASE_ARCH_OLD="
+ Linux_x86-64:Linux_x86-64 
+ aix-7.1-ppc7-64:AIX-powerpc7
+ " 
+   export RDE_BASE_ARCH_EQUIV_LIST0="
+ Linux_x86-64:linux26-x86-64
+ Linux_x86-64:rhel-6.0-amd64-64
+ Linux_x86-64:ubuntu-10.04-amd64-64
+ Linux_x86-64:ubuntu-12.04-amd64-64
+ Linux_x86-64:ubuntu-14.04-amd64-64
+ Linux_x86-64:sles-11-amd64-64
+ Linux_x86-64:sles-11-haswell-64 
+ Linux_x86-64:sles-11-haswell-64-xc40 
+ Linux_x86-64:sles-11-broadwell-64 
+ Linux_x86-64:sles-11-broadwell-64-xc40
+ "
+   export RDE_BASE_ARCH_EQUIV_LIST="${RDE_BASE_ARCH_EQUIV_LIST:-$RDE_BASE_ARCH_EQUIV_LIST0}"
    #TODO: export RDE_KNOWN_ARCH=
    export RDE_BASE_ARCH=$ORDENV_PLAT
 else
@@ -65,6 +85,11 @@ while [[ $# -gt 0 ]] ; do
     shift
 done
 namelist="$namelist $@"
+myrde_equiv_arch() {
+   _toto="$(echo ${RDE_BASE_ARCH_EQUIV_LIST} | tr ' ' '\n' | grep $RDE_BASE_ARCH | tr '\n' ';' | cut -d':' -f1)"
+   echo ${_toto:-$RDE_BASE_ARCH}
+}
+export RDE_BASE_ARCH_EQUIV="$(myrde_equiv_arch)"
 export RDE_ARCH=$DEP_ARCH
 export RDE_BASE_ARCH=${DEP_ARCH%%/*}
 export RDE_COMP_ARCH=${DEP_ARCH#*/}
@@ -94,7 +119,8 @@ RDE_CONST_MK=${RDE_CONST_BASE}.${RDE_BASE_ARCH_SFX}.${rde_version}.mk
 RDE_CONST_SH_WILD=${RDE_CONST_BASE}.*.dot
 RDE_CONST_MK_WILD=${RDE_CONST_BASE}.*.mk
 
-RDE_DEP_MK=${RDE_EXP_ROOT}/Makefile.dep.${RDE_BASE_ARCH}.mk
+#RDE_DEP_MK=${RDE_EXP_ROOT}/Makefile.dep.${RDE_BASE_ARCH}.mk
+RDE_DEP_MK=${RDE_EXP_ROOT}/Makefile.dep.${RDE_BASE_ARCH_EQUIV}.mk
 RDE_DEP_MK_WILD=${RDE_EXP_ROOT}/Makefile.dep.*.mk
 # Makefile_dep=    Makefile.dep.${RDE_ARCH_FLAT}.mk;
 
@@ -142,11 +168,16 @@ myvpathvar() {
 
 mybasearchold() {
    for item in $RDE_KNOWN_BASE_ARCH_OLD ; do
-      if [[ x${item%:*} == x$RDE_BASE_ARCH ]] ; then
+      if [[ x${item%:*} == x${RDE_BASE_ARCH_EQUIV} ]] ; then
          echo ${item#*:}
          return
       fi
-   done
+   done   
+}
+
+myrde_equiv_arch_list() {
+   _toto="$(echo ${RDE_BASE_ARCH_EQUIV_LIST} | tr ' ' '\n' | grep ${RDE_BASE_ARCH_EQUIV} | cut -d':' -f2)"
+   echo $RDE_BASE_ARCH ${_toto} | tr ' ' '\n' | grep -v ${RDE_BASE_ARCH_EQUIV} | sort -u
 }
 
 myvars="
@@ -161,6 +192,8 @@ myvars="
  rde_setenv_dot=  \$RDE_SETENV_FILE;
  rde_known_arch_list=   \$RDE_KNOWN_ARCH;
  rde_known_base_arch_list= \$RDE_KNOWN_BASE_ARCH;
+ rde_base_arch_equiv=      \${RDE_BASE_ARCH_EQUIV};
+ rde_base_arch_equiv_list= \$(myrde_equiv_arch_list);
  rde_supp_arch_list=   \$(myrde_arch_list);
  rde_supp_base_arch_list= \$(myrde_base_arch_list);
  rde_linked_arch_list= \$(myrdeconfigvar RDE_LINKED_ARCH_LIST);
