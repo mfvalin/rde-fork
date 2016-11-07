@@ -50,7 +50,7 @@ while [[ $# -gt 0 ]] ; do
       (-*) ECDIFFARGS="${ECDIFFARGS} $1";;
         *) PATHLIST="$PATHLIST $1";;
     esac
-	 previous=$1
+    previous=$1
     shift
 done
 

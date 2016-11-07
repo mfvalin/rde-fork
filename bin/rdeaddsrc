@@ -123,28 +123,34 @@ SRCPATH="\$SRCPATH_R"
 if [[ x$mymaxdepth != x0 ]] ; then
    SRCPATH1=""
    for mydir in $SRCPATH_R; do
-      mystderr 1 "Recursively Looking into: $mydir"
+      mystderr 1 "Recursively Looking for SRCPATH into: $mydir"
       #SRCPATH1="$SRCPATH1 $mydir"
       if [[ x$myarch != x ]] ; then
-         SRCPATH1="$SRCPATH1 $(rdefind $mydir --type d -L --maxdepth $mymaxdepth --restricted "${RESTRICT_LIST}" --nodotdir --name '[a-zA-Z0-9]*' | sort -r)"
+         SRCPATH1="$SRCPATH1 $(rdefind $mydir --type d -L --maxdepth $mymaxdepth --restricted "${RESTRICT_LIST}" --nodotdir --notempty --dirname '[a-zA-Z0-9]*' | sort -r)"
       else
-         SRCPATH1="$SRCPATH1 $(rdefind $mydir --type d -L --maxdepth $mymaxdepth --nodotdir --name '[a-zA-Z0-9]*' | sort -r)"
+         SRCPATH1="$SRCPATH1 $(rdefind $mydir --type d -L --maxdepth $mymaxdepth --nodotdir --notempty --dirname '[a-zA-Z0-9]*' | sort -r)"
       fi
    done
    SRCPATH="$SRCPATH1"
+   mystderr 1 "Setting SRCPATH_INCLUDE"
    SRCPATH_INCLUDE=""
-   for mydir in $SRCPATH1 ; do
-      if [[ x"$(rdefind $mydir --type f -L --maxdepth 0 --restricted "${RESTRICT_LIST}" --nodotdir --name '[a-zA-Z0-9]*')" != x"" ]] ; then
-         SRCPATH_INCLUDE="${SRCPATH_INCLUDE} ${mydir}"
-      fi
-   done
+   # for mydir in $SRCPATH1 ; do
+   #    mystderr 1 "Checking INCPATH: $mydir"
+   #    if [[ x"$(rdefind $mydir --type f -L --maxdepth 0 --name '[a-zA-Z0-9]*')" != x"" ]] ; then
+   #       SRCPATH_INCLUDE="${SRCPATH_INCLUDE} ${mydir}"
+   #    fi
+   # done
+   SRCPATH_INCLUDE="$(rdefind --type d -L --maxdepth 0 --notempty $SRCPATH1)"
+   #TODO: remove empty inc dir
 fi
 
 
 if [[ x$mykeep == x0 ]] ; then
    rm -f $SRC_PATH_FILE
 fi
-mystderr 1 "Setting SRCPATH=$SRCPATH"
+mystderr 1 "Updating SRC_PATH_FILE with"
+mystderr 1 "SRCPATH=\"$SRCPATH\""
+mystderr 1 "SRCPATH_INCLUDE=\"$SRCPATH_INCLUDE\""
 if [[ x$myarch != x ]] ; then
 #TODO: update to add all equiv arch also
 cat >> $SRC_PATH_FILE <<EOF

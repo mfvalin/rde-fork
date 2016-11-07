@@ -1,6 +1,6 @@
 SHELL = /bin/bash
 
-RDE_VERSION0  = 1.0.4
+RDE_VERSION0  = 1.0.5
 RDE_VERSION   = $(notdir $(RDE_VERSION0))
 RDE_VERSION_X = $(dir $(RDE_VERSION0))
 

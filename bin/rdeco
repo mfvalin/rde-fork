@@ -49,7 +49,7 @@ while [[ $# -gt 0 ]] ; do
             *) PATHLIST="$PATHLIST $1";;
          esac ;;
     esac
-	 previous=$1
+    previous=$1
     shift
 done
 PATHLIST="$PATHLIST $@"
