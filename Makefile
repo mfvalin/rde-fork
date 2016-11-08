@@ -18,6 +18,15 @@ RDE_UNINSTALL = rde_uninstall
 DIRORIG_rde := $(PWD)
 BUILDSSM = $(TMPDIR)/build-rde
 
+RDEMK_SSM_CONTROL=.rdemk_ssm_control
+ifneq (,$(wildcard ./bin/.rdemk_ssm_control))
+RDEMK_SSM_CONTROL=./bin/.rdemk_ssm_control
+endif
+RDE_SSM_INSLALL=rdessm-install
+ifneq (,$(wildcard ./bin/rdessm-install))
+RDE_SSM_INSLALL=./bin/rdessm-install
+endif
+
 ssm: $(RDE_SSMALL_FILES)
 rde_ssm_all.ssm: $(RDE_SSMALL_FILES)
 $(RDE_SSMALL_FILES): rde_ssm_all rm_rde_ssm_all.ssm $(SSM_DEPOT_DIR)/$(RDE_SSMALL_NAME).ssm
@@ -37,7 +46,7 @@ $(BUILDSSM)/$(RDE_SSMALL_NAME):
 	rsync -av --exclude-from=$(DIRORIG_rde)/.ssm.d/exclude $(DIRORIG_rde)/ $@/ ; \
 	echo "Dependencies (s.ssmuse.dot): " > $@/BUILDINFO ; \
 	cat $@/ssmusedep.bndl >> $@/BUILDINFO ; \
-	.rdemk_ssm_control rde $(RDE_VERSION) "all" $@/BUILDINFO $@/DESCRIPTION > $@/.ssm.d/control
+	$(RDEMK_SSM_CONTROL) rde $(RDE_VERSION) "all" $@/BUILDINFO $@/DESCRIPTION > $@/.ssm.d/control
 
 .PHONY: install uninstall rde_install rde_uninstall
 install: rde_install
@@ -47,7 +56,7 @@ rde_install:
 		exit 1;\
 	fi
 	cd $(SSM_DEPOT_DIR) ;\
-	rdessm-install -v \
+	$(RDE_SSM_INSLALL) -v \
 			--dest=$(RDE_SSM_BASE_DOM)/rde_$(RDE_VERSION) \
 			--bndl=$(RDE_SSM_BASE_BNDL)/$(RDE_VERSION).bndl \
 			--base=$(SSM_BASE2) \
@@ -60,7 +69,7 @@ rde_uninstall:
 		exit 1;\
 	fi
 	cd $(SSM_DEPOT_DIR) ;\
-	rdessm-install -v \
+	$(RDE_SSM_INSLALL) -v \
 			--dest=$(RDE_SSM_BASE_DOM)/rde_$(RDE_VERSION) \
 			--bndl=$(RDE_SSM_BASE_BNDL)/$(RDE_VERSION).bndl \
 			--base=$(SSM_BASE2) \
