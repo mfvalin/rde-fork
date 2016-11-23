@@ -1,6 +1,6 @@
 SHELL = /bin/bash
 
-RDE_VERSION0  = 1.0.5
+RDE_VERSION0  = 1.0.6
 RDE_VERSION   = $(notdir $(RDE_VERSION0))
 RDE_VERSION_X = $(dir $(RDE_VERSION0))
 
@@ -19,12 +19,12 @@ DIRORIG_rde := $(PWD)
 BUILDSSM = $(TMPDIR)/build-rde
 
 RDEMK_SSM_CONTROL=.rdemk_ssm_control
-ifneq (,$(wildcard ./bin/.rdemk_ssm_control))
-RDEMK_SSM_CONTROL=./bin/.rdemk_ssm_control
+ifneq (,$(wildcard $(PWD)/bin/.rdemk_ssm_control))
+RDEMK_SSM_CONTROL := $(PWD)/bin/.rdemk_ssm_control
 endif
 RDE_SSM_INSLALL=rdessm-install
-ifneq (,$(wildcard ./bin/rdessm-install))
-RDE_SSM_INSLALL=./bin/rdessm-install
+ifneq (,$(wildcard $(PWD)/bin/rdessm-install))
+RDE_SSM_INSLALL := $(PWD)/bin/rdessm-install
 endif
 
 ssm: $(RDE_SSMALL_FILES)

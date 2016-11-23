@@ -138,6 +138,9 @@ if [ -n "${COMPILING_FORTRAN}${COMPILING_C}" ]; then
    unset WILL_LINK
    WITH_OPENMP=-DWITHOUT_OpenMP
    C_SHARED=""
+   if [[ "$(echo ${MPI_LIB} | tr 'a-z' 'A-Z')" == "NONE" ]] ; then
+      export MPI_LIB=""
+   fi
    while [[ -n $LocalArgs && -n $1 ]]; do
       if [ -n "$COMPILING_FORTRAN" ]; then
          case "$1" in
