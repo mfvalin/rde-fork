@@ -89,11 +89,11 @@ myrde_equiv_arch() {
    _toto="$(echo ${RDE_BASE_ARCH_EQUIV_LIST} | tr ' ' '\n' | grep $RDE_BASE_ARCH | tr '\n' ';' | cut -d':' -f1)"
    echo ${_toto:-$RDE_BASE_ARCH}
 }
-export RDE_BASE_ARCH_EQUIV="$(myrde_equiv_arch)"
 export RDE_ARCH=$DEP_ARCH
 export RDE_BASE_ARCH=${DEP_ARCH%%/*}
 export RDE_COMP_ARCH=${DEP_ARCH#*/}
 export RDE_ARCH_FLAT=${RDE_BASE_ARCH}_${RDE_COMP_ARCH}
+export RDE_BASE_ARCH_EQUIV="$(myrde_equiv_arch)"
 
 export RDE_BASE_ARCH_SFX=${RDE_BASE_ARCH}${RDE_BUILDDIR_SFX}
 
