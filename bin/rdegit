@@ -29,10 +29,11 @@ $DESC
 $toto
 
 Options:
-    -h, --help    : print this help
-    -v, --verbose : verbose mode
-    -f, --force   : force operation
-    -u, --update  : update git tree with working dir files
+    -h, --help        : print this help
+    -v, --verbose     : verbose mode
+    -f, --force       : force operation
+    -u, --update      : update git tree with working dir files
+        --patch=NAME  : Produce a set of patches from your current branch
 
 Commands:
     init            : init the repository
@@ -58,21 +59,28 @@ Commands:
                       e.g.: ${MYSELF} branch -d BRANCHNAME
     gitk [--all]    : start gitk
 
-WARNING: Commands below change the working dir content, use with caution
-    reset           : Reset current HEAD to the specified state
-                      Any changes not commited will be lost
-                      Reset are always "--hard" since rdegit assumes no staging
-                      e.g.: ${MYSELF} reset
-    checkout        : Checkout a branch or paths to the working tree
-                      Any changes not commited may be lost
-                      e.g.: ${MYSELF} checkout -b newbranch ${RDEGITTAG0}
-                            This reverts to original and start on newbranch
-                      e.g.: ${MYSELF} checkout master
-                            This reverts back to the main dev branch
-                      e.g.: ${MYSELF} checkout BRANCHNAME
-                      e.g.: ${MYSELF} checkout -b tmp_branch TAGNAME
-                      e.g.: ${MYSELF} checkout HEAD -- rpnphy/src/base/skocon.F90
-                            You may prefer: rdeco -f skocon.F90
+WARNING: Commands/options below change the working dir content, use with caution
+    --update-reverse : update working dir files with git tree files
+                       You may use this after an operation you made 
+                       directly in the git repository (not through rdegit) 
+                       to refresh the working dir
+    --apply=PATCH    : Apply patch produced by --patch ti current branch
+                       Note, to avoid merge conflict, please make sure you
+                       commited or reset your working dir modifis beforehand
+    reset            : Reset current HEAD to the specified state
+                       Any changes not commited will be lost
+                       Reset are always "--hard" since rdegit assumes no staging
+                       e.g.: ${MYSELF} reset
+    checkout         : Checkout a branch or paths to the working tree
+                       Any changes not commited may be lost
+                       e.g.: ${MYSELF} checkout -b newbranch ${RDEGITTAG0}
+                             This reverts to original and start on newbranch
+                       e.g.: ${MYSELF} checkout master
+                             This reverts back to the main dev branch
+                       e.g.: ${MYSELF} checkout BRANCHNAME
+                       e.g.: ${MYSELF} checkout -b tmp_branch TAGNAME
+                       e.g.: ${MYSELF} checkout HEAD -- rpnphy/src/base/skocon.F90
+                             You may prefer: rdeco -f skocon.F90
 
 
 Notes:
@@ -89,6 +97,8 @@ EOF
 mystatus=0
 myforce=0
 myupdate=0
+mypatch=""
+myapply=""
 mycmd=""
 mycmd2=""
 mycmdopt=""
@@ -100,10 +110,12 @@ while [[ $# -gt 0 ]] ; do
          (-v|--verbose) ((verbose=verbose+1));;
          (-f|--force) myforce=1;;
          (-u|--update) myupdate=1;;
+         (--update-reverse) mycmd="updatereverse";;
+         (--patch=*) mycmd="patch"; mypatch="${1#*=}";;
+         (--apply=*) mycmd="apply"; myapply="${1#*=}";;
          (diff) mycmd=${1%%=*}; mycmd2="git diff --cached";;
          (diff=*) mycmd=${1%%=*}; mycmd2="${1#*=} --cached";;
          (gitk) mycmd=${1}; mycmd2="${1}";;
-         (update) mycmd=${1};;
          (init|status|log|commit|tag|branch) mycmd=$1;;
          (reset|checkout) mycmd=$1;;
          *) rdegiterror "Uknown command or option: $1";;
@@ -185,6 +197,7 @@ rdegitinit() {
    RDESUFFIXES="$(rdevar rdesuffix)"
    RDESRCPATH="$(rdevar srcpath)"
    RDESRCPATH_R="$(rdevar srcpath_r)"
+   RDESRCPATH_TOPDIR="$(rdevar srcpath_topdirs)"
 
    if [[ ${myforce} == 1 ]] ; then
       rm -rf ${BUILDGIT}
@@ -214,6 +227,8 @@ ${RDESHORTPATH2CACHE}
 .rdesrcusrls
 .rdesrcusrll
 .gitignore
+.patch
+.patch.tgz
 EOF
 
    rdegitbuildfilecache
@@ -223,6 +238,10 @@ EOF
    git add .
    git commit -a -m "Initial commit of code from: $RDESRCPATH_R"
    git tag ${RDEGITTAG0}
+   for item in ${RDESRCPATH_TOPDIR} ; do
+      item2=$(echo ${item##*/} | cut -d_ -f1-2)
+      git tag ${item2}
+   done
 
    cd ${ROOT}
 }
@@ -242,7 +261,7 @@ rdegitupdate() {
    ## Checking changes status
    diff ${TMPLL} ${GITLL} > /dev/null 2>&1
    if [[ x$? == x0 && ${myforce} == 0 ]] ; then
-      myecho 1 "+ Update Shadow tree: Nothing changed since last rdegit update"
+      myecho 2 "+ Update Shadow tree: Nothing changed since last rdegit update"
       return
    fi
    myecho 1 "+ Updating Shadow tree"
@@ -294,6 +313,7 @@ checkifgit() {
 }
 
 git2workdir() {
+   myecho 1 "+ Updating workdir files from git";
    cd ${ROOT}
    # rm -f ${EXTRAFILES} ${VALIDEXTWILD}
    rm -f ${VALIDEXTWILD}
@@ -302,40 +322,93 @@ git2workdir() {
    filelist="$(git diff ${RDEGITTAG0} --name-only)"
    if [[ x"${filelist}" != x"" ]] ; then
       cp ${filelist} ${ROOT}
+      # for item in ${filelist}; do
+      #    if [[ -f ${item##*/} ]] ; then
+      #       touch ${item##*/}
+      #    fi
+      # done
+   fi
+   myecho 1 "+ ... With code changed, it would be best to do: make buildclean deplocal";
+}
+
+
+git2patch() {
+   #See: https://www.devroom.io/2009/10/26/how-to-create-and-apply-a-patch-with-git/
+   expname=${1:-""}
+   RDESRCPATH_TOPDIR="$(rdevar srcpath_topdirs)"
+   cd ${BUILDGIT}
+   git format-patch ${RDEGITTAG0}
+   patchname=""
+   for item in ${RDESRCPATH_TOPDIR} ; do
+      item2=$(echo ${item##*/} | cut -d_ -f1-2)
+      patchname="${patchname}+${item2}"
+   done
+   #TODO: add branch name to patch?
+   patchname="${patchname#+}+${USER}_${expname}.patch.tgz"
+   patchlist="$(ls *.patch)"
+   if [[ x"${patchlist}" != x"" ]] ; then
+      rm -f ${patchname}
+      tar czf ${patchname} ${patchlist} 
+      rm -f ${patchlist}
+      myecho 0 "Patch: ${BUILDGIT}/${patchname}"
+   else
+      myecho 0 "Patch: Nothing to be done"
    fi
 }
 
+
+patch2git() {
+   patchfile=${1:-"__NO_SUCH_FILE__"}
+   if [[ ! -f ${patchfile} ]] ; then
+      myerror "File not found: ${patchfile}"
+   fi
+   #TODO: tar xzvf ${patchfile}
+   #TODO: git am --signoff < patchname.patch
+   myerror "Apply is Not yet implemented"
+}
+
+
 if [[ x"${mycmd}" == x"init" ]] ; then
    rdegitinit
+elif [[ x"${mypatch}" != x"" ]] ; then
+   checkifgit
+   if [[ ${myupdate} = 1 ]] ; then rdegitupdate add ; fi
+   git2patch ${mypatch}
+elif [[ x"${apply}" != x"" ]] ; then
+   checkifgit
+   if [[ ${myupdate} = 1 ]] ; then rdegitupdate add ; fi
+   patch2git ${myapply}
 elif [[ x"${mycmd2}" != x"" ]] ; then
    checkifgit
    rdegitupdate add
    myecho 1 "+ ${mycmd2} ${mycmdopt}"
-   eval "cd ${BUILDGIT} && ${mycmd2} ${mycmdopt}" || status=1
+   eval "cd ${BUILDGIT} && ${mycmd2} ${mycmdopt}" || mystatus=1
 else
    checkifgit
    wasupdated=0
    case ${mycmd} in
       (tag|log)
          myecho 1 "+ git ${mycmd} ${mycmdopt}";
-         eval "cd ${BUILDGIT} && git ${mycmd} ${mycmdopt}" || status=1;;
+         eval "cd ${BUILDGIT} && git ${mycmd} ${mycmdopt}" || mystatus=1;;
       (status|branch)
          rdegitupdate add;
          myecho 1 "+ git ${mycmd} ${mycmdopt}";
-         eval "cd ${BUILDGIT} && git ${mycmd} ${mycmdopt}" || status=1;;
-      (commit)
+         eval "cd ${BUILDGIT} && git ${mycmd} ${mycmdopt}" || mystatus=1;;
+      (commit) #TODO: commit each component independently?
          rdegitupdate add;
          myecho 1 "+ git ${mycmd} -a ${mycmdopt}";
-         eval "cd ${BUILDGIT} && git ${mycmd} -a ${mycmdopt}" || status=1;;
+         eval "cd ${BUILDGIT} && git ${mycmd} -a ${mycmdopt}" || mystatus=1;;
+      (updatereverse)
+         git2workdir;;
       (reset)
          myecho 1 "+ git ${mycmd} ${mycmdopt}";
-         eval "cd ${BUILDGIT} && git ${mycmd} --hard ${mycmdopt}" || status=1;
+         eval "cd ${BUILDGIT} && git ${mycmd} --hard ${mycmdopt}" || mystatus=1;
          git2workdir;
          rdegitupdate add;;
       (checkout)
          rdegitupdate add;
          myecho 1 "+ git ${mycmd} ${mycmdopt}";
-         eval "cd ${BUILDGIT} && git ${mycmd} ${mycmdopt}" || status=1;
+         eval "cd ${BUILDGIT} && git ${mycmd} ${mycmdopt}" || mystatus=1;
          git2workdir;
          rdegitupdate add;;
       *)
