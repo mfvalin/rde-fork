@@ -241,6 +241,10 @@ $(RDE_TARGET_OBJ_FORCES): $(RDE_TARGET_OBJ_TOUCH)
 $(RDE_TARGET_OBJ_TOUCH):
 	touch `ls *.f* *.c* *.h* *.F* *.t* 2>/dev/null` 2>/dev/null || true
 
+.PHONY: hash
+hash:
+	echo "export RDE_BUILDNAME=`rdediff --hashstat`" >> .rde.buildname
+
 .PHONY: rmpo
 rmpo: $(RDE_TARGET_CLEAN)
 .PHONY: $(RDE_TARGET_CLEAN)

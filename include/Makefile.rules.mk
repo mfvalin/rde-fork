@@ -6,9 +6,9 @@ endif
 
 ifeq (,$(CONST_BUILD))
    ifneq (,$(DEBUGMAKE))
-      $(info include $(ROOT)/include $(MAKEFILE_CONST))
+      $(info include $(MAKEFILE_CONST))
    endif
-   include $(ROOT)/$(MAKEFILE_CONST)
+   include $(MAKEFILE_CONST)
 endif
 
 INCSUFFIXES = $(CONST_RDESUFFIXINC)
@@ -52,6 +52,7 @@ BUILDCC_NOMPI = export EC_INCLUDE_PATH="" ; $(RDECC)  $(RDEALL_LFLAGS_NOMPI) $(R
 
 DORBUILD4BIDONF = \
 	mkdir .bidon 2>/dev/null ; cd .bidon ;\
+	if [[ x"$(VERBOSEV)" != x"" ]] ; then .rdemakemodelbidon $${MAINSUBNAME} ; fi ;\
 	.rdemakemodelbidon $${MAINSUBNAME} > bidon_$${MAINSUBNAME}.f90 ;\
 	$(FC90aNoInclude) bidon_$${MAINSUBNAME}.f90 >/dev/null || status=1 ;\
 	rm -f bidon_$${MAINSUBNAME}.f90 ;\

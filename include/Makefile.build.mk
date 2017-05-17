@@ -251,10 +251,19 @@ LAPACK      = lapack
 BLAS        = blas
 LIBMASSWRAP =  
 LIBMASS     = $(LIBMASSWRAP) massv_p4
+
+#RDE_OPTF_MODULE = -module $(BUILDMOD)
+ifneq (,$(filter pgi%,$(COMP_ARCH)))
 RDE_OPTF_MODULE = -module $(BUILDMOD)
+endif
+ifneq (,$(filter gfortran%,$(COMP_ARCH)))
+RDE_OPTF_MODULE = -J $(BUILDMOD)
+endif
 ifneq (,$(filter intel%,$(COMP_ARCH)))
+RDE_OPTF_MODULE = -module $(BUILDMOD)
 RDE_MKL     = -mkl
 endif
+
 ifneq (,$(filter intel%,$(COMP_ARCH))$(filter PrgEnv-intel%,$(COMP_ARCH)))
 LAPACK      = 
 BLAS        = 
@@ -265,7 +274,6 @@ RDE_CFLAGS_COMP = $(RDE_INTEL_DIAG_DISABLE) $(RDE_MKL) $(RDE_FP_MODEL)
 RDE_LFLAGS_COMP = $(RDE_INTEL_DIAG_DISABLE) $(RDE_MKL) $(RDE_FP_MODEL)
 endif
 ifneq (,$(filter pgi%,$(COMP_ARCH)))
-#RDE_OPTF_MODULE = -module $(BUILDMOD)
 RDE_KIEEE = -Kieee
 RDE_FFLAGS_COMP = $(RDE_KIEEE)
 endif
@@ -300,6 +308,20 @@ else
    VERBOSEV  := -v
    VERBOSEVL := -verbose
 endif
+endif
+
+RDEBUILDNAMEFILE = $(wildcard $(ROOT)/.rde.buildname)
+ifneq (,$(RDEBUILDNAMEFILE))
+   ifneq (,$(DEBUGMAKE))
+      $(info include $(RDEBUILDNAMEFILE))
+   endif
+   include $(RDEBUILDNAMEFILE)
+endif
+
+ifneq (,$(BUILDNAME))
+   export RDE_BUILDNAME=$(BUILDNAME)
+# else
+#    #TODO:
 endif
 
 RDE_COMP_RULES_FILE_USER = 
