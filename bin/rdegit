@@ -1,0 +1,352 @@
+#!/bin/bash
+. .rdebase.inc.dot
+
+DESC='Use Git as CVS backend'
+USAGE="USAGE: ${MYSELF} [-h] [-v] [-f] [-u] [GIT_CMD [GIT_CMD_OPTIONS]]"
+RDEGITTAG0="original"
+
+rdegiterror() {
+   if [[ $quiet == 0 ]] ; then
+	   toto=$(echo -e $USAGE)
+	   more <<EOF
+
+ERROR: $1
+
+$DESC
+
+$toto
+
+EOF
+   fi
+   exit 1
+}
+
+usage_long() {
+	toto=$(echo -e $USAGE)
+	more <<EOF
+$DESC
+
+$toto
+
+Options:
+    -h, --help    : print this help
+    -v, --verbose : verbose mode
+    -f, --force   : force operation
+    -u, --update  : update git tree with working dir files
+
+Commands:
+    init            : init the repository
+    status          : print repository status
+    log             : Show commit logs
+    diff            : native/default "git diff"
+                      e.g.: ${MYSELF} diff --name-status
+                      e.g.: ${MYSELF} diff --name-status HEAD
+                      e.g.: ${MYSELF} diff --name-status ${RDEGITTAG0}
+    diff=DIFFCMD    : use DIFFCMD as diff tool instead of "git diff"
+                      e.g.: ${MYSELF} diff=r.gitdiff
+                      e.g.: ${MYSELF} diff=r.gitdiff ${RDEGITTAG0}
+    commit [-m LOG] : commit change to repository
+                      Commits are always with "-a" since rdegit assumes no staging
+                      e.g.: ${MYSELF} commit -m 'my commit log'
+    tag [[-d] NAME] : list tags or add/remove tags
+                      e.g.: ${MYSELF} tag
+                      e.g.: ${MYSELF} tag TAGNAME
+                      e.g.: ${MYSELF} tag -d TAGNAME
+    branch          : List, create, or delete branches
+                      e.g.: ${MYSELF} branch [-v] [-r|-a]
+                      e.g.: ${MYSELF} branch BRANCHNAME
+                      e.g.: ${MYSELF} branch -d BRANCHNAME
+    gitk [--all]    : start gitk
+
+WARNING: Commands below change the working dir content, use with caution
+    reset           : Reset current HEAD to the specified state
+                      Any changes not commited will be lost
+                      Reset are always "--hard" since rdegit assumes no staging
+                      e.g.: ${MYSELF} reset
+    checkout        : Checkout a branch or paths to the working tree
+                      Any changes not commited may be lost
+                      e.g.: ${MYSELF} checkout -b newbranch ${RDEGITTAG0}
+                            This reverts to original and start on newbranch
+                      e.g.: ${MYSELF} checkout master
+                            This reverts back to the main dev branch
+                      e.g.: ${MYSELF} checkout BRANCHNAME
+                      e.g.: ${MYSELF} checkout -b tmp_branch TAGNAME
+                      e.g.: ${MYSELF} checkout HEAD -- rpnphy/src/base/skocon.F90
+                            You may prefer: rdeco -f skocon.F90
+
+
+Notes:
+* Source files are auto added and removed from the git repository, thus
+** no need to do git add/rm, just add/remove them from your working dir
+** files are never in staging mode
+** diff is always done with '--cached'
+** reset is always done with '--hard'
+* For gitk to represent properly your workdir,
+  you may need to run '${MYSELF} update' or '${MYSELF} status'
+EOF
+}
+
+mystatus=0
+myforce=0
+myupdate=0
+mycmd=""
+mycmd2=""
+mycmdopt=""
+previous=""
+while [[ $# -gt 0 ]] ; do
+   if [[ x$mycmd == x ]] ; then
+      case $1 in
+         (-h|--help) usage_long; exit 0;;
+         (-v|--verbose) ((verbose=verbose+1));;
+         (-f|--force) myforce=1;;
+         (-u|--update) myupdate=1;;
+         (diff) mycmd=${1%%=*}; mycmd2="git diff --cached";;
+         (diff=*) mycmd=${1%%=*}; mycmd2="${1#*=} --cached";;
+         (gitk) mycmd=${1}; mycmd2="${1}";;
+         (update) mycmd=${1};;
+         (init|status|log|commit|tag|branch) mycmd=$1;;
+         (reset|checkout) mycmd=$1;;
+         *) rdegiterror "Uknown command or option: $1";;
+      esac
+      previous=$1
+   else
+      # mycmdopt="$*"
+      mycmdopt=''
+      for i in "$@"; do
+         if [[ x"${i}" == x"${i##* }" ]] ; then
+            mycmdopt="${mycmdopt} ${i}"
+         else
+            i="${i//\\/\\\\}"
+            mycmdopt="${mycmdopt} \"${i//\"/\\\"}\""
+         fi
+      done
+      break
+   fi
+   shift
+done
+
+rde_exit_if_not_rdetopdir
+
+# BUILDGIT=${ROOT}/$(rdevar build/repos)
+BUILDGIT=${ROOT}/$(rdevar build)/repos
+RDETOPDIRS="$(rdevar srcpath_topdirs)"
+RDEGITDIROTHER="_other"
+VALIDEXTWILD="$(echo $VALIDEXT | sed 's/\./*./g')"
+EXTRAFILES="${SRC_PATH_FILE} Makefile.build.mk Makefile.rules.mk Makefile.user.mk  Makefile.user.root.mk ${MAKEFILEDEP}"
+
+rdeshortpath() {
+   #Provide RDEGIT path for REF path
+   mypath="$1"
+   mypath2=${mypath}
+   for mytop in ${RDETOPDIRS} ; do
+      TOPNAME=${mytop##*/}
+      TOPNAME=${TOPNAME%%_*}
+      mypath2=$(echo $mypath | sed "s|${mytop%/}/||")
+      if [[ ${mypath2} != ${mypath} ]] ; then
+         break
+      fi
+      TOPNAME=${RDEGITDIROTHER}
+   done
+   echo $TOPNAME/${mypath2}
+}
+
+RDESHORTPATH2CACHE='.filelist0'
+rdegitbuildfilecache() {
+   myecho 1 "+ Build inital files list cache"
+   here=$(pwd)
+   cd ${BUILDGIT}
+   find . -type f > ${RDESHORTPATH2CACHE}
+   cd ${here}
+}
+
+rdegitfilecachearray=''
+rdegitloadfilecache() {
+   myecho 2 "++ Load inital files list cache"
+   rdegitfilecachearray="$(cat ${BUILDGIT}/${RDESHORTPATH2CACHE})"
+}
+
+rdeshortpath2() {
+   #Provide RDEGIT path for exp file name
+   myname="$1"
+   # here=$(pwd)
+   # cd ${BUILDGIT}
+   # mypath2="$(find . -name ${myname} 2>/dev/null)"
+   # cd ${here}
+   mypath2="$(echo ${rdegitfilecachearray} | tr ' ' '\n' | grep ${myname} 2>/dev/null | cut -d' ' -f1)"
+   if [[ x"${mypath2}" == x"" ]] ; then
+      mypath2=${RDEGITDIROTHER}/${myname}
+   fi
+   echo ${mypath2}
+}
+
+
+
+rdegitinit() {
+   RDESUFFIXES="$(rdevar rdesuffix)"
+   RDESRCPATH="$(rdevar srcpath)"
+   RDESRCPATH_R="$(rdevar srcpath_r)"
+
+   if [[ ${myforce} == 1 ]] ; then
+      rm -rf ${BUILDGIT}
+   fi
+   if [[ -d ${BUILDGIT}/.git ]] ; then
+      rdegiterror "Git init already done; Use --force to replace exisitng repos"
+      return
+   fi
+
+   mkdir -p ${BUILDGIT} 2> /dev/null
+   cd ${BUILDGIT}
+   myecho 1 "+ Building src code shadow tree"
+   for mydir in ${RDESRCPATH} ; do
+      mydir2="$(rdeshortpath ${mydir})"
+      mkdir -p ${mydir2} 2> /dev/null
+      cp $mydir/* ${mydir2}/ 2> /dev/null
+   done
+
+   mkdir ${RDEGITDIROTHER}
+   ## Add other workdir files
+   for item in $(cd ${ROOT} ; ls ${EXTRAFILES} 2>/dev/null) ; do
+	   cp ${ROOT}/$item ${RDEGITDIROTHER}/${item}
+   done
+
+   cat > .gitignore <<EOF
+${RDESHORTPATH2CACHE}
+.rdesrcusrls
+.rdesrcusrll
+.gitignore
+EOF
+
+   rdegitbuildfilecache
+
+   myecho 1 "+ Git init and inital commit with tag: ${RDEGITTAG0}"
+   git init
+   git add .
+   git commit -a -m "Initial commit of code from: $RDESRCPATH_R"
+   git tag ${RDEGITTAG0}
+
+   cd ${ROOT}
+}
+
+
+rdegitupdate() {
+   doadd="$1"
+   wasupdated=1
+   TMPLS=${TMPDIR}/.rdesrcusrls-$$
+   TMPLL=${TMPDIR}/.rdesrcusrll-$$
+   GITLS=${BUILDGIT}/.rdesrcusrls
+   GITLL=${BUILDGIT}/.rdesrcusrll
+   mylist="$(ls ${EXTRAFILES} ${VALIDEXTWILD} 2>/dev/null | sort)"
+   ls -l ${EXTRAFILES} ${VALIDEXTWILD} 2>/dev/null | sort > $TMPLL
+   echo $mylist > $TMPLS
+
+   ## Checking changes status
+   diff ${TMPLL} ${GITLL} > /dev/null 2>&1
+   if [[ x$? == x0 && ${myforce} == 0 ]] ; then
+      myecho 1 "+ Update Shadow tree: Nothing changed since last rdegit update"
+      return
+   fi
+   myecho 1 "+ Updating Shadow tree"
+
+   cd ${BUILDGIT}
+
+   rdegitloadfilecache
+
+   ## Remove files that were present in last update
+   myecho 2 "++ Remove/revert files that were present in last update but not longer are"
+   for item in $(cat ${GITLS} 2>/dev/null) ; do
+      if [[ ! -f ${ROOT}/${item} ]] ; then
+         item2=$(rdeshortpath2 ${item})
+         if [[ x${item2%%/*} != x${RDEGITDIROTHER} ]] ; then
+            myecho 3 "+++ revert to original ${item2}"
+            git checkout ${RDEGITTAG0} -- ${item2}
+         else
+            myecho 3 "+++ rm ${item2}"
+            rm -f ${item2}
+            if [[ x${doadd} == xadd ]] ; then
+               git rm -f ${item2} 2>/dev/null
+            fi
+         fi
+      fi
+   done
+
+   ## Re-add all workdir files
+   myecho 2 "++ Re-add all workdir files"
+   for item in ${mylist} ; do
+      item2=$(rdeshortpath2 ${item})
+      myecho 3 "+++ Update ${item2}"
+      cp ${ROOT}/${item} ${item2} 2>/dev/null
+      if [[ x${doadd} == xadd ]] ; then
+         git add ${item2}
+      fi
+   done
+
+   mv ${TMPLS} ${GITLS} 2>/dev/null
+   mv ${TMPLL} ${GITLL} 2>/dev/null
+   cd ${ROOT}
+}
+
+
+checkifgit() {
+   if [[ ! -d ${BUILDGIT}/.git ]] ; then
+      rdegiterror "You need to run 'rdegit init' before anything."
+      return
+   fi
+}
+
+git2workdir() {
+   cd ${ROOT}
+   # rm -f ${EXTRAFILES} ${VALIDEXTWILD}
+   rm -f ${VALIDEXTWILD}
+   cd ${BUILDGIT}
+   rm -f ${TMPLS} ${GITLS} ${TMPLL} ${GITLL}
+   filelist="$(git diff ${RDEGITTAG0} --name-only)"
+   if [[ x"${filelist}" != x"" ]] ; then
+      cp ${filelist} ${ROOT}
+   fi
+}
+
+if [[ x"${mycmd}" == x"init" ]] ; then
+   rdegitinit
+elif [[ x"${mycmd2}" != x"" ]] ; then
+   checkifgit
+   rdegitupdate add
+   myecho 1 "+ ${mycmd2} ${mycmdopt}"
+   eval "cd ${BUILDGIT} && ${mycmd2} ${mycmdopt}" || status=1
+else
+   checkifgit
+   wasupdated=0
+   case ${mycmd} in
+      (tag|log)
+         myecho 1 "+ git ${mycmd} ${mycmdopt}";
+         eval "cd ${BUILDGIT} && git ${mycmd} ${mycmdopt}" || status=1;;
+      (status|branch)
+         rdegitupdate add;
+         myecho 1 "+ git ${mycmd} ${mycmdopt}";
+         eval "cd ${BUILDGIT} && git ${mycmd} ${mycmdopt}" || status=1;;
+      (commit)
+         rdegitupdate add;
+         myecho 1 "+ git ${mycmd} -a ${mycmdopt}";
+         eval "cd ${BUILDGIT} && git ${mycmd} -a ${mycmdopt}" || status=1;;
+      (reset)
+         myecho 1 "+ git ${mycmd} ${mycmdopt}";
+         eval "cd ${BUILDGIT} && git ${mycmd} --hard ${mycmdopt}" || status=1;
+         git2workdir;
+         rdegitupdate add;;
+      (checkout)
+         rdegitupdate add;
+         myecho 1 "+ git ${mycmd} ${mycmdopt}";
+         eval "cd ${BUILDGIT} && git ${mycmd} ${mycmdopt}" || status=1;
+         git2workdir;
+         rdegitupdate add;;
+      *)
+         if [[ x"${mycmd}" != x"" ]] ; then 
+            rdegiterror "Uknown Command: ${mycmd}";
+         fi;
+   esac
+   if [[ ${myupdate} = 1 && ${wasupdated} == 0 ]] ; then 
+      rdegitupdate add
+   fi
+fi
+
+
+exit $mystatus
