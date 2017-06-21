@@ -34,6 +34,8 @@ Options:
     -f, --force       : force operation
     -u, --update      : update git tree with working dir files
         --patch=NAME  : Produce a set of patches from your current branch
+        --patchsplit=NAME  : Produce a set of patches from your current branch
+                             split into components
 
 Commands:
     init            : init the repository
@@ -112,6 +114,7 @@ while [[ $# -gt 0 ]] ; do
          (-u|--update) myupdate=1;;
          (--update-reverse) mycmd="updatereverse";;
          (--patch=*) mycmd="patch"; mypatch="${1#*=}";;
+         (--patchsplit=*) mycmd="patchsplit"; mypatch="${1#*=}";;
          (--apply=*) mycmd="apply"; myapply="${1#*=}";;
          (diff) mycmd=${1%%=*}; mycmd2="git diff --cached";;
          (diff=*) mycmd=${1%%=*}; mycmd2="${1#*=} --cached";;
@@ -123,6 +126,7 @@ while [[ $# -gt 0 ]] ; do
       previous=$1
    else
       # mycmdopt="$*"
+      mycmdopt="$@"
       mycmdopt=''
       for i in "$@"; do
          if [[ x"${i}" == x"${i##* }" ]] ; then
@@ -171,10 +175,30 @@ rdegitbuildfilecache() {
    cd ${here}
 }
 
+rdegitbuildgitignore() {
+   here=$(pwd)
+   cd ${BUILDGIT}
+   if [[ ! -f .gitignore ]] ; then
+      myecho 1 "+ Build .gitignore"
+      cat > .gitignore <<EOF
+${RDESHORTPATH2CACHE}
+.rdesrcusrls
+.rdesrcusrll
+.gitignore
+.patch
+.patch.tgz
+EOF
+   fi
+   cd ${here}
+}
+
 rdegitfilecachearray=''
 rdegitloadfilecache() {
    myecho 2 "++ Load inital files list cache"
-   rdegitfilecachearray="$(cat ${BUILDGIT}/${RDESHORTPATH2CACHE})"
+   if [[ ! -f ${BUILDGIT}/${RDESHORTPATH2CACHE} ]] ; then
+      rdegitbuildfilecache
+   fi
+   rdegitfilecachearray="$(cat ${BUILDGIT}/${RDESHORTPATH2CACHE} 2>/dev/null)"
 }
 
 rdeshortpath2() {
@@ -222,15 +246,7 @@ rdegitinit() {
 	   cp ${ROOT}/$item ${RDEGITDIROTHER}/${item}
    done
 
-   cat > .gitignore <<EOF
-${RDESHORTPATH2CACHE}
-.rdesrcusrls
-.rdesrcusrll
-.gitignore
-.patch
-.patch.tgz
-EOF
-
+   rdegitbuildgitignore
    rdegitbuildfilecache
 
    myecho 1 "+ Git init and inital commit with tag: ${RDEGITTAG0}"
@@ -332,12 +348,35 @@ git2workdir() {
 }
 
 
+rdemksplitpatches() {
+   expname=${1:-""}
+   #See: https://stackoverflow.com/questions/359424/detach-move-subdirectory-into-separate-git-repository/17864475#17864475
+   #See: https://stackoverflow.com/questions/1006775/how-to-reference-the-initial-commit
+   #See: https://www.devroom.io/2009/10/26/how-to-create-and-apply-a-patch-with-git/
+   cd ${BUILDGIT}
+   for item in [a-z]* ; do
+      if [[ -d ${item} ]] ; then
+         #TODO: deal with _other/ as well... before splitting?
+         git subtree split -P ${item} -b ${item}-branch
+         git checkout ${item}-branch
+         origin="$(git rev-list --max-parents=0 HEAD | tail -n 1)"
+         # git format-patch ${origin}
+         itemname="$(cd ${ROOT} && rdevar srcpath_topdirs | tr ' ' '\n' | grep ${item})"
+         itemname="$(echo ${itemname##*/} | cut -d_ -f1-2)"
+         git2patch "${expname}" ${itemname:-${item}} ${origin}
+         git checkout master
+      fi
+   done
+}
+
+
 git2patch() {
    #See: https://www.devroom.io/2009/10/26/how-to-create-and-apply-a-patch-with-git/
    expname=${1:-""}
-   RDESRCPATH_TOPDIR="$(rdevar srcpath_topdirs)"
+   RDESRCPATH_TOPDIR="${2:-$(rdevar srcpath_topdirs)}"
+   RDEGITTAG0B=${3:-${RDEGITTAG0}}
    cd ${BUILDGIT}
-   git format-patch ${RDEGITTAG0}
+   git format-patch ${RDEGITTAG0B}
    patchname=""
    for item in ${RDESRCPATH_TOPDIR} ; do
       item2=$(echo ${item##*/} | cut -d_ -f1-2)
@@ -367,17 +406,22 @@ patch2git() {
    myerror "Apply is Not yet implemented"
 }
 
-
+rdegitbuildgitignore
 if [[ x"${mycmd}" == x"init" ]] ; then
    rdegitinit
 elif [[ x"${mypatch}" != x"" ]] ; then
    checkifgit
    if [[ ${myupdate} = 1 ]] ; then rdegitupdate add ; fi
-   git2patch ${mypatch}
+   if [[ ${mycmd} == 'patchsplit' ]] ; then
+      rdemksplitpatches ${mypatch}
+   else
+      git2patch ${mypatch}
+   fi
 elif [[ x"${apply}" != x"" ]] ; then
    checkifgit
    if [[ ${myupdate} = 1 ]] ; then rdegitupdate add ; fi
    patch2git ${myapply}
+   #TODO: update-reverse
 elif [[ x"${mycmd2}" != x"" ]] ; then
    checkifgit
    rdegitupdate add
