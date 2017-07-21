@@ -177,6 +177,9 @@ rdegitbuildfilecache() {
 
 rdegitbuildgitignore() {
    here=$(pwd)
+   if [[ ! -d ${BUILDGIT} ]] ; then
+      mkdir ${BUILDGIT}
+   fi
    cd ${BUILDGIT}
    if [[ ! -f .gitignore ]] ; then
       myecho 1 "+ Build .gitignore"
@@ -208,14 +211,12 @@ rdeshortpath2() {
    # cd ${BUILDGIT}
    # mypath2="$(find . -name ${myname} 2>/dev/null)"
    # cd ${here}
-   mypath2="$(echo ${rdegitfilecachearray} | tr ' ' '\n' | grep ${myname} 2>/dev/null | cut -d' ' -f1)"
+   mypath2="$(echo ${rdegitfilecachearray} | tr ' ' '\n' | grep -e "\b${myname}\b" 2>/dev/null | cut -d' ' -f1)"
    if [[ x"${mypath2}" == x"" ]] ; then
       mypath2=${RDEGITDIROTHER}/${myname}
    fi
    echo ${mypath2}
 }
-
-
 
 rdegitinit() {
    RDESUFFIXES="$(rdevar rdesuffix)"

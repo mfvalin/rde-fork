@@ -87,22 +87,11 @@ if [[ $localonly == 1 ]] ; then
       fi
    done
    exit 0
-   
+
 elif [[ $refonly == 1 ]] ; then
-
-   mycache="$(get_srclist_files)"
-   for myfile in $files ; do
-      mypathlist="$(echo $mycache | tr ' ' '\n' | grep /${myfile} 2>/dev/null)"
-      if [[ x"$mypathlist" != x"" ]] ; then
-         myecho 0 $mypathlist | tr ' ' '\n'
-      else
-         mystderr 0 "Missing file: $myfile"
-      fi
-   done
-   exit 0
-
+   mydirlist="$(rdevar srcpath)"
 elif [[ $buildonly == 1 ]] ; then
-   #mydirlist="$(rdevar build/src) $(rdevar build/pre)" 
+   #mydirlist="$(rdevar build/src) $(rdevar build/pre)"
    mydirlist="$(rdevar build/src)"
 else
    #mydirlist=". $(rdevar build/src) $(rdevar build/pre) $(rdevar srcpath)"
