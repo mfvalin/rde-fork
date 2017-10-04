@@ -63,8 +63,8 @@ Commands:
 
 WARNING: Commands/options below change the working dir content, use with caution
     --update-reverse : update working dir files with git tree files
-                       You may use this after an operation you made 
-                       directly in the git repository (not through rdegit) 
+                       You may use this after an operation you made
+                       directly in the git repository (not through rdegit)
                        to refresh the working dir
     --apply=PATCH    : Apply patch produced by --patch ti current branch
                        Note, to avoid merge conflict, please make sure you
@@ -84,7 +84,6 @@ WARNING: Commands/options below change the working dir content, use with caution
                        e.g.: ${MYSELF} checkout HEAD -- rpnphy/src/base/skocon.F90
                              You may prefer: rdeco -f skocon.F90
 
-
 Notes:
 * Source files are auto added and removed from the git repository, thus
 ** no need to do git add/rm, just add/remove them from your working dir
@@ -93,7 +92,35 @@ Notes:
 ** reset is always done with '--hard'
 * For gitk to represent properly your workdir,
   you may need to run '${MYSELF} update' or '${MYSELF} status'
+
+HowTo:
+* Save a copy of your code:
+  rdegit commit
+* Reset to last commmit:
+  rdegit reset
+* Reset only one file to last commit:
+  rdegit checkout HEAD -- PATH/TO/FILE
+* Start to code on a new branch, 2 cases:
+** case 1, from the present code (HEAD is a special keyword):
+   rdegit checkout -b BRANCHNAME HEAD
+   where HEAD is a special keyword. type as is in capital letters
+   where BRANCHNAME is the actual name of your branch
+** case 2, from a previous commit:
+   rdegit checkout -b BRANCHNAME REFNAME
+   where REFNAME can be a commit hash (see rdegit log) or a tag (see rdegit tag)
+* Resume coding on another existing branch, 2 steps:
+** step 1: save or reset the modified code, see commit and reset above
+** step 2: checkout the code:
+   rdegit checkout BRANCHNAME
+
+For Operations not yet supported (merging, patching, ...), you can:
+* cd $(rdevar build)/repos
+* # do your git operations
+* cd ../..
+* rdegit --update-reverse  # update your working dir from the git repository
+
 EOF
+
 }
 
 mystatus=0
@@ -143,8 +170,8 @@ done
 
 rde_exit_if_not_rdetopdir
 
-# BUILDGIT=${ROOT}/$(rdevar build/repos)
-BUILDGIT=${ROOT}/$(rdevar build)/repos
+# BUILDGIT=${ROOT}/${CONST_BUILDREPOS}
+BUILDGIT=${ROOT}/${CONST_BUILD}/repos
 RDETOPDIRS="$(rdevar srcpath_topdirs)"
 RDEGITDIROTHER="_other"
 VALIDEXTWILD="$(echo $VALIDEXT | sed 's/\./*./g')"
@@ -219,7 +246,7 @@ rdeshortpath2() {
 }
 
 rdegitinit() {
-   RDESUFFIXES="$(rdevar rdesuffix)"
+   RDESUFFIXES="${CONST_RDESUFFIX}"
    RDESRCPATH="$(rdevar srcpath)"
    RDESRCPATH_R="$(rdevar srcpath_r)"
    RDESRCPATH_TOPDIR="$(rdevar srcpath_topdirs)"

@@ -346,7 +346,7 @@ endif
 .DEFAULT: 
 	@if [[ x$$(echo $@ | cut -c1-9) == x_invdep_. ]] ; then \
 	   echo > /dev/null ;\
-	elif [[ x"$$(.rdeisext --ext="$(CONST_RDESUFFIX) .mk" $@)" == x1 ]] ; then \
+	elif [[ x"$(filter $(suffix $@),$(CONST_RDESUFFIX) .mk)" != x"" ]] ; then \
 	   rdeco -q $@  && echo "Checking out: $@" || (echo "ERROR: File Not found: $@" && exit 1);\
 	else \
 	   echo "ERROR: No such target: $@" 1>&2 ; \

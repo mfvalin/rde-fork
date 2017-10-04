@@ -3,8 +3,8 @@
 
 DESC='Diff locally modified src compared to library version'
 USAGE="USAGE: ${MYSELF} [-h] [-v] [-l|--list|--status] [-d|--dirmode] [--diff=DIFF_TOOL] [DIFFARGS] [FILES]"
-BUILDDIFF=${ROOT}/$(rdevar build)/tmp-diff-$$
-RDESUFFIXES="$(rdevar rdesuffix)"
+BUILDDIFF=${ROOT}/${CONST_BUILD}/tmp-diff-$$
+RDESUFFIXES="${CONST_RDESUFFIX}"
 
 usage_long() {
 	 toto=$(echo -e $USAGE)
