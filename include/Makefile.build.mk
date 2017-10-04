@@ -263,9 +263,6 @@ ifneq (,$(filter intel%,$(COMP_ARCH)))
 RDE_OPTF_MODULE = -module $(BUILDMOD)
 RDE_MKL     = -mkl
 endif
-ifneq (,$(filter PrgEnv-intel%,$(COMP_ARCH)))
-RDE_OPTF_MODULE = -module $(BUILDMOD)
-endif
 
 ifneq (,$(filter intel%,$(COMP_ARCH))$(filter PrgEnv-intel%,$(COMP_ARCH)))
 LAPACK      = 
