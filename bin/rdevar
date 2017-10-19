@@ -22,6 +22,46 @@ if [[ "x$1" == "x--shdump" ]] ; then
 fi
 
 #==== Some faster access vars
+if [[ x$RDE_USE_OLD_ARCH != x1 ]] ; then
+   #export RDE_KNOWN_BASE_ARCH0="linux26-x86-64 rhel-6.0-amd64-64 ubuntu-10.04-amd64-64 ubuntu-12.04-amd64-64 ubuntu-14.04-amd64-64 aix-7.1-ppc7-64 sles-11-amd64-64 sles-11-haswell-64 sles-11-haswell-64-xc40 sles-11-broadwell-64 sles-11-broadwell-64-xc40"
+   export RDE_KNOWN_BASE_ARCH0="
+ Linux_x86-64 
+ "
+   export RDE_KNOWN_BASE_ARCH="${RDE_KNOWN_BASE_ARCH:-$RDE_KNOWN_BASE_ARCH0}"
+   export RDE_KNOWN_BASE_ARCH_OLD="
+ Linux_x86-64:Linux_x86-64 
+ " 
+   export RDE_BASE_ARCH_EQUIV_LIST0="
+ Linux_x86-64:linux26-x86-64
+ Linux_x86-64:rhel-6.0-amd64-64
+ Linux_x86-64:ubuntu-10.04-amd64-64
+ Linux_x86-64:ubuntu-12.04-amd64-64
+ Linux_x86-64:ubuntu-14.04-amd64-64
+ Linux_x86-64:sles-11-amd64-64
+ Linux_x86-64:sles-11-haswell-64 
+ Linux_x86-64:sles-11-haswell-64-xc40 
+ Linux_x86-64:sles-11-broadwell-64 
+ Linux_x86-64:sles-11-broadwell-64-xc40
+ "
+   export RDE_BASE_ARCH_EQUIV_LIST="${RDE_BASE_ARCH_EQUIV_LIST:-$RDE_BASE_ARCH_EQUIV_LIST0}"
+   #TODO: export RDE_KNOWN_ARCH=
+   export RDE_BASE_ARCH=$ORDENV_PLAT
+else
+   export RDE_KNOWN_BASE_ARCH0="Linux_x86-64"
+   export RDE_KNOWN_BASE_ARCH="${RDE_KNOWN_BASE_ARCH:-$RDE_KNOWN_BASE_ARCH0}"
+   export RDE_KNOWN_BASE_ARCH_OLD="Linux_x86-64:Linux_x86-64"
+   #TODO: export RDE_KNOWN_ARCH=
+   export RDE_BASE_ARCH=${BASE_ARCH:-${EC_ARCH%%/*}}
+fi
+export RDE_COMP_ARCH=${COMP_ARCH:-${EC_ARCH#*/}}
+DEP_ARCH=${RDE_BASE_ARCH}/${RDE_COMP_ARCH}
+#If --arch is specified, the 5 following will be re-defined below
+export RDE_ARCH=$DEP_ARCH
+export RDE_BASE_ARCH=${DEP_ARCH%%/*}
+export RDE_COMP_ARCH=${DEP_ARCH#*/}
+export RDE_ARCH_FLAT=${RDE_BASE_ARCH}_${RDE_COMP_ARCH}
+export RDE_BASE_ARCH_EQUIV="$(echo ${RDE_BASE_ARCH_EQUIV_LIST} | tr ' ' '\n' | grep $RDE_BASE_ARCH | tr '\n' ';' | cut -d':' -f1)"
+
 INCSUFFIXES=".cdk .h .hf .fh .itf90 .inc .include"
 SRCSUFFIXES=".c .cpp .f .ftn .ptn .f90 .f95 .f03 .ftn90 .ptn90 .cdk90 .tmpl90 .F .FOR .F90 .F95 .F03"
 RDE_EXP_ROOT=${RDE_EXP_ROOT:-.}
@@ -90,39 +130,6 @@ domkfile=0
 dolist=0
 namelist=""
 dokey=0
-if [[ x$RDE_USE_OLD_ARCH != x1 ]] ; then
-   #export RDE_KNOWN_BASE_ARCH0="linux26-x86-64 rhel-6.0-amd64-64 ubuntu-10.04-amd64-64 ubuntu-12.04-amd64-64 ubuntu-14.04-amd64-64 aix-7.1-ppc7-64 sles-11-amd64-64 sles-11-haswell-64 sles-11-haswell-64-xc40 sles-11-broadwell-64 sles-11-broadwell-64-xc40"
-   export RDE_KNOWN_BASE_ARCH0="
- Linux_x86-64 
- "
-   export RDE_KNOWN_BASE_ARCH="${RDE_KNOWN_BASE_ARCH:-$RDE_KNOWN_BASE_ARCH0}"
-   export RDE_KNOWN_BASE_ARCH_OLD="
- Linux_x86-64:Linux_x86-64 
- " 
-   export RDE_BASE_ARCH_EQUIV_LIST0="
- Linux_x86-64:linux26-x86-64
- Linux_x86-64:rhel-6.0-amd64-64
- Linux_x86-64:ubuntu-10.04-amd64-64
- Linux_x86-64:ubuntu-12.04-amd64-64
- Linux_x86-64:ubuntu-14.04-amd64-64
- Linux_x86-64:sles-11-amd64-64
- Linux_x86-64:sles-11-haswell-64 
- Linux_x86-64:sles-11-haswell-64-xc40 
- Linux_x86-64:sles-11-broadwell-64 
- Linux_x86-64:sles-11-broadwell-64-xc40
- "
-   export RDE_BASE_ARCH_EQUIV_LIST="${RDE_BASE_ARCH_EQUIV_LIST:-$RDE_BASE_ARCH_EQUIV_LIST0}"
-   #TODO: export RDE_KNOWN_ARCH=
-   export RDE_BASE_ARCH=$ORDENV_PLAT
-else
-   export RDE_KNOWN_BASE_ARCH0="Linux_x86-64"
-   export RDE_KNOWN_BASE_ARCH="${RDE_KNOWN_BASE_ARCH:-$RDE_KNOWN_BASE_ARCH0}"
-   export RDE_KNOWN_BASE_ARCH_OLD="Linux_x86-64:Linux_x86-64"
-   #TODO: export RDE_KNOWN_ARCH=
-   export RDE_BASE_ARCH=${BASE_ARCH:-${EC_ARCH%%/*}}
-fi
-export RDE_COMP_ARCH=${COMP_ARCH:-${EC_ARCH#*/}}
-DEP_ARCH=${RDE_BASE_ARCH}/${RDE_COMP_ARCH}
 while [[ $# -gt 0 ]] ; do
    case $1 in
       (-h|--help) usage_long; exit 0;;
