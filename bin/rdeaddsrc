@@ -171,3 +171,6 @@ cat >> $SRC_PATH_FILE <<EOF
 fi
 EOF
 fi
+
+# Invalidate the rdevar cache
+rm -f ${CONST_SH_CONST_WILD} ${CONST_MAKEFILE_CONST_WILD} || true

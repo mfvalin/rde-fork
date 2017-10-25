@@ -11,7 +11,10 @@
 dodump=0
 if [[ "x$1" == "x--shdump" ]] ; then
    shift
-   RDE_CONST_SH_DEFAULT=${TMPDIR:-/tmp}/.rde.const.${rde_version}.dot
+   myhash="$(echo ${PWD:-$(pwd)} | cksum | cut -d" " -f1)"
+   RDE_CONST_BASE=${TMPDIR:-/tmp}/.rde.const.${myhash}
+   # RDE_CONST_SH=${RDE_CONST_BASE}.${RDE_BASE_ARCH_SFX}.${rde_version}.dot
+   RDE_CONST_SH_DEFAULT=${RDE_CONST_BASE}.${rde_version}.dot
    if [[ -f ${RDE_CONST_SH_DEFAULT} ]] ; then
       cat ${RDE_CONST_SH_DEFAULT}
       exit 0
@@ -264,6 +267,7 @@ myvars="
  srcpath_topdirs=   \$(mysrcpathvar SRCPATH_TOPDIRS);
  storage=           \$(rdemodel_path -l storage)\${RDE_BUILDDIR_SFX};
  utils=             \$(myrde_utils_list);
+ sh_const_wild=        \${RDE_CONST_SH_WILD};
  Makefile_dep=         \${RDE_DEP_MK};
  Makefile_const=       \${RDE_CONST_MK};
  Makefile_const_wild=  \${RDE_CONST_MK_WILD};
@@ -280,7 +284,6 @@ myvars="
  RDE_LASTUPDATED= \$(date +%s);
 "
 
-
 if [[ $domkfile == 1 ]] ; then
    filename=${RDE_CONST_MK}
    echo > $filename
@@ -296,7 +299,6 @@ if [[ $domkfile == 1 ]] ; then
    done
 fi
 
-
 if [[ $doshfile == 1 ]] ; then
    filename=${RDE_CONST_SH_DEFAULT:-${RDE_CONST_SH}}
    echo > $filename
@@ -308,7 +310,11 @@ if [[ $doshfile == 1 ]] ; then
          myvar="$(echo $myvars | tr ';' '\n' | grep "^${myname}=")"
       fi
       myname2=CONST_$(echo $myname | tr 'a-z' 'A-Z' | sed 's/\///g')
+      if [[ $myname2 == 'CONST_SH_CONST_WILD' || $myname2 == 'CONST_MAKEFILE_CONST_WILD' ]] ; then
+         set -f
+      fi
       echo "$myname2='$(eval echo $(echo $myvar | cut -d= -f2))'" >> $filename
+      set +f
    done
    if [[ $dodump == 1 ]] ; then
       cat $filename
