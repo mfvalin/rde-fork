@@ -1,5 +1,8 @@
-#!/bin/ksh
- 
+#!/bin/bash
+if [[ -f .exper_cour ]] ; then # .exper_cour detected, call original r.make_exp
+  r.make_exp_etagere
+  exit $?
+fi 
 cat 1>&2 <<EOF
 
 WARNING: you are using RDE (RPN Dev. Env.) which is not compatible with r.make_exp
